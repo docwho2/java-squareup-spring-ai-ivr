@@ -1,4 +1,4 @@
-package cloud.cleo.squareup;
+package cloud.cleo.squareup.tools;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license

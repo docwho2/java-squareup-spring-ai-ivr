@@ -1,7 +1,11 @@
 package cloud.cleo.squareup.cloudfunctions;
 
-import com.amazonaws.services.lambda.runtime.events.LexV2Event;
-import com.amazonaws.services.lambda.runtime.events.LexV2Response;
+import cloud.cleo.squareup.ClearChatMemory;
+import cloud.cleo.squareup.LexV2Event;
+import cloud.cleo.squareup.LexV2Response;
+import static cloud.cleo.squareup.enums.LexMessageContentType.PlainText;
+import cloud.cleo.squareup.tools.ChatBotTool;
+
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -9,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.ai.chat.client.ChatClient;
@@ -25,6 +30,7 @@ import org.springframework.stereotype.Component;
  * @author sjensen
  */
 @Component
+@RequiredArgsConstructor
 public class LexFunction implements Function<LexV2Event, LexV2Response> {
 
     // Initialize the Log4j logger
@@ -33,34 +39,17 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
 
     private final ChatClient chatClient;
     private final ChatModel chatModel;
-    //private final ClearChatMemory clearChatMemory;
+    private final ClearChatMemory clearChatMemory;
+    private final List<ChatBotTool> tools;
 
-
-    record FileLink(String url, String mimeType, String name) {
-
-    }
-    
-    // Tool context object names
-    public final static String USER_OBJ = "user";  // User Object
-    public final static String COMPANY_OBJ = "company";  // Company Object
-    public final static String USER_ID = "userId";  // User Id (Integer)
-    public final static String COMPANY_ID = "companyId";  // Company Id (Integer)
-
-
-    public LexFunction(ChatClient chatClient, ChatModel chatModel
-    //        ClearChatMemory clearChatMemory
-    ) {
-        this.chatClient = chatClient;
-        this.chatModel = chatModel;
-        //this.clearChatMemory = clearChatMemory;
-    }
 
     @Override
     public LexV2Response apply(LexV2Event lexRequest) {
         final String sessionId = lexRequest.getSessionId();
 
         if ("Quit".equals(lexRequest.getSessionState().getIntent().getName())) {
-            //clearChatMemory.clearMemory(lexRequest.getSessionId());
+            log.debug("Quit called");
+            clearChatMemory.clearMemory(lexRequest.getSessionId());
             //userContextCache.remove(sessionId);
             return buildQuitResponse(lexRequest, null);
         }
@@ -71,8 +60,7 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
     I am interacting as a user of Telephone Timesheets, a time tracking system for employees.
     Please be a helpful and friendly support assistant.
     Do not display employee_id, supervisor_id, job_id fields from function calling and always display the start_date and end_date.
-    My first name is %s. I am a supervisor and my supervisor_id is %d.
-    The current date and time is %s
+    My first name is Steve. I am a supervisor and my supervisor_id is 1.
         Very important:
             - Keep responses short and focused.
             - Never exceed 1,000 characters in your response.
@@ -95,8 +83,9 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
                     .system(systemText)
                     .user(lexRequest.getInputTranscript())
                     // Use Lex Session ID for the conversation ID for Chat Memory
-                    .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, lexRequest.getSessionId()))
-                    //.toolContext(toolCtx)
+                    .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, sessionId))
+                    .toolContext(Map.of("some","thing"))
+                    .tools(tools.toArray())
                     .call();
 
             final ChatResponse resp = chatCall.chatResponse();     // <-- single terminal call
@@ -146,7 +135,7 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
 
         final var lexV2Res = LexV2Response.builder()
                 .withSessionState(ss)
-                .withMessages(new LexV2Response.Message[]{new LexV2Response.Message("PlainText",
+                .withMessages(new LexV2Response.Message[]{new LexV2Response.Message(PlainText,
             response == null ? "Session Closed, Thank You" : response, null)})
                 .build();
         //log.debug("Response is " + mapper.valueToTree(lexV2Res));
@@ -173,7 +162,7 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
         final var lexV2Res = LexV2Response.builder()
                 .withSessionState(ss)
                 // We are using plain text responses
-                .withMessages(new LexV2Response.Message[]{new LexV2Response.Message("PlainText", response, null)})
+                .withMessages(new LexV2Response.Message[]{new LexV2Response.Message(PlainText, response, null)})
                 .build();
         //log.debug("Response is " + mapper.valueToTree(lexV2Res));
         return lexV2Res;

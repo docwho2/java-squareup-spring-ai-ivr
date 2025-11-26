@@ -2,6 +2,7 @@ package cloud.cleo.squareup;
 
 
 
+import cloud.cleo.squareup.tools.ChatBotTool;
 import java.util.List;
 import org.springframework.ai.bedrock.converse.BedrockChatOptions;
 import org.springframework.ai.bedrock.converse.BedrockProxyChatModel;
@@ -106,7 +107,7 @@ public class ChatConfig {
                         ChatModelCallAdvisor.builder().chatModel(model).build(),
                         new SimpleLoggerAdvisor()
                 )
-                .defaultTools(toolBeans.toArray())
+                //.defaultTools(toolBeans.toArray())
                 .build();
     }
 }
