@@ -1,9 +1,9 @@
-# Amazon Chime SMA ChatGPT IVR for Square Retail
+# Amazon Chime SMA Spring AI IVR for Square Retail
 
 ## Background
 
 This project is a [SIP Media Application](https://docs.aws.amazon.com/chime-sdk/latest/ag/use-sip-apps.html) and makes use of the 
-[Java Chime SMA Flow Library](https://github.com/docwho2/java-chime-voicesdk-sma) to deliver a [ChatGPT](https://openai.com/chatgpt) voice bot IVR application. The IVR application is integrated with the [Square API](https://developer.squareup.com/us/en) to allow callers to ask questions about products 
+[Java Chime SMA Flow Library](https://github.com/docwho2/java-chime-voicesdk-sma) to deliver a [Spring AI](https://docs.spring.io/spring-ai/reference/) voice bot IVR application. The IVR application is integrated with the [Square API](https://developer.squareup.com/us/en) to allow callers to ask questions about products 
 and business hours, transfer to employee cell phones, etc.
 
 ## Use Case
@@ -20,8 +20,8 @@ and business hours, transfer to employee cell phones, etc.
 
 ## Solution Summary
 
-The goal is to introduce a "Store Virtual Assistant" powered by [OpenAI ChatGPT](https://openai.com/chatgpt) that can not only answer store-specific queries but also address any general questions the caller might have.
-- Utilize [ChatGPT Function Calls](https://platform.openai.com/docs/guides/gpt/function-calling) to facilitate Square API calls, enabling access to inventory, employee details, and store hours.
+The goal is to introduce a "Store Virtual Assistant" powered by [Spring AI](https://docs.spring.io/spring-ai/reference/) that can not only answer store-specific queries but also address any general questions the caller might have.
+- Utilize [Spring AI Tooling](https://docs.spring.io/spring-ai/reference/api/tools.html) to facilitate Square API calls, enabling access to inventory, employee details, and store hours.
   - Further leverage function calls so that the model can determine when a call should be transferred or concluded.
 - Employ strategic prompting to prime the model with pertinent store information and to guide interactions with callers.
 - Ensure a robust and dependable solution that is deployed across multiple regions within AWS and is entirely cloud-based.
@@ -39,17 +39,17 @@ The goal is to introduce a "Store Virtual Assistant" powered by [OpenAI ChatGPT]
 - Directions to the store can be requested and Google directions URL can be sent to the callers mobile device if requested.
   - When interacting with Text the link is just returned, when using voice, the link is sent to the caller.
 - Messages can be sent to via Email to any of the employees.
-  - ChatGPT can compose some interesting emails, quite entertaining.
+  - The Model can compose some interesting emails, quite entertaining.
   - The calling number is included in the subject of the email to lend context.
 - Language Support
-  - When interacting via Text channels (Facebook and SMS via Twilio) any language ChatGPT knows about (over 100) is supported.
-    - ChatGPT detects your language and responds in that language.
+  - When interacting via Text channels (Facebook and SMS via Twilio) any language the Model knows about (over 100) is supported.
+    - The Model detects your language and responds in that language.
   - When interacting via Voice any [language Lex supports](https://docs.aws.amazon.com/lexv2/latest/dg/how-languages.html) is possible.
     - This project is configured with English, Spanish, German, Dutch, Finnish, French (Canadian), Norwegian, Polish, and Swedish.
       - These are the more common languages spoken in northern Minnesota (Strong Nordic population).
-    - ChatGPT tries to detect (or you can ask of course) if you want to speak in another language.
-    - ChatGPT function calling is used to trigger a language context switch and then the call is moved from one Bot Locale to another at the Chime level.
-  - ChatGPT is instructed to translate request parameters into English so searching items in the Store works in any language.
+    - The Model tries to detect (or you can ask of course) if you want to speak in another language.
+    - Model tooling is used to trigger a language context switch and then the call is moved from one Bot Locale to another at the Chime level.
+  - The Model is instructed to translate request parameters into English so searching items in the Store works in any language.
     - Do you have gummy bears?  in Spanish is "¿Tienes ositos de goma?".
     - Sí, tenemos ositos de goma. Ofrecemos "Big Yummy Gummy Bear - 12 Ct.", "Snack Pack O'Gummy Bears Milk Chocolate", y "Triple-Decker Candy Sour Gummy Bears".
 - You can call into a test SandBox deployment via +1(612)254-0226 to try it out.
@@ -92,17 +92,17 @@ protected Action getInitialAction() {
     }
 ```
 
-Control is then handed off to a Lex Bot which is backed by ChatGPT to handle the interaction until a terminating event happens.
+Control is then handed off to a Lex Bot which is backed by a LLM to handle the interaction until a terminating event happens.
 
 ```Java
 final var lexBotEN = StartBotConversationAction.builder()
-                .withDescription("ChatGPT English")
+                .withDescription("LLM English")
                 .withLocale(english)
                 .withContent("You can ask about our products, hours, location, or speak to one of our team members. Tell us how we can help today?")
                 .build();
 ```
 
-If ChatGPT determines the call needs to be transferred or ended, that action is returned and the SMA Controller transfers or ends the call.
+If the Model determines the call needs to be transferred or ended, that action is returned and the SMA Controller transfers or ends the call.
 
 ```Java
 Function<StartBotConversationAction, Action> botNextAction = (a) -> {

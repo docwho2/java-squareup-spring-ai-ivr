@@ -3,7 +3,6 @@ package cloud.cleo.squareup.tools;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.squareup.square.AsyncSquareClient;
 import com.squareup.square.core.Environment;
 import com.squareup.square.types.BusinessHoursPeriod;
