@@ -5,7 +5,7 @@
     <artifactId>parent-pom</artifactId>
     <packaging>pom</packaging>
     <version>1.0</version>
-    <name>Square Chime SMA Parent POM</name>
+    <name>Spring AI Square Chime SMA Parent POM</name>
     <description>Top Level POM for Square Chime Project</description>
     
     <organization>
@@ -39,7 +39,7 @@
         <!-- Provision Chime Resources -->
         <module>ChimeCDKProvision</module>
         <!-- These are part of the local project -->
-        <module>ChatGPT</module>
+        <module>SpringAI</module>
         <module>ChimeSMA</module>
     </modules>
 
@@ -87,10 +87,7 @@
             <dependency>
                 <groupId>com.fasterxml.jackson</groupId>
                 <artifactId>jackson-bom</artifactId>
-                <!-- Pinned at 2.19.2 because OpenAI client 0.18.2 still references
-                PropertyNamingStrategy.SNAKE_CASE (removed in 2.20.0). 
-                TODO: update once legacy OpenAI lib is retired. -->
-                <version>2.19.2</version>
+                <version>2.20.1</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -112,18 +109,29 @@
                 <version>2.8.0</version>
             </dependency>
             
-            <!-- OpenAI ChatGPT Lib --> 
-            <dependency>
-                <groupId>com.theokanning.openai-gpt3-java</groupId>
-                <artifactId>service</artifactId>
-                <version>0.18.2</version>       
+            <!-- Soring resources we need for the Lambda -->
+             <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>3.5.7</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
-            <!-- Included in above, but need to bump higher due to security alert in this package --> 
-            <dependency>
-                <groupId>io.github.classgraph</groupId>
-                <artifactId>classgraph</artifactId>
-                <version>4.8.184</version>
+                <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-function-dependencies</artifactId>
+                <version>4.3.0</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>1.1.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            
             
             <!-- Square Lib --> 
             <dependency>
