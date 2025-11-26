@@ -1,0 +1,1186 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 
+  - AWS::Serverless-2016-10-31
+  - AWS::LanguageExtensions
+
+Description: >
+  Square AWS Chime SMA ChatGPT IVR
+
+Parameters:
+  SMAID:
+    Description: Chime Voice Sip Media Application (SMA) ID (cf3e17cd-f4e5-44c3-ab04-XXXXXXXXXXXX) from parameter store
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: SMA_ID
+  VOICECONNECTORARN:
+    Description: The ARN of a Voice Connector (or VC Group) to be used to send calls via SIP (set to PSTN to not use SIP for transfers)
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: VOICE_CONNECTOR_ARN
+  FBPAGEACCESSTOKEN:
+    Description: Facebook Access Token stored in parameter store used to make FB API calls when using FB Channel
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: FB_PAGE_ACCESS_TOKEN
+  FBPAGEID:
+    Description: Facebook Page ID used to make FB API calls when using FB Channel
+    Type: String
+    Default: DISABLED
+  SQUAREAPIKEY:
+    Description: Square API Key stored in parameter store
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: SQUARE_API_KEY
+  SQUARELOCATIONID:
+    Description: The Square Location ID to use (You must look this up via Square API or from dev console)
+    Type: String
+    Default: L5KK29RDQG17Q
+  SQUAREENVIRONMENT:
+    Description: The Square Environment to use (SANDBOX for testing, set to PRODUCTION when you have a real Square business account)
+    Type: String
+    Default: SANDBOX
+    AllowedValues:
+        - SANDBOX
+        - PRODUCTION
+  OPENAIAPIKEY:
+    Description: OpenAI Key stored in parameter store
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: OPENAI_API_KEY
+  OPENAIMODEL:
+    Description: OpenAI ChatGPT Model that has function calling enabled
+    Type: String
+    Default: gpt-4o-mini
+    AllowedValues: # https://platform.openai.com/docs/models/overview (requres model with function calling)
+        - gpt-3.5-turbo
+        - gpt-3.5-turbo-1106
+        - gpt-3.5-turbo-0125
+        - gpt-4
+        - gpt-4-32k
+        - gpt-4-1106-preview
+        - gpt-4-0125-preview
+        - gpt-4-turbo-preview
+        - gpt-4o-mini
+        - gpt-4.1-nano
+        - gpt-5-nano
+  VOICEIDEN:
+    Description: The neural voice used for LEX and prompt generation for English
+    Type: String
+    Default: Joanna
+    AllowedValues: # https://docs.aws.amazon.com/polly/latest/dg/ntts-voices-main.html
+        - Ivy      # Female (child)
+        - Joanna   # Female
+        - Kendra   # Female
+        - Kimberly # Female
+        - Salli    # Female
+        - Joey     # Male
+        - Justin   # Male (child)
+        - Kevin    # Male (child)
+        - Matthew  # Male
+        - Ruth     # Female
+        - Stephen  # Male
+  VOICEIDES:
+    Description: The neural voice used for LEX and prompt generation for Spanish
+    Type: String
+    Default: Lupe
+    AllowedValues:
+        - Lupe     # Female (US, neural)
+        - Pedro    # Male (US, neural)
+  VOICEIDDE:
+    Description: The neural voice used for LEX and prompt generation for German
+    Type: String
+    Default: Vicki
+    AllowedValues:
+        - Vicki    # Female (neural)
+        - Daniel   # Male (neural)
+  TRANSFERNUMBER:
+    Description: The E164 Number to be used when transferring to main number
+    Type: String
+    Default: '+18004444444' # MCI Test Number, change to a real number
+  
+
+Globals:
+  Function:
+    Runtime: java25
+    Timeout: 30
+    MemorySize: 3009
+    Environment:
+        Variables:
+            JAVA_TOOL_OPTIONS: -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational
+Resources:
+    
+  PromptBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    
+  PromptBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref PromptBucket
+      PolicyDocument:  
+        Version: 2012-10-17
+        Statement:
+          - Sid: AllowChimeAccessRead
+            Effect: Allow
+            Principal:
+              Service: voiceconnector.chime.amazonaws.com
+            Action:
+              - s3:GetObject
+            Resource:
+              - !GetAtt PromptBucket.Arn
+              - !Sub "${PromptBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Sub "${AWS::AccountId}"
+ 
+  PromptCreator:
+    Type: AWS::Serverless::Function
+    DependsOn: PromptCreatorLogGroup
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-PromptCreator
+      Description: Creates Static prompts to be used in Chime Voice SDK
+      Handler: cloud.cleo.chimesma.PollyPromptGenerator
+      CodeUri: ./ChimeSMALibrary/PollyPromptCreation
+      Architectures:  # requires x86 due to naitive SOX libraries
+        - x86_64
+      SnapStart:
+           ApplyOn: None
+      Environment: 
+        Variables:
+            PROMPT_BUCKET: !Ref PromptBucket
+      Policies: 
+        - S3CrudPolicy:
+            BucketName: !Ref PromptBucket
+        - Version: '2012-10-17' 
+          Statement:
+            - Effect: Allow
+              Action:
+                - polly:SynthesizeSpeech
+              Resource: '*'
+  
+  PromptCreatorLogGroup:
+    Type: AWS::Logs::LogGroup
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-PromptCreator'
+      RetentionInDays: 30
+
+  PromptCopier:
+    Type: AWS::Serverless::Function
+    DependsOn: PromptCopierLogGroup
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-PromptCopier
+      Description: Copy Static prompts in repo to S3 to be used in Chime SMA
+      Handler: cloud.cleo.chimesma.PromptCopier
+      CodeUri: ./ChimeSMALibrary/PollyPromptCreation
+      Architectures:  # SnapStart now supports ARM
+        - arm64
+      SnapStart:
+           ApplyOn: None
+      Environment: 
+        Variables:
+            PROMPT_BUCKET: !Ref PromptBucket
+      Policies: 
+        - S3CrudPolicy:
+            BucketName: !Ref PromptBucket
+  
+  PromptCopierLogGroup:
+    Type: AWS::Logs::LogGroup
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-PromptCopier'
+      RetentionInDays: 30
+
+  StaticPrompts:
+    Type: Custom::PromptCopier
+    Properties:
+        ServiceToken: !GetAtt PromptCopier.Arn
+  
+  MainPrompt:
+    Type: Custom::PromptCreator
+    Properties:
+        ServiceToken: !GetAtt PromptCreator.Arn
+        VoiceId: !Ref VOICEIDEN
+        PromptName: welcome.wav
+        PromptText: |
+            <speak>
+            <break time="2s"/>Thank you for calling Copper Fox Gifts.
+            </speak>
+  
+  OpenPrompt:
+    Type: Custom::PromptCreator
+    Properties:
+        ServiceToken: !GetAtt PromptCreator.Arn
+        VoiceId: !Ref VOICEIDEN
+        PromptName: open.wav
+        PromptText: |
+            Our Store is currently open.
+        
+  ClosedPrompt:
+    Type: Custom::PromptCreator
+    Properties:
+        ServiceToken: !GetAtt PromptCreator.Arn
+        VoiceId: !Ref VOICEIDEN
+        PromptName: closed.wav
+        PromptText: |
+            Our store is currently closed.
+                
+  GoodbyePromptEN:
+    Type: Custom::PromptCreator
+    Properties:
+        ServiceToken: !GetAtt PromptCreator.Arn
+        VoiceId: !Ref VOICEIDEN
+        PromptName: goodbye-en-US.wav
+        PromptText: Thank you for calling, good bye.
+        
+  GoodbyePromptES:
+    Type: Custom::PromptCreator
+    Properties:
+        ServiceToken: !GetAtt PromptCreator.Arn
+        VoiceId: !Ref VOICEIDES
+        PromptName: goodbye-es-US.wav
+        PromptText: Gracias por llamar, adiós.
+           
+  GoodbyePromptDE:
+    Type: Custom::PromptCreator
+    Properties:
+        ServiceToken: !GetAtt PromptCreator.Arn
+        VoiceId: !Ref VOICEIDDE
+        PromptName: goodbye-de-DE.wav
+        PromptText: Danke für Ihren Anruf, auf Wiedersehen.
+
+  GoodbyePromptFI:
+    Type: Custom::PromptCreator
+    Properties:
+        ServiceToken: !GetAtt PromptCreator.Arn
+        VoiceId: Suvi
+        PromptName: goodbye-fi-FI.wav
+        PromptText: Kiitos soitosta, näkemiin.
+
+  GoodbyePromptFR:
+    Type: Custom::PromptCreator
+    Properties:
+        ServiceToken: !GetAtt PromptCreator.Arn
+        VoiceId: Gabrielle
+        PromptName: goodbye-fr-CA.wav
+        PromptText: Merci d'avoir appelé, au revoir.
+
+  GoodbyePromptNL:
+    Type: Custom::PromptCreator
+    Properties:
+        ServiceToken: !GetAtt PromptCreator.Arn
+        VoiceId: Laura
+        PromptName: goodbye-nl-NL.wav
+        PromptText: Bedankt voor het bellen, tot ziens.
+        
+  GoodbyePromptNO:
+    Type: Custom::PromptCreator
+    Properties:
+        ServiceToken: !GetAtt PromptCreator.Arn
+        VoiceId: Ida
+        PromptName: goodbye-no-NO.wav
+        PromptText: Takk for at du ringte, farvel.
+
+  GoodbyePromptPL:
+    Type: Custom::PromptCreator
+    Properties:
+        ServiceToken: !GetAtt PromptCreator.Arn
+        VoiceId: Ola
+        PromptName: goodbye-pl-PL.wav
+        PromptText: Dziękuję za telefon, do widzenia.
+
+  GoodbyePromptSV:
+    Type: Custom::PromptCreator
+    Properties:
+        ServiceToken: !GetAtt PromptCreator.Arn
+        VoiceId: Elin
+        PromptName: goodbye-sv-SE.wav
+        PromptText: Tack för att du ringde, hejdå.
+
+  ErrorPromptEN:
+    Type: Custom::PromptCreator
+    Properties:
+        ServiceToken: !GetAtt PromptCreator.Arn
+        VoiceId: !Ref VOICEIDEN
+        PromptName: error-en-US.wav
+        PromptText: A system error has occured, please call back and try again.
+        
+  ErrorPromptES:
+    Type: Custom::PromptCreator
+    Properties:
+        ServiceToken: !GetAtt PromptCreator.Arn
+        VoiceId: !Ref VOICEIDES
+        PromptName: error-es-US.wav
+        PromptText: Se ha producido un error en el sistema, vuelva a llamar e inténtelo de nuevo.
+           
+  ErrorPromptDE:
+    Type: Custom::PromptCreator
+    Properties:
+        ServiceToken: !GetAtt PromptCreator.Arn
+        VoiceId: !Ref VOICEIDDE
+        PromptName: error-de-DE.wav
+        PromptText: Es ist ein Systemfehler aufgetreten. Bitte rufen Sie noch einmal an und versuchen Sie es erneut.      
+
+  ErrorPromptFI:
+    Type: Custom::PromptCreator
+    Properties:
+        ServiceToken: !GetAtt PromptCreator.Arn
+        VoiceId: Suvi
+        PromptName: error-fi-FI.wav
+        PromptText: Tapahtui järjestelmävirhe, soita takaisin ja yritä uudelleen.      
+ 
+  ErrorPromptFR:
+    Type: Custom::PromptCreator
+    Properties:
+        ServiceToken: !GetAtt PromptCreator.Arn
+        VoiceId: Gabrielle
+        PromptName: error-fr-CA.wav
+        PromptText: Une erreur système s'est produite, veuillez rappeler et réessayer.      
+ 
+  ErrorPromptNL:
+    Type: Custom::PromptCreator
+    Properties:
+        ServiceToken: !GetAtt PromptCreator.Arn
+        VoiceId: Laura
+        PromptName: error-nl-NL.wav
+        PromptText: Er is een systeemfout opgetreden. Bel terug en probeer het opnieuw.      
+ 
+  ErrorPromptNO:
+    Type: Custom::PromptCreator
+    Properties:
+        ServiceToken: !GetAtt PromptCreator.Arn
+        VoiceId: Ida
+        PromptName: error-no-NO.wav
+        PromptText: Det har oppstått en systemfeil. Ring tilbake og prøv igjen.      
+ 
+  ErrorPromptPL:
+    Type: Custom::PromptCreator
+    Properties:
+        ServiceToken: !GetAtt PromptCreator.Arn
+        VoiceId: Ola
+        PromptName: error-pl-PL.wav
+        PromptText: Wystąpił błąd systemowy. Oddzwoń i spróbuj ponownie.      
+ 
+  ErrorPromptSV:
+    Type: Custom::PromptCreator
+    Properties:
+        ServiceToken: !GetAtt PromptCreator.Arn
+        VoiceId: Elin
+        PromptName: error-sv-SE.wav
+        PromptText: Ett systemfel har uppstått, ring tillbaka och försök igen.      
+ 
+        
+  ChimeSMA:
+    Type: AWS::Serverless::Function
+    DependsOn: ChimeSMALogGroup
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-ChimeSMA
+      Description: Square Chime SMA Call FLow Director
+      Handler: cloud.cleo.chimesma.squareup.ChimeSMA
+      AutoPublishAlias: SNAPSTART
+      CodeUri: ./ChimeSMA
+      Architectures:  # SnapStart now supports ARM
+        - arm64
+      SnapStart:
+        ApplyOn: PublishedVersions
+      Environment: 
+        Variables:
+          PROMPT_BUCKET: !Ref PromptBucket
+          BOT_ALIAS_ARN: !GetAtt BotAliasGPT.Arn
+          SQUARE_API_KEY: !Ref SQUAREAPIKEY
+          SQUARE_LOCATION_ID: !Ref SQUARELOCATIONID
+          SQUARE_ENVIRONMENT: !Ref SQUAREENVIRONMENT
+          MAIN_NUMBER: !Ref TRANSFERNUMBER
+          VC_ARN: !Ref VOICECONNECTORARN
+          LANGUAGE_VOICE_MAP:
+              Fn::ToJsonString:
+                - Locale: en-US
+                  VoiceId: !Ref VOICEIDEN
+                - Locale: es-US
+                  VoiceId: !Ref VOICEIDES
+                - Locale: de-DE
+                  VoiceId: !Ref VOICEIDDE
+                - Locale: fi-FI
+                  VoiceId: Suvi
+                - Locale: fr-CA
+                  VoiceId: Gabrielle
+                - Locale: nl-NL
+                  VoiceId: Laura
+                - Locale: no-NO
+                  VoiceId: Ida
+                - Locale: pl-PL
+                  VoiceId: Ola
+                - Locale: sv-SE
+                  VoiceId: Elin
+  
+  ChimeSMALogGroup:
+    Type: AWS::Logs::LogGroup
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Delete
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-ChimeSMA'
+      RetentionInDays: 90
+        
+  ChimeSMAPerm:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: !Ref ChimeSMA
+        Action: lambda:InvokeFunction
+        Principal: voiceconnector.chime.amazonaws.com
+        SourceAccount: !Ref 'AWS::AccountId'
+  
+  ChimeSMASnapPerm:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: !Ref ChimeSMA.Alias
+        Action: lambda:InvokeFunction
+        Principal: voiceconnector.chime.amazonaws.com
+        SourceAccount: !Ref 'AWS::AccountId'
+      
+                
+  BotRuntimeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lex.amazonaws.com
+                - lexv2.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        - PolicyName: !Sub ${AWS::StackName}-${AWS::Region}-Bot-Role-Policy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "polly:SynthesizeSpeech"
+                  - "comprehend:DetectSentiment"
+                  - "lambda:invokeFunction"
+                Resource: "*"
+  
+
+  LexBotGPT:
+    Type: AWS::Lex::Bot
+    Properties:
+      Name: !Sub ${AWS::StackName}-Lex-Bot-GPT
+      Description: ChatGPT Bot 
+      RoleArn: !GetAtt BotRuntimeRole.Arn
+      DataPrivacy:
+        ChildDirected: false
+      AutoBuildBotLocales: true
+      IdleSessionTTLInSeconds: 300
+      BotLocales:
+        - LocaleId: en_US
+          Description: ChatGPT Bot English
+          NluConfidenceThreshold: 1.00
+          VoiceSettings:
+            VoiceId: !Ref VOICEIDEN
+            Engine: neural
+          Intents:
+            - Name: "Bogus"
+              Description: "Must have one other intent, but we never want it to match"
+              SampleUtterances:
+                - Utterance: "null"
+            - Name: "FallbackIntent"
+              Description: "Default intent, send to GPT, which should be everything"
+              ParentIntentSignature: "AMAZON.FallbackIntent"
+              FulfillmentCodeHook:
+                  Enabled: true
+                  FulfillmentUpdatesSpecification: 
+                    Active: true
+                    TimeoutInSeconds: 60
+                    StartResponse: 
+                      AllowInterrupt: false
+                      DelayInSeconds: 3
+                      MessageGroups:
+                        - Message: 
+                            PlainTextMessage:
+                              Value: Checking
+                          Variations:
+                              - PlainTextMessage:
+                                  Value: Hold On
+                              - PlainTextMessage:
+                                  Value: One Moment
+                    UpdateResponse:
+                      AllowInterrupt: false
+                      FrequencyInSeconds: 15
+                      MessageGroups:
+                        - Message: 
+                            PlainTextMessage:
+                              Value: Still Checking
+                          Variations:
+                              - PlainTextMessage:
+                                  Value: Still Working
+                              - PlainTextMessage:
+                                  Value: Still Processing
+        - LocaleId: es_US
+          Description: ChatGPT Bot Spanish
+          NluConfidenceThreshold: 1.00
+          VoiceSettings:
+            VoiceId: !Ref VOICEIDES
+            Engine: neural
+          Intents:
+            - Name: "Bogus"
+              Description: "Must have one other intent, but we never want it to match"
+              SampleUtterances:
+                - Utterance: "null"
+            - Name: "FallbackIntent"
+              Description: "Default intent, send to GPT, which should be everything"
+              ParentIntentSignature: "AMAZON.FallbackIntent"
+              FulfillmentCodeHook:
+                  Enabled: true
+                  FulfillmentUpdatesSpecification: 
+                    Active: true
+                    TimeoutInSeconds: 60
+                    StartResponse: 
+                      AllowInterrupt: false
+                      DelayInSeconds: 3
+                      MessageGroups:
+                        - Message: 
+                            PlainTextMessage:
+                              Value: Pensamiento
+                          Variations:
+                              - PlainTextMessage:
+                                  Value: Trabajador
+                              - PlainTextMessage:
+                                  Value: Procesando
+                    UpdateResponse:
+                      AllowInterrupt: false
+                      FrequencyInSeconds: 15
+                      MessageGroups:
+                        - Message: 
+                            PlainTextMessage:
+                              Value: "Sigue pensando"
+                          Variations:
+                              - PlainTextMessage:
+                                  Value: "Aún trabajando"
+                              - PlainTextMessage:
+                                  Value: "Todavía procesando"
+        - LocaleId: de_DE
+          Description: ChatGPT Bot German
+          NluConfidenceThreshold: 1.00
+          VoiceSettings:
+            VoiceId: !Ref VOICEIDDE
+            Engine: neural
+          Intents:
+            - Name: "Bogus"
+              Description: "Must have one other intent, but we never want it to match"
+              SampleUtterances:
+                - Utterance: "null"
+            - Name: "FallbackIntent"
+              Description: "Default intent, send to GPT, which should be everything"
+              ParentIntentSignature: "AMAZON.FallbackIntent"
+              FulfillmentCodeHook:
+                  Enabled: true
+                  FulfillmentUpdatesSpecification: 
+                    Active: true
+                    TimeoutInSeconds: 60
+                    StartResponse: 
+                      AllowInterrupt: false
+                      DelayInSeconds: 3
+                      MessageGroups:
+                        - Message: 
+                            PlainTextMessage:
+                              Value: Denken
+                          Variations:
+                              - PlainTextMessage:
+                                  Value: Arbeiten
+                              - PlainTextMessage:
+                                  Value: "wird bearbeitet"
+                    UpdateResponse:
+                      AllowInterrupt: false
+                      FrequencyInSeconds: 15
+                      MessageGroups:
+                        - Message: 
+                            PlainTextMessage:
+                              Value: "Noch am überlegen"
+                          Variations:
+                              - PlainTextMessage:
+                                  Value: "Immer noch am arbeiten"
+                              - PlainTextMessage:
+                                  Value: "Noch in Bearbeitung"
+        - LocaleId: fi_FI
+          Description: ChatGPT Bot Finnish
+          NluConfidenceThreshold: 1.00
+          VoiceSettings:
+            VoiceId: Suvi
+            Engine: neural
+          Intents:
+            - Name: "Bogus"
+              Description: "Must have one other intent, but we never want it to match"
+              SampleUtterances:
+                - Utterance: "null"
+            - Name: "FallbackIntent"
+              Description: "Default intent, send to GPT, which should be everything"
+              ParentIntentSignature: "AMAZON.FallbackIntent"
+              FulfillmentCodeHook:
+                  Enabled: true
+                  FulfillmentUpdatesSpecification: 
+                    Active: true
+                    TimeoutInSeconds: 60
+                    StartResponse: 
+                      AllowInterrupt: false
+                      DelayInSeconds: 3
+                      MessageGroups:
+                        - Message: 
+                            PlainTextMessage:
+                              Value: Tarkistetaan
+                          Variations:
+                              - PlainTextMessage:
+                                  Value: pidä kiinni
+                              - PlainTextMessage:
+                                  Value: hetkinen
+                    UpdateResponse:
+                      AllowInterrupt: false
+                      FrequencyInSeconds: 15
+                      MessageGroups:
+                        - Message: 
+                            PlainTextMessage:
+                              Value: Tarkistaa edelleen
+                          Variations:
+                              - PlainTextMessage:
+                                  Value: Yhä työskentelemässä
+                              - PlainTextMessage:
+                                  Value: Käsitellään edelleen
+        - LocaleId: fr_CA
+          Description: ChatGPT Bot French (Canada)
+          NluConfidenceThreshold: 1.00
+          VoiceSettings:
+            VoiceId: Gabrielle
+            Engine: neural
+          Intents:
+            - Name: "Bogus"
+              Description: "Must have one other intent, but we never want it to match"
+              SampleUtterances:
+                - Utterance: "null"
+            - Name: "FallbackIntent"
+              Description: "Default intent, send to GPT, which should be everything"
+              ParentIntentSignature: "AMAZON.FallbackIntent"
+              FulfillmentCodeHook:
+                  Enabled: true
+                  FulfillmentUpdatesSpecification: 
+                    Active: true
+                    TimeoutInSeconds: 60
+                    StartResponse: 
+                      AllowInterrupt: false
+                      DelayInSeconds: 3
+                      MessageGroups:
+                        - Message: 
+                            PlainTextMessage:
+                              Value: Vérification
+                          Variations:
+                              - PlainTextMessage:
+                                  Value: Attendez
+                              - PlainTextMessage:
+                                  Value: Un moment
+                    UpdateResponse:
+                      AllowInterrupt: false
+                      FrequencyInSeconds: 15
+                      MessageGroups:
+                        - Message: 
+                            PlainTextMessage:
+                              Value: Vrification en cours
+                          Variations:
+                              - PlainTextMessage:
+                                  Value: Je travaille encore
+                              - PlainTextMessage:
+                                  Value: Toujours en cours de traitement
+        - LocaleId: nl_NL
+          Description: ChatGPT Bot Dutch
+          NluConfidenceThreshold: 1.00
+          VoiceSettings:
+            VoiceId: Laura
+            Engine: neural
+          Intents:
+            - Name: "Bogus"
+              Description: "Must have one other intent, but we never want it to match"
+              SampleUtterances:
+                - Utterance: "null"
+            - Name: "FallbackIntent"
+              Description: "Default intent, send to GPT, which should be everything"
+              ParentIntentSignature: "AMAZON.FallbackIntent"
+              FulfillmentCodeHook:
+                  Enabled: true
+                  FulfillmentUpdatesSpecification: 
+                    Active: true
+                    TimeoutInSeconds: 60
+                    StartResponse: 
+                      AllowInterrupt: false
+                      DelayInSeconds: 3
+                      MessageGroups:
+                        - Message: 
+                            PlainTextMessage:
+                              Value: Controleren
+                          Variations:
+                              - PlainTextMessage:
+                                  Value: Hou vol
+                              - PlainTextMessage:
+                                  Value: Een moment
+                    UpdateResponse:
+                      AllowInterrupt: false
+                      FrequencyInSeconds: 15
+                      MessageGroups:
+                        - Message: 
+                            PlainTextMessage:
+                              Value: Nog steeds aan het controleren
+                          Variations:
+                              - PlainTextMessage:
+                                  Value: Werkt nog steeds
+                              - PlainTextMessage:
+                                  Value: Nog steeds aan het verwerken
+        - LocaleId: no_NO
+          Description: ChatGPT Bot Norwegian
+          NluConfidenceThreshold: 1.00
+          VoiceSettings:
+            VoiceId: Ida
+            Engine: neural
+          Intents:
+            - Name: "Bogus"
+              Description: "Must have one other intent, but we never want it to match"
+              SampleUtterances:
+                - Utterance: "null"
+            - Name: "FallbackIntent"
+              Description: "Default intent, send to GPT, which should be everything"
+              ParentIntentSignature: "AMAZON.FallbackIntent"
+              FulfillmentCodeHook:
+                  Enabled: true
+                  FulfillmentUpdatesSpecification: 
+                    Active: true
+                    TimeoutInSeconds: 60
+                    StartResponse: 
+                      AllowInterrupt: false
+                      DelayInSeconds: 3
+                      MessageGroups:
+                        - Message: 
+                            PlainTextMessage:
+                              Value: Sjekker
+                          Variations:
+                              - PlainTextMessage:
+                                  Value: Vent litt
+                              - PlainTextMessage:
+                                  Value: Et øyeblikk
+                    UpdateResponse:
+                      AllowInterrupt: false
+                      FrequencyInSeconds: 15
+                      MessageGroups:
+                        - Message: 
+                            PlainTextMessage:
+                              Value: Sjekker fortsatt
+                          Variations:
+                              - PlainTextMessage:
+                                  Value: Jobber fortsatt
+                              - PlainTextMessage:
+                                  Value: Behandler fortsatt
+        - LocaleId: pl_PL
+          Description: ChatGPT Bot Polish
+          NluConfidenceThreshold: 1.00
+          VoiceSettings:
+            VoiceId: Ola
+            Engine: neural
+          Intents:
+            - Name: "Bogus"
+              Description: "Must have one other intent, but we never want it to match"
+              SampleUtterances:
+                - Utterance: "null"
+            - Name: "FallbackIntent"
+              Description: "Default intent, send to GPT, which should be everything"
+              ParentIntentSignature: "AMAZON.FallbackIntent"
+              FulfillmentCodeHook:
+                  Enabled: true
+                  FulfillmentUpdatesSpecification: 
+                    Active: true
+                    TimeoutInSeconds: 60
+                    StartResponse: 
+                      AllowInterrupt: false
+                      DelayInSeconds: 3
+                      MessageGroups:
+                        - Message: 
+                            PlainTextMessage:
+                              Value: Kontrola
+                          Variations:
+                              - PlainTextMessage:
+                                  Value: Trzymać się
+                              - PlainTextMessage:
+                                  Value: Jeden moment
+                    UpdateResponse:
+                      AllowInterrupt: false
+                      FrequencyInSeconds: 15
+                      MessageGroups:
+                        - Message: 
+                            PlainTextMessage:
+                              Value: Wciąż sprawdzam
+                          Variations:
+                              - PlainTextMessage:
+                                  Value: Wciąż pracuje
+                              - PlainTextMessage:
+                                  Value: Nadal przetwarzam
+        - LocaleId: sv_SE
+          Description: ChatGPT Bot Swedish
+          NluConfidenceThreshold: 1.00
+          VoiceSettings:
+            VoiceId: Elin
+            Engine: neural
+          Intents:
+            - Name: "Bogus"
+              Description: "Must have one other intent, but we never want it to match"
+              SampleUtterances:
+                - Utterance: "null"
+            - Name: "FallbackIntent"
+              Description: "Default intent, send to GPT, which should be everything"
+              ParentIntentSignature: "AMAZON.FallbackIntent"
+              FulfillmentCodeHook:
+                  Enabled: true
+                  FulfillmentUpdatesSpecification: 
+                    Active: true
+                    TimeoutInSeconds: 60
+                    StartResponse: 
+                      AllowInterrupt: false
+                      DelayInSeconds: 3
+                      MessageGroups:
+                        - Message: 
+                            PlainTextMessage:
+                              Value: Kontroll
+                          Variations:
+                              - PlainTextMessage:
+                                  Value: Vänta
+                              - PlainTextMessage:
+                                  Value: Ett ögonblick
+                    UpdateResponse:
+                      AllowInterrupt: false
+                      FrequencyInSeconds: 15
+                      MessageGroups:
+                        - Message: 
+                            PlainTextMessage:
+                              Value: Kollar fortfarande
+                          Variations:
+                              - PlainTextMessage:
+                                  Value: Jobbar fortfarande
+                              - PlainTextMessage:
+                                  Value: Bearbetar fortfarande                                 
+                                  
+  BotVersionChatGPTV2:
+    Type: AWS::Lex::BotVersion
+    Properties:
+      BotId: !Ref LexBotGPT
+      BotVersionLocaleSpecification:
+        - LocaleId: en_US
+          BotVersionLocaleDetails:
+            SourceBotVersion: DRAFT
+        - LocaleId: es_US
+          BotVersionLocaleDetails:
+            SourceBotVersion: DRAFT
+        - LocaleId: de_DE
+          BotVersionLocaleDetails:
+            SourceBotVersion: DRAFT
+        - LocaleId: fi_FI
+          BotVersionLocaleDetails:
+            SourceBotVersion: DRAFT
+        - LocaleId: fr_CA
+          BotVersionLocaleDetails:
+            SourceBotVersion: DRAFT
+        - LocaleId: nl_NL
+          BotVersionLocaleDetails:
+            SourceBotVersion: DRAFT
+        - LocaleId: no_NO
+          BotVersionLocaleDetails:
+            SourceBotVersion: DRAFT
+        - LocaleId: pl_PL
+          BotVersionLocaleDetails:
+            SourceBotVersion: DRAFT
+        - LocaleId: sv_SE
+          BotVersionLocaleDetails:
+            SourceBotVersion: DRAFT
+      Description: ChatGPT Bot V2
+      
+  BotAliasGPT:
+    Type: AWS::Lex::BotAlias
+    Properties:
+      BotId: !Ref LexBotGPT
+      BotAliasName: "Latest"
+      BotVersion: !GetAtt BotVersionChatGPTV2.BotVersion
+      SentimentAnalysisSettings:
+        DetectSentiment: false
+      BotAliasLocaleSettings:
+        - LocaleId: en_US
+          BotAliasLocaleSetting:
+            Enabled: true
+            CodeHookSpecification:
+              LambdaCodeHook:
+                CodeHookInterfaceVersion: "1.0"
+                LambdaArn: !Ref ChatGPTLex.Alias
+        - LocaleId: es_US
+          BotAliasLocaleSetting:
+            Enabled: true
+            CodeHookSpecification:
+              LambdaCodeHook:
+                CodeHookInterfaceVersion: "1.0"
+                LambdaArn: !Ref ChatGPTLex.Alias
+        - LocaleId: de_DE
+          BotAliasLocaleSetting:
+            Enabled: true
+            CodeHookSpecification:
+              LambdaCodeHook:
+                CodeHookInterfaceVersion: "1.0"
+                LambdaArn: !Ref ChatGPTLex.Alias
+        - LocaleId: fi_FI
+          BotAliasLocaleSetting:
+            Enabled: true
+            CodeHookSpecification:
+              LambdaCodeHook:
+                CodeHookInterfaceVersion: "1.0"
+                LambdaArn: !Ref ChatGPTLex.Alias
+        - LocaleId: fr_CA
+          BotAliasLocaleSetting:
+            Enabled: true
+            CodeHookSpecification:
+              LambdaCodeHook:
+                CodeHookInterfaceVersion: "1.0"
+                LambdaArn: !Ref ChatGPTLex.Alias
+        - LocaleId: nl_NL
+          BotAliasLocaleSetting:
+            Enabled: true
+            CodeHookSpecification:
+              LambdaCodeHook:
+                CodeHookInterfaceVersion: "1.0"
+                LambdaArn: !Ref ChatGPTLex.Alias
+        - LocaleId: no_NO
+          BotAliasLocaleSetting:
+            Enabled: true
+            CodeHookSpecification:
+              LambdaCodeHook:
+                CodeHookInterfaceVersion: "1.0"
+                LambdaArn: !Ref ChatGPTLex.Alias
+        - LocaleId: pl_PL
+          BotAliasLocaleSetting:
+            Enabled: true
+            CodeHookSpecification:
+              LambdaCodeHook:
+                CodeHookInterfaceVersion: "1.0"
+                LambdaArn: !Ref ChatGPTLex.Alias
+        - LocaleId: sv_SE
+          BotAliasLocaleSetting:
+            Enabled: true
+            CodeHookSpecification:
+              LambdaCodeHook:
+                CodeHookInterfaceVersion: "1.0"
+                LambdaArn: !Ref ChatGPTLex.Alias
+  
+  BotIdParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Type: String
+      Description: !Sub ${AWS::StackName} Lex Bot ID
+      Name: !Sub /${AWS::StackName}/BOT_ID
+      Value: !Ref LexBotGPT
+  
+  
+  BotAliasIdParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Type: String
+      Description: !Sub ${AWS::StackName} Lex Bot Alias ID
+      Name: !Sub /${AWS::StackName}/BOT_ALIAS_ID
+      Value: !GetAtt BotAliasGPT.BotAliasId
+      
+                
+  ChatGPTLex:
+    Type: AWS::Serverless::Function
+    DependsOn: ChatGPTLogGroup
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-ChatGPTLex
+      Description: Lex fullfilment that talks to ChatGPT service
+      Handler: cloud.cleo.squareup.ChatGPTLambdaLex
+      AutoPublishAlias: SNAPSTART
+      CodeUri: ./ChatGPT
+      Architectures:  # SnapStart now supports ARM
+        - arm64
+      Timeout: 60
+      Environment: 
+        Variables:
+          OPENAI_MODEL: !Ref OPENAIMODEL
+          OPENAI_API_KEY: !Ref OPENAIAPIKEY
+          SQUARE_API_KEY: !Ref SQUAREAPIKEY
+          SQUARE_LOCATION_ID: !Ref SQUARELOCATIONID
+          SQUARE_ENVIRONMENT: !Ref SQUAREENVIRONMENT
+          SESSION_TABLE_NAME: !Ref SessionTable
+          MAIN_NUMBER: !Ref TRANSFERNUMBER
+          VC_ARN: !Ref VOICECONNECTORARN
+          FB_PAGE_ID: !Ref FBPAGEID
+          FB_PAGE_ACCESS_TOKEN: !Ref FBPAGEACCESSTOKEN
+      SnapStart:
+        ApplyOn: PublishedVersions
+      Policies: 
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref SessionTable
+        - Version: '2012-10-17' 
+          Statement:
+            - Effect: Allow
+              Action:
+                # Allow send of SMS messages via SNS
+                - sns:Publish
+                # Send Emails 
+                - ses:SendEmail
+                # Validate numbers as mobile with Pinpoint
+                - mobiletargeting:PhoneNumberValidate
+                # AWS Cost forecast
+                - ce:GetCostForecast
+              Resource: '*' 
+  
+  ChatGPTLogGroup:
+    Type: AWS::Logs::LogGroup
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Delete
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-ChatGPTLex'
+      RetentionInDays: 90
+        
+  LexToChatGPTPerm:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: !Ref ChatGPTLex
+        Action: lambda:InvokeFunction
+        Principal: lexv2.amazonaws.com
+        SourceAccount: !Ref 'AWS::AccountId'
+  
+  LexToChatGPTSnapPerm:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: !Ref ChatGPTLex.Alias
+        Action: lambda:InvokeFunction
+        Principal: lexv2.amazonaws.com
+        SourceAccount: !Ref 'AWS::AccountId'
+  
+  PinpointInboundTopic:
+        Type: AWS::SNS::Topic
+        Properties:
+            DisplayName: InboundSMS
+            TopicName: !Sub ${AWS::StackName}-SMSInbound
+            
+  PinpointPublishRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - sms-voice.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+            Condition:
+              StringEquals:
+                AWS:SourceAccount: !Sub ${AWS::AccountId}
+      Path: "/"
+      Policies:
+        - PolicyName: !Sub ${AWS::StackName}-${AWS::Region}-Pinpoint-Role-Policy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "sns:Publish"
+                Resource: !Ref PinpointInboundTopic
+                Condition:
+                  StringEquals:
+                    AWS:ResourceAccount: !Sub ${AWS::AccountId}
+  
+  ChatGPTPinpoint:
+    Type: AWS::Serverless::Function
+    DependsOn: ChatGPTLogGroupPinpoint
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-ChatGPTPinpoint
+      Description: Pinpoint SMS fullfilment that talks to ChatGPT service
+      Handler: cloud.cleo.squareup.ChatGPTLambdaPinpoint
+      CodeUri: ./ChatGPT
+      Architectures:
+        - arm64
+      Timeout: 60
+      Environment: 
+        Variables:
+          OPENAI_MODEL: !Ref OPENAIMODEL
+          OPENAI_API_KEY: !Ref OPENAIAPIKEY
+          SQUARE_API_KEY: !Ref SQUAREAPIKEY
+          SQUARE_LOCATION_ID: !Ref SQUARELOCATIONID
+          SQUARE_ENVIRONMENT: !Ref SQUAREENVIRONMENT
+          SESSION_TABLE_NAME: !Ref SessionTable
+          MAIN_NUMBER: !Ref TRANSFERNUMBER
+      Policies: 
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref SessionTable
+        - Version: '2012-10-17' 
+          Statement:
+            - Effect: Allow
+              Action:
+                # Allow send of SMS messages via SNS
+                - sns:Publish
+                # Send Emails 
+                - ses:SendEmail
+                # AWS Cost forecast
+                - ce:GetCostForecast
+              Resource: '*'
+      Events:
+        SNSSub:
+          Type: SNS
+          Properties:
+            Topic: !Ref PinpointInboundTopic
+  
+  ChatGPTLogGroupPinpoint:
+    Type: AWS::Logs::LogGroup
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Delete
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-ChatGPTPinpoint'
+      RetentionInDays: 90  
+  
+  SessionTable:
+    Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Delete
+    Properties:
+      TableName: !Sub ${AWS::StackName}-sessions
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: sessionId
+          AttributeType: S
+        - AttributeName: date
+          AttributeType: S
+      KeySchema:
+        - AttributeName: sessionId
+          KeyType: HASH
+        - AttributeName: date
+          KeyType: RANGE
+      TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+            
+           
+  ChimeCallLexGPT:
+    Type: AWS::Lex::ResourcePolicy
+    Properties:
+      ResourceArn: !GetAtt BotAliasGPT.Arn
+      Policy:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: AllowChimePstnAudioUseBotGPT
+          Effect: Allow
+          Principal:
+            Service: voiceconnector.chime.amazonaws.com
+          Action: lex:StartConversation
+          Resource: !Sub ${BotAliasGPT.Arn}
+          Condition:
+            StringEquals:
+              AWS:SourceAccount: !Sub ${AWS::AccountId}
+            ArnEquals:
+              AWS:SourceArn: !Sub arn:aws:voiceconnector:${AWS::Region}:${AWS::AccountId}:sma/${SMAID}
+      
+      

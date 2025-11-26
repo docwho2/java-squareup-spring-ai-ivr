@@ -1,0 +1,87 @@
+# More information about the configuration file can be found here:
+# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-config.html
+version = 0.1
+
+[default]
+[default.global]
+[default.global.parameters]
+stack_name = "squareup-chatgpt-ivr"
+
+[default.build]
+[default.build.parameters]
+cached = true
+parallel = true
+
+[default.validate]
+[default.validate.parameters]
+lint = true
+
+[default.deploy]
+[default.deploy.parameters]
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+resolve_s3 = true
+
+[default.package]
+[default.package.parameters]
+resolve_s3 = true
+
+[default.sync]
+[default.sync.parameters]
+watch = true
+
+[default.local_start_api]
+[default.local_start_api.parameters]
+warm_containers = "EAGER"
+
+[default.local_start_lambda]
+[default.local_start_lambda.parameters]
+warm_containers = "EAGER"
+
+[east.deploy]
+[east.deploy.parameters]
+region = "us-east-1"
+stack_name = "squareup-chatgpt-ivr"
+resolve_s3 = true
+s3_prefix = "squareup-chatgpt-ivr"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+image_repositories = []
+
+
+[west.deploy]
+[west.deploy.parameters]
+region = "us-west-2"
+stack_name = "squareup-chatgpt-ivr"
+resolve_s3 = true
+s3_prefix = "squareup-chatgpt-ivr"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+image_repositories = []
+
+[cfox-east.deploy]
+[cfox-east.deploy.parameters]
+region = "us-east-1"
+parameter_overrides = "SMAID=\"SMA_ID\" VOICECONNECTORARN=\"VOICE_CONNECTOR_ARN\" OPENAIMODEL=\"gpt-4.1-nano\" SQUAREENVIRONMENT=\"PRODUCTION\" TRANSFERNUMBER=\"+13204952424\""
+stack_name = "squareup-chatgpt-ivr"
+resolve_s3 = true
+s3_prefix = "squareup-chatgpt-ivr"
+profile = "CLEO"
+confirm_changeset = false
+capabilities = "CAPABILITY_IAM"
+image_repositories = []
+
+
+[cfox-west.deploy]
+[cfox-west.deploy.parameters]
+region = "us-west-2"
+parameter_overrides = "SMAID=\"SMA_ID\" VOICECONNECTORARN=\"VOICE_CONNECTOR_ARN\" OPENAIMODEL=\"gpt-4.1-nano\" SQUAREENVIRONMENT=\"PRODUCTION\" TRANSFERNUMBER=\"+13204952424\""
+stack_name = "squareup-chatgpt-ivr"
+resolve_s3 = true
+s3_prefix = "squareup-chatgpt-ivr"
+profile = "CLEO"
+confirm_changeset = false
+capabilities = "CAPABILITY_IAM"
+image_repositories = []
+
