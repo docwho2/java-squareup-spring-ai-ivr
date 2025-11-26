@@ -4,7 +4,7 @@ Transform:
   - AWS::LanguageExtensions
 
 Description: >
-  Square AWS Chime SMA ChatGPT IVR
+  Spring AI Square AWS Chime SMA IVR
 
 Parameters:
   SMAID:
@@ -43,18 +43,10 @@ Parameters:
     Type: AWS::SSM::Parameter::Value<String>
     Default: OPENAI_API_KEY
   OPENAIMODEL:
-    Description: OpenAI ChatGPT Model that has function calling enabled
+    Description: OpenAI Model that has function calling enabled
     Type: String
     Default: gpt-4o-mini
     AllowedValues: # https://platform.openai.com/docs/models/overview (requres model with function calling)
-        - gpt-3.5-turbo
-        - gpt-3.5-turbo-1106
-        - gpt-3.5-turbo-0125
-        - gpt-4
-        - gpt-4-32k
-        - gpt-4-1106-preview
-        - gpt-4-0125-preview
-        - gpt-4-turbo-preview
         - gpt-4o-mini
         - gpt-4.1-nano
         - gpt-5-nano
@@ -466,7 +458,7 @@ Resources:
     Type: AWS::Lex::Bot
     Properties:
       Name: !Sub ${AWS::StackName}-Lex-Bot-GPT
-      Description: ChatGPT Bot 
+      Description: SpringAI Bot 
       RoleArn: !GetAtt BotRuntimeRole.Arn
       DataPrivacy:
         ChildDirected: false
@@ -474,7 +466,7 @@ Resources:
       IdleSessionTTLInSeconds: 300
       BotLocales:
         - LocaleId: en_US
-          Description: ChatGPT Bot English
+          Description: SpringAI Bot English
           NluConfidenceThreshold: 1.00
           VoiceSettings:
             VoiceId: !Ref VOICEIDEN
@@ -517,7 +509,7 @@ Resources:
                               - PlainTextMessage:
                                   Value: Still Processing
         - LocaleId: es_US
-          Description: ChatGPT Bot Spanish
+          Description: SpringAI Bot Spanish
           NluConfidenceThreshold: 1.00
           VoiceSettings:
             VoiceId: !Ref VOICEIDES
@@ -560,7 +552,7 @@ Resources:
                               - PlainTextMessage:
                                   Value: "Todavía procesando"
         - LocaleId: de_DE
-          Description: ChatGPT Bot German
+          Description: SpringAI Bot German
           NluConfidenceThreshold: 1.00
           VoiceSettings:
             VoiceId: !Ref VOICEIDDE
@@ -603,7 +595,7 @@ Resources:
                               - PlainTextMessage:
                                   Value: "Noch in Bearbeitung"
         - LocaleId: fi_FI
-          Description: ChatGPT Bot Finnish
+          Description: SpringAI Bot Finnish
           NluConfidenceThreshold: 1.00
           VoiceSettings:
             VoiceId: Suvi
@@ -646,7 +638,7 @@ Resources:
                               - PlainTextMessage:
                                   Value: Käsitellään edelleen
         - LocaleId: fr_CA
-          Description: ChatGPT Bot French (Canada)
+          Description: SpringAI Bot French (Canada)
           NluConfidenceThreshold: 1.00
           VoiceSettings:
             VoiceId: Gabrielle
@@ -689,7 +681,7 @@ Resources:
                               - PlainTextMessage:
                                   Value: Toujours en cours de traitement
         - LocaleId: nl_NL
-          Description: ChatGPT Bot Dutch
+          Description: SpringAI Bot Dutch
           NluConfidenceThreshold: 1.00
           VoiceSettings:
             VoiceId: Laura
@@ -732,7 +724,7 @@ Resources:
                               - PlainTextMessage:
                                   Value: Nog steeds aan het verwerken
         - LocaleId: no_NO
-          Description: ChatGPT Bot Norwegian
+          Description: SpringAI Bot Norwegian
           NluConfidenceThreshold: 1.00
           VoiceSettings:
             VoiceId: Ida
@@ -775,7 +767,7 @@ Resources:
                               - PlainTextMessage:
                                   Value: Behandler fortsatt
         - LocaleId: pl_PL
-          Description: ChatGPT Bot Polish
+          Description: SpringAI Bot Polish
           NluConfidenceThreshold: 1.00
           VoiceSettings:
             VoiceId: Ola
@@ -818,7 +810,7 @@ Resources:
                               - PlainTextMessage:
                                   Value: Nadal przetwarzam
         - LocaleId: sv_SE
-          Description: ChatGPT Bot Swedish
+          Description: SpringAI Bot Swedish
           NluConfidenceThreshold: 1.00
           VoiceSettings:
             VoiceId: Elin
@@ -861,7 +853,7 @@ Resources:
                               - PlainTextMessage:
                                   Value: Bearbetar fortfarande                                 
                                   
-  BotVersionChatGPTV2:
+  BotVersionSpringAIV2:
     Type: AWS::Lex::BotVersion
     Properties:
       BotId: !Ref LexBotGPT
@@ -893,14 +885,14 @@ Resources:
         - LocaleId: sv_SE
           BotVersionLocaleDetails:
             SourceBotVersion: DRAFT
-      Description: ChatGPT Bot V2
+      Description: SpringAI Bot V2
       
   BotAliasGPT:
     Type: AWS::Lex::BotAlias
     Properties:
       BotId: !Ref LexBotGPT
       BotAliasName: "Latest"
-      BotVersion: !GetAtt BotVersionChatGPTV2.BotVersion
+      BotVersion: !GetAtt BotVersionSpringAIV2.BotVersion
       SentimentAnalysisSettings:
         DetectSentiment: false
       BotAliasLocaleSettings:
@@ -910,63 +902,63 @@ Resources:
             CodeHookSpecification:
               LambdaCodeHook:
                 CodeHookInterfaceVersion: "1.0"
-                LambdaArn: !Ref ChatGPTLex.Alias
+                LambdaArn: !Ref SpringAILex.Alias
         - LocaleId: es_US
           BotAliasLocaleSetting:
             Enabled: true
             CodeHookSpecification:
               LambdaCodeHook:
                 CodeHookInterfaceVersion: "1.0"
-                LambdaArn: !Ref ChatGPTLex.Alias
+                LambdaArn: !Ref SpringAILex.Alias
         - LocaleId: de_DE
           BotAliasLocaleSetting:
             Enabled: true
             CodeHookSpecification:
               LambdaCodeHook:
                 CodeHookInterfaceVersion: "1.0"
-                LambdaArn: !Ref ChatGPTLex.Alias
+                LambdaArn: !Ref SpringAILex.Alias
         - LocaleId: fi_FI
           BotAliasLocaleSetting:
             Enabled: true
             CodeHookSpecification:
               LambdaCodeHook:
                 CodeHookInterfaceVersion: "1.0"
-                LambdaArn: !Ref ChatGPTLex.Alias
+                LambdaArn: !Ref SpringAILex.Alias
         - LocaleId: fr_CA
           BotAliasLocaleSetting:
             Enabled: true
             CodeHookSpecification:
               LambdaCodeHook:
                 CodeHookInterfaceVersion: "1.0"
-                LambdaArn: !Ref ChatGPTLex.Alias
+                LambdaArn: !Ref SpringAILex.Alias
         - LocaleId: nl_NL
           BotAliasLocaleSetting:
             Enabled: true
             CodeHookSpecification:
               LambdaCodeHook:
                 CodeHookInterfaceVersion: "1.0"
-                LambdaArn: !Ref ChatGPTLex.Alias
+                LambdaArn: !Ref SpringAILex.Alias
         - LocaleId: no_NO
           BotAliasLocaleSetting:
             Enabled: true
             CodeHookSpecification:
               LambdaCodeHook:
                 CodeHookInterfaceVersion: "1.0"
-                LambdaArn: !Ref ChatGPTLex.Alias
+                LambdaArn: !Ref SpringAILex.Alias
         - LocaleId: pl_PL
           BotAliasLocaleSetting:
             Enabled: true
             CodeHookSpecification:
               LambdaCodeHook:
                 CodeHookInterfaceVersion: "1.0"
-                LambdaArn: !Ref ChatGPTLex.Alias
+                LambdaArn: !Ref SpringAILex.Alias
         - LocaleId: sv_SE
           BotAliasLocaleSetting:
             Enabled: true
             CodeHookSpecification:
               LambdaCodeHook:
                 CodeHookInterfaceVersion: "1.0"
-                LambdaArn: !Ref ChatGPTLex.Alias
+                LambdaArn: !Ref SpringAILex.Alias
   
   BotIdParam:
     Type: AWS::SSM::Parameter
@@ -988,22 +980,26 @@ Resources:
       Value: !GetAtt BotAliasGPT.BotAliasId
       
                 
-  ChatGPTLex:
+  SpringAILex:
     Type: AWS::Serverless::Function
-    DependsOn: ChatGPTLogGroup
+    DependsOn: SpringAILogGroup
     Properties:
-      FunctionName: !Sub ${AWS::StackName}-ChatGPTLex
-      Description: Lex fullfilment that talks to ChatGPT service
-      Handler: cloud.cleo.squareup.ChatGPTLambdaLex
+      FunctionName: !Sub ${AWS::StackName}-SpringAILex
+      Description: Lex fullfilment that talks to SpringAI service
+      Handler: org.springframework.cloud.function.adapter.aws.FunctionInvoker::handleRequest
+      SnapStart:
+        ApplyOn: PublishedVersions
       AutoPublishAlias: SNAPSTART
-      CodeUri: ./ChatGPT
+      CodeUri: ./SpringAI
       Architectures:  # SnapStart now supports ARM
         - arm64
       Timeout: 60
       Environment: 
         Variables:
-          OPENAI_MODEL: !Ref OPENAIMODEL
-          OPENAI_API_KEY: !Ref OPENAIAPIKEY
+          MAIN_CLASS: cloud.cleo.squareup.SpringApp
+          SPRING_CLOUD_FUNCTION_DEFINITION: lexFunction
+          SPRING_AI_OPENAI_CHAT_OPTIONS_MODEL: !Ref OPENAIMODEL
+          SPRING_AI_OPENAI_API_KEY: !Ref OPENAIAPIKEY
           SQUARE_API_KEY: !Ref SQUAREAPIKEY
           SQUARE_LOCATION_ID: !Ref SQUARELOCATIONID
           SQUARE_ENVIRONMENT: !Ref SQUAREENVIRONMENT
@@ -1012,13 +1008,12 @@ Resources:
           VC_ARN: !Ref VOICECONNECTORARN
           FB_PAGE_ID: !Ref FBPAGEID
           FB_PAGE_ACCESS_TOKEN: !Ref FBPAGEACCESSTOKEN
-      SnapStart:
-        ApplyOn: PublishedVersions
       Policies: 
         - DynamoDBReadPolicy:
             TableName: !Ref SessionTable
         - DynamoDBWritePolicy:
             TableName: !Ref SessionTable
+        - !Ref BedrockInvokeManagedPolicy
         - Version: '2012-10-17' 
           Statement:
             - Effect: Allow
@@ -1033,26 +1028,26 @@ Resources:
                 - ce:GetCostForecast
               Resource: '*' 
   
-  ChatGPTLogGroup:
+  SpringAILogGroup:
     Type: AWS::Logs::LogGroup
     UpdateReplacePolicy: Retain
-    DeletionPolicy: Delete
+    DeletionPolicy: Retain
     Properties:
-      LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-ChatGPTLex'
+      LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-SpringAILex'
       RetentionInDays: 90
         
-  LexToChatGPTPerm:
+  LexToSpringAIPerm:
       Type: AWS::Lambda::Permission
       Properties:
-        FunctionName: !Ref ChatGPTLex
+        FunctionName: !Ref SpringAILex
         Action: lambda:InvokeFunction
         Principal: lexv2.amazonaws.com
         SourceAccount: !Ref 'AWS::AccountId'
   
-  LexToChatGPTSnapPerm:
+  LexToSpringAISnapPerm:
       Type: AWS::Lambda::Permission
       Properties:
-        FunctionName: !Ref ChatGPTLex.Alias
+        FunctionName: !Ref SpringAILex.Alias
         Action: lambda:InvokeFunction
         Principal: lexv2.amazonaws.com
         SourceAccount: !Ref 'AWS::AccountId'
@@ -1092,21 +1087,26 @@ Resources:
                   StringEquals:
                     AWS:ResourceAccount: !Sub ${AWS::AccountId}
   
-  ChatGPTPinpoint:
+  SpringAIPinpoint:
     Type: AWS::Serverless::Function
-    DependsOn: ChatGPTLogGroupPinpoint
+    DependsOn: SpringAILogGroupPinpoint
     Properties:
-      FunctionName: !Sub ${AWS::StackName}-ChatGPTPinpoint
-      Description: Pinpoint SMS fullfilment that talks to ChatGPT service
-      Handler: cloud.cleo.squareup.ChatGPTLambdaPinpoint
-      CodeUri: ./ChatGPT
+      FunctionName: !Sub ${AWS::StackName}-SpringAIPinpoint
+      Description: Pinpoint SMS fullfilment that talks to SpringAI service
+      Handler: org.springframework.cloud.function.adapter.aws.FunctionInvoker::handleRequest
+      SnapStart:
+        ApplyOn: PublishedVersions
+      AutoPublishAlias: SNAPSTART
+      CodeUri: ./SpringAI
       Architectures:
         - arm64
       Timeout: 60
       Environment: 
         Variables:
-          OPENAI_MODEL: !Ref OPENAIMODEL
-          OPENAI_API_KEY: !Ref OPENAIAPIKEY
+          MAIN_CLASS: cloud.cleo.squareup.SpringApp
+          SPRING_CLOUD_FUNCTION_DEFINITION: pinpointFunction
+          SPRING_AI_OPENAI_CHAT_OPTIONS_MODEL: !Ref OPENAIMODEL
+          SPRING_AI_OPENAI_API_KEY: !Ref OPENAIAPIKEY
           SQUARE_API_KEY: !Ref SQUAREAPIKEY
           SQUARE_LOCATION_ID: !Ref SQUARELOCATIONID
           SQUARE_ENVIRONMENT: !Ref SQUAREENVIRONMENT
@@ -1117,6 +1117,7 @@ Resources:
             TableName: !Ref SessionTable
         - DynamoDBWritePolicy:
             TableName: !Ref SessionTable
+        - !Ref BedrockInvokeManagedPolicy
         - Version: '2012-10-17' 
           Statement:
             - Effect: Allow
@@ -1134,12 +1135,12 @@ Resources:
           Properties:
             Topic: !Ref PinpointInboundTopic
   
-  ChatGPTLogGroupPinpoint:
+  SpringAILogGroupPinpoint:
     Type: AWS::Logs::LogGroup
     UpdateReplacePolicy: Retain
-    DeletionPolicy: Delete
+    DeletionPolicy: Retain
     Properties:
-      LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-ChatGPTPinpoint'
+      LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-SpringAIPinpoint'
       RetentionInDays: 90  
   
   SessionTable:
@@ -1182,5 +1183,22 @@ Resources:
               AWS:SourceAccount: !Sub ${AWS::AccountId}
             ArnEquals:
               AWS:SourceArn: !Sub arn:aws:voiceconnector:${AWS::Region}:${AWS::AccountId}:sma/${SMAID}
+  
+  BedrockInvokeManagedPolicy:
+      Type: AWS::IAM::ManagedPolicy
+      Properties:
+        Description: Allows Lambda functions to invoke Amazon Bedrock models
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            # Basic Bedrock invoke rights — both classic InvokeModel and the new Converse API
+            - Sid: AllowBedrockModelInvocations
+              Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+                - bedrock:InvokeModelWithResponseStream
+                - bedrock:Converse
+                - bedrock:ConverseStream
+              Resource: '*'
       
       
