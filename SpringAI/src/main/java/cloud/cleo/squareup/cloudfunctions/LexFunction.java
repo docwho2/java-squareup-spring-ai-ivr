@@ -4,7 +4,7 @@ import cloud.cleo.squareup.ClearChatMemory;
 import cloud.cleo.squareup.LexV2Event;
 import cloud.cleo.squareup.LexV2Response;
 import static cloud.cleo.squareup.enums.LexMessageContentType.PlainText;
-import cloud.cleo.squareup.tools.ChatBotTool;
+import cloud.cleo.squareup.tools.AbstractTool;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -42,7 +42,7 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
     private final ChatClient chatClient;
     private final ChatModel chatModel;
     private final ClearChatMemory clearChatMemory;
-    private final List<ChatBotTool> tools;
+    private final List<AbstractTool> tools;
 
     @Override
     public LexV2Response apply(LexV2Event lexRequest) {

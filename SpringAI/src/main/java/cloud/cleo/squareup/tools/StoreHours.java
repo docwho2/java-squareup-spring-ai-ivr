@@ -3,8 +3,6 @@ package cloud.cleo.squareup.tools;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.squareup.square.AsyncSquareClient;
-import com.squareup.square.core.Environment;
 import com.squareup.square.types.BusinessHoursPeriod;
 import static com.squareup.square.types.DayOfWeek.Value.FRI;
 import static com.squareup.square.types.DayOfWeek.Value.MON;
@@ -43,45 +41,11 @@ import org.springframework.stereotype.Component;
  * truth and not guess.
  */
 @Component
-public class StoreHours implements ChatBotTool {
+public class StoreHours extends AbstractTool {
 
     private static volatile Location cachedLocation; // Cache for the last successful location data
 
-    private final static boolean squareEnabled;
-    private final static AsyncSquareClient squareClient;
-
-    static {
-        final var key = System.getenv("SQUARE_API_KEY");
-        final var loc = System.getenv("SQUARE_LOCATION_ID");
-        final var senv = System.getenv("SQUARE_ENVIRONMENT");
-
-        squareEnabled = !((loc == null || loc.isBlank() || loc.equalsIgnoreCase("DISABLED")) || (key == null || key.isBlank() || key.equalsIgnoreCase("DISABLED")));
-        //log.debug("Square Enabled = " + squareEnabled);
-
-        // If square enabled, then configure the client
-        if (squareEnabled) {
-            squareClient = AsyncSquareClient.builder()
-                    .token(key)
-                    .environment(switch (senv) {
-                default ->
-                    Environment.PRODUCTION;
-                case "SANDBOX", "sandbox" ->
-                    Environment.SANDBOX;
-            }).build();
-        } else {
-            squareClient = null;
-        }
-    }
     
-    /**
-     * Square client to make API Calls.
-     *
-     * @return client or null if not enabled
-     */
-    protected final static AsyncSquareClient getSquareClient() {
-        return squareClient;
-    }
-
     /**
      * No request parameters needed; all context comes from your Location / BusinessHours.
      *

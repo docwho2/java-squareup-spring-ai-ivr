@@ -14,6 +14,7 @@ import cloud.cleo.squareup.lang.LangUtil.LanguageIds;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
 import lombok.AccessLevel;
 import lombok.Getter;
 
@@ -155,6 +156,22 @@ public class LexV2EventWrapper {
                 null;
         };
     }
+    
+    private static final Pattern US_E164_PATTERN = Pattern.compile("^\\+1[2-9]\\d{2}[2-9]\\d{6}$");
+
+    /**
+     * Is the callers number a valid US Phone number
+     *
+     * @return
+     */
+    protected boolean hasValidUSE164Number() {
+        final var callingNumber = getPhoneE164();
+        if (callingNumber == null || callingNumber.isBlank()) {
+            return false;
+        }
+        return US_E164_PATTERN.matcher(callingNumber).matches();
+    }
+
 
     /**
      * The textual input to process.

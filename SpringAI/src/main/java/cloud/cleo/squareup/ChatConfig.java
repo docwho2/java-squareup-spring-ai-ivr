@@ -2,7 +2,7 @@ package cloud.cleo.squareup;
 
 
 
-import cloud.cleo.squareup.tools.ChatBotTool;
+import cloud.cleo.squareup.tools.AbstractTool;
 import java.util.List;
 import org.springframework.ai.bedrock.converse.BedrockChatOptions;
 import org.springframework.ai.bedrock.converse.BedrockProxyChatModel;
@@ -77,7 +77,7 @@ public class ChatConfig {
 
     @Bean
     @Primary
-    public ChatClient chatClient(ChatModel model, ChatMemory memory, List<ChatBotTool> toolBeans) {
+    public ChatClient chatClient(ChatModel model, ChatMemory memory, List<AbstractTool> toolBeans) {
         return ChatClient.builder(model)
                 .defaultAdvisors(
                         MessageChatMemoryAdvisor.builder(memory).build(),
