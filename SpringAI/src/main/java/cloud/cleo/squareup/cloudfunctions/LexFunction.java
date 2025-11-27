@@ -6,13 +6,13 @@ import cloud.cleo.squareup.LexV2Response;
 import static cloud.cleo.squareup.enums.LexMessageContentType.PlainText;
 import cloud.cleo.squareup.tools.ChatBotTool;
 
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,12 +36,13 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
     // Initialize the Log4j logger
     public static final Logger log = LogManager.getLogger(LexFunction.class);
 
+    private static final Pattern THINKING_PATTERN
+            = Pattern.compile("<thinking>.*?</thinking>", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 
     private final ChatClient chatClient;
     private final ChatModel chatModel;
     private final ClearChatMemory clearChatMemory;
     private final List<ChatBotTool> tools;
-
 
     @Override
     public LexV2Response apply(LexV2Event lexRequest) {
@@ -53,8 +54,6 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
             //userContextCache.remove(sessionId);
             return buildQuitResponse(lexRequest, null);
         }
-
-        
 
         String systemText = """
     I am interacting as a user of Telephone Timesheets, a time tracking system for employees.
@@ -77,14 +76,13 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
             - Offer to explain more only if the user asks.                        
     """;
 
-        
         try {
             final CallResponseSpec chatCall = chatClient.prompt()
                     .system(systemText)
                     .user(lexRequest.getInputTranscript())
                     // Use Lex Session ID for the conversation ID for Chat Memory
                     .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, sessionId))
-                    .toolContext(Map.of("some","thing"))
+                    .toolContext(Map.of("some", "thing"))
                     .tools(tools.toArray())
                     .call();
 
@@ -93,9 +91,7 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
             log.debug("Bot Text Response is: " + botResponse);
             final String model = getModel(resp);               // reuse the same response
 
-       
-
-            return buildResponse(lexRequest, botResponse);
+            return buildResponse(lexRequest, sanitizeOutput(botResponse));
         } catch (Exception e) {
             // Spring AI / Bedrock will throw this for unsupported media like application/zip
             if (e instanceof IllegalArgumentException) {
@@ -108,11 +104,9 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
         }
     }
 
-    
-
-
- 
-
+    public static String sanitizeOutput(String txt) {
+        return THINKING_PATTERN.matcher(txt).replaceAll("").trim();
+    }
 
     /**
      * Response that sends you to the Quit intent so the call can be ended

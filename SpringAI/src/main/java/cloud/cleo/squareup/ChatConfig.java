@@ -19,8 +19,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import software.amazon.awssdk.http.crt.AwsCrtAsyncHttpClient;
-import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeAsyncClient;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
 
@@ -58,26 +56,6 @@ public class ChatConfig {
                 .build();
     }
     
-    
-    @Bean
-    public BedrockRuntimeClient bedrockRuntimeClient() {
-        // Uses Lambda/EC2 role credentials automatically
-        return BedrockRuntimeClient.builder()
-                .httpClient(AwsCrtHttpClient.create()) 
-                .build();
-    }
-    
-    
-    /**
-     * Not used since not streaming responses as the moment.
-     * 
-     * @return 
-     */
-    public BedrockRuntimeAsyncClient bedrockRuntimeAsyncClient() {
-    return BedrockRuntimeAsyncClient.builder()
-            .httpClient(AwsCrtAsyncHttpClient.create())
-            .build();
-}
 
     @Bean
     public BedrockChatOptions bedrockChatOptions() {
@@ -89,10 +67,10 @@ public class ChatConfig {
   
     @Primary
     @Bean(name = "bedrockChatModel")
-    public ChatModel bedrockChatModel(BedrockRuntimeClient client, BedrockChatOptions options) {
+    public ChatModel bedrockChatModel(BedrockRuntimeAsyncClient bedrockRuntimeAsyncClient, BedrockRuntimeClient bedrockRuntimeClient, BedrockChatOptions options) {
         return BedrockProxyChatModel.builder()
-                .bedrockRuntimeClient(client)
-                //.bedrockRuntimeAsyncClient(asyncClient)
+                .bedrockRuntimeClient(bedrockRuntimeClient)
+                .bedrockRuntimeAsyncClient(bedrockRuntimeAsyncClient)
                 .defaultOptions(options)
                 .build();
     }
