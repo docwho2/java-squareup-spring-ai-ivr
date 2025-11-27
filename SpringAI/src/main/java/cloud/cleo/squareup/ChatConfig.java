@@ -77,7 +77,7 @@ public class ChatConfig {
 
     @Bean
     @Primary
-    public ChatClient chatClient(ChatModel model, ChatMemory memory, List<AbstractTool> toolBeans) {
+    public ChatClient chatClient(ChatModel model, ChatMemory memory) {
         return ChatClient.builder(model)
                 .defaultAdvisors(
                         MessageChatMemoryAdvisor.builder(memory).build(),
@@ -85,7 +85,6 @@ public class ChatConfig {
                         ChatModelCallAdvisor.builder().chatModel(model).build(),
                         new SimpleLoggerAdvisor()
                 )
-                //.defaultTools(toolBeans.toArray())
                 .build();
     }
 }
