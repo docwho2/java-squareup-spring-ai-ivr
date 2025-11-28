@@ -15,7 +15,6 @@ import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeAsyncClient;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
-import software.amazon.awssdk.services.costexplorer.CostExplorerClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.pinpoint.PinpointClient;
@@ -89,21 +88,21 @@ public class AWSConfig {
     }
 
     @Bean(destroyMethod = "close")
-    public PinpointClient pinpointAsyncClient(SdkHttpClient crtHttpClient) {
+    public PinpointClient pinpointClient(SdkHttpClient crtHttpClient) {
         return PinpointClient.builder()
                 .httpClient(crtHttpClient)
                 .build();
     }
 
     @Bean(destroyMethod = "close")
-    public SesClient sesAsyncClient(SdkHttpClient crtHttpClient) {
+    public SesClient sesClient(SdkHttpClient crtHttpClient) {
         return SesClient.builder()
                 .httpClient(crtHttpClient)
                 .build();
     }
 
     @Bean(destroyMethod = "close")
-    public SnsClient snsAsyncClient(SdkHttpClient crtHttpClient) {
+    public SnsClient snsClient(SdkHttpClient crtHttpClient) {
         return SnsClient.builder()
                 // Force SMS sending to east because that's where all the 10DLC and campaign crap setup is done
                 // Otherwise have to pay for registrations and numbers in 2 regions, HUGE HASSLE (and more monthly cost)
