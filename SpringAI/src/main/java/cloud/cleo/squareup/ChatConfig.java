@@ -2,8 +2,9 @@ package cloud.cleo.squareup;
 
 
 
-import cloud.cleo.squareup.tools.AbstractTool;
-import java.util.List;
+import cloud.cleo.squareup.memory.DynamoDbChatMemoryRepository;
+import java.time.Clock;
+import java.time.Duration;
 import org.springframework.ai.bedrock.converse.BedrockChatOptions;
 import org.springframework.ai.bedrock.converse.BedrockProxyChatModel;
 import org.springframework.ai.chat.client.ChatClient;
@@ -11,6 +12,8 @@ import org.springframework.ai.chat.client.advisor.ChatModelCallAdvisor;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.ChatMemoryRepository;
+import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
@@ -19,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeAsyncClient;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
 
@@ -75,6 +79,25 @@ public class ChatConfig {
                 .build();
     }
 
+    
+    @Bean
+    public ChatMemoryRepository chatMemoryRepository(DynamoDbEnhancedClient enhancedClient) {
+        return new DynamoDbChatMemoryRepository(
+                enhancedClient,
+                System.getenv().getOrDefault("CHAT_MEMORY_TABLE", "chat-memory"),
+                Duration.ofDays(1),
+                Clock.systemUTC());
+    }
+
+    @Bean
+    public ChatMemory chatMemory(ChatMemoryRepository chatMemoryRepository) {
+        return MessageWindowChatMemory.builder()
+                .chatMemoryRepository(chatMemoryRepository)
+                .maxMessages(30) // whatever you like
+                .build();
+    }
+    
+    
     @Bean
     @Primary
     public ChatClient chatClient(ChatModel model, ChatMemory memory) {
