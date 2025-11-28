@@ -89,13 +89,6 @@ public class AWSConfig {
     }
 
     @Bean(destroyMethod = "close")
-    public CostExplorerClient costExplorerAsyncClient(SdkHttpClient crtHttpClient) {
-        return CostExplorerClient.builder()
-                .httpClient(crtHttpClient)
-                .build();
-    }
-
-    @Bean(destroyMethod = "close")
     public PinpointClient pinpointAsyncClient(SdkHttpClient crtHttpClient) {
         return PinpointClient.builder()
                 .httpClient(crtHttpClient)
