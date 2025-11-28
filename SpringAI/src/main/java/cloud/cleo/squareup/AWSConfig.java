@@ -6,6 +6,7 @@ package cloud.cleo.squareup;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.http.SdkHttpClient;
@@ -112,4 +113,11 @@ public class AWSConfig {
                 .build();
     }
 
+    
+    @Bean
+    public RestClient facebookRestClient(RestClient.Builder builder) {
+        return builder
+                .baseUrl("https://graph.facebook.com")
+                .build();
+    }
 }

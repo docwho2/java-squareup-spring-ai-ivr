@@ -1,5 +1,6 @@
 package cloud.cleo.squareup.tools;
 
+import cloud.cleo.squareup.LexV2EventWrapper;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -120,6 +121,12 @@ public class StoreHours extends AbstractTool {
                     null
             );
         }
+    }
+
+    @Override
+    public boolean isValidForRequest(LexV2EventWrapper event) {
+        // Valid if square is enabled
+         return isSquareEnabled();
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)

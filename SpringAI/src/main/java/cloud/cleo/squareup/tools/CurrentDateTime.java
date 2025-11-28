@@ -4,6 +4,7 @@
  */
 package cloud.cleo.squareup.tools;
 
+import cloud.cleo.squareup.LexV2EventWrapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.ZoneId;
@@ -30,6 +31,11 @@ public class CurrentDateTime extends AbstractTool {
         root.put("time", now.toLocalTime().toString());
         root.put("zone", now.getZone().toString());
         return root;
+    }
+
+    @Override
+    public boolean isValidForRequest(LexV2EventWrapper event) {
+        return true;
     }
 }
 

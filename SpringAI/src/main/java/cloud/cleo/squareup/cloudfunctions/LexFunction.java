@@ -2,12 +2,22 @@ package cloud.cleo.squareup.cloudfunctions;
 
 import cloud.cleo.squareup.ClearChatMemory;
 import cloud.cleo.squareup.LexV2Event;
+import cloud.cleo.squareup.LexV2Event.Intent;
+import cloud.cleo.squareup.LexV2Event.SessionState;
+import cloud.cleo.squareup.LexV2EventWrapper;
 import cloud.cleo.squareup.LexV2Response;
+import cloud.cleo.squareup.LexV2Response.ImageResponseCard;
+import static cloud.cleo.squareup.enums.LexDialogAction.Close;
+import static cloud.cleo.squareup.enums.LexDialogAction.ElicitIntent;
+import static cloud.cleo.squareup.enums.LexMessageContentType.ImageResponseCard;
 import static cloud.cleo.squareup.enums.LexMessageContentType.PlainText;
+import cloud.cleo.squareup.lang.LangUtil;
 import cloud.cleo.squareup.tools.AbstractTool;
+import static cloud.cleo.squareup.tools.AbstractTool.HANGUP_FUNCTION_NAME;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -46,44 +56,28 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
 
     @Override
     public LexV2Response apply(LexV2Event lexRequest) {
+        final var eventWrapper = new LexV2EventWrapper(lexRequest);
+
         final String sessionId = lexRequest.getSessionId();
 
-        if ("Quit".equals(lexRequest.getSessionState().getIntent().getName())) {
-            log.debug("Quit called");
-            clearChatMemory.clearMemory(lexRequest.getSessionId());
-            //userContextCache.remove(sessionId);
-            return buildQuitResponse(lexRequest, null);
+        // Handle case where there is no input (Caller Silence not saying anything)
+        if (eventWrapper.getBlankCounter() > 2 && eventWrapper.isVoice()) {
+            // Call is just hanging there with nothing said so hang up
+            return buildTerminatingResponse(Map.of("action", HANGUP_FUNCTION_NAME, "bot_response", eventWrapper.getLangString(LangUtil.LanguageIds.GOODBYE)));
+        } else if (eventWrapper.getBlankCounter() > 0) {
+            // Don't bother calling Model, no input
+            return buildResponse(eventWrapper, eventWrapper.getLangString(LangUtil.LanguageIds.BLANK_RESPONSE));
         }
 
-        String systemText = """
-    I am interacting as a user of Telephone Timesheets, a time tracking system for employees.
-    Please be a helpful and friendly support assistant.
-    Do not display employee_id, supervisor_id, job_id fields from function calling and always display the start_date and end_date.
-    My first name is Steve. I am a supervisor and my supervisor_id is 1.
-        Very important:
-            - Keep responses short and focused.
-            - Never exceed 1,000 characters in your response.
-            - Prefer summaries, bullet points, or step-by-step instructions.
-            - Only include details that directly answer the user's question.
-                            
-        Avoid:
-            - Long explanations.
-            - Rambling or repeating yourself.
-            - Large code blocks or large data dumps.
-                            
-        If more detail is needed:
-            - Provide a short summary.
-            - Offer to explain more only if the user asks.                        
-    """;
-
+       
         try {
             final CallResponseSpec chatCall = chatClient.prompt()
-                    .system(systemText)
+                    .system(eventWrapper.getSystemPrompt())
                     .user(lexRequest.getInputTranscript())
                     // Use Lex Session ID for the conversation ID for Chat Memory
                     .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, sessionId))
-                    .toolContext(Map.of("some", "thing"))
-                    .tools(tools.toArray())
+                    .toolContext(Map.of("eventWrapper", eventWrapper))
+                    .tools(tools.stream().filter(t -> t.isValidForRequest(eventWrapper)).toArray())
                     .call();
 
             final ChatResponse resp = chatCall.chatResponse();     // <-- single terminal call
@@ -91,15 +85,34 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
             log.debug("Bot Text Response is: " + botResponse);
             final String model = getModel(resp);               // reuse the same response
 
-            return buildResponse(lexRequest, sanitizeOutput(botResponse));
+            // We now need to determine if we should end Lex session for Chime to take back control
+            if (eventWrapper.hasSessionAttributeAction()) {
+                // The only FB action is to stop the Bot and transfer conversation to Inbox
+                if ( eventWrapper.isFacebook() ) {
+                    return buildResponse(eventWrapper, "CopperBot will be removed from this conversation after clicking below.", buildTransferCard());
+                } else {
+                    // Since not FB, this will be for Voice calls to take action on the call (Hangup, Language Change, Transfer,etc.)
+                    eventWrapper.putSessionAttributeBotResponse(sanitizeOutput(botResponse));
+                    return buildTerminatingResponse(eventWrapper.getSessionAttributes());
+                }
+            } else {
+                if (eventWrapper.isNewSession() && eventWrapper.isFacebook()) {
+                    // If this a new Session send back a Welcome card for Facebook Channel
+                    // This works for Twilio/SMS, but sends a MMS and costs more money (it sends logo, but of course doesn't support the buttons)
+                    return buildResponse(eventWrapper, botResponse, buildWelcomeCard());
+                } else {
+                    // Just a normal turn 
+                    return buildResponse(eventWrapper, sanitizeOutput(botResponse));
+                }
+            }
         } catch (Exception e) {
             // Spring AI / Bedrock will throw this for unsupported media like application/zip
             if (e instanceof IllegalArgumentException) {
                 log.warn("Unsupported media from Lex attachment", e);
-                return buildResponse(lexRequest, "You have attached an unsupported media type, please try another file type.");
+                return buildResponse(eventWrapper, "You have attached an unsupported media type, please try another file type.");
             } else {
                 log.error(e);
-                return buildResponse(lexRequest, e.getMessage());
+                return buildResponse(eventWrapper, e.getMessage());
             }
         }
     }
@@ -109,57 +122,124 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
     }
 
     /**
-     * Response that sends you to the Quit intent so the call can be ended
+     * Tell Lex we are done so Chime can process terminating the Bot and hanging
+     * up or switching language or transferring the call for example.
      *
-     * @param lexRequest
-     * @param response
+     * @param attrs
      * @return
      */
-    private LexV2Response buildQuitResponse(LexV2Event lexRequest, String response) {
+    private LexV2Response buildTerminatingResponse(Map<String, String> attrs) {
 
         // State to return
-        final var ss = LexV2Event.SessionState.builder()
-                // Retain the current session attributes
-                .withSessionAttributes(lexRequest.getSessionState().getSessionAttributes())
-                // Send back Quit Intent
-                .withIntent(LexV2Event.Intent.builder().withName("Quit").withState("Fulfilled").build())
-                // Indicate the state is Delegate
-                .withDialogAction(LexV2Event.DialogAction.builder().withType("Close").build())
+        final var ss = SessionState.builder()
+                // Send all Session Attrs
+                .withSessionAttributes(attrs)
+                // We are always using Fallback, and let Lex know everything is fulfilled
+                .withIntent(Intent.builder().withName("FallbackIntent").withState("Fulfilled").build())
+                // Indicate we are closing things up, IE we are done here
+                .withDialogAction(Close.getDialogAction())
                 .build();
 
         final var lexV2Res = LexV2Response.builder()
                 .withSessionState(ss)
-                .withMessages(new LexV2Response.Message[]{new LexV2Response.Message(PlainText,
-            response == null ? "Session Closed, Thank You" : response, null)})
                 .build();
-        //log.debug("Response is " + mapper.valueToTree(lexV2Res));
+        log.debug("Lex Response is {}", lexV2Res);
         return lexV2Res;
     }
 
     /**
-     * General Response used to send back a message and Elicit Intent again at LEX
+     * General Response used to send back a message and Elicit Intent again at
+     * LEX. IE, we are sending back GPT response, and then waiting for Lex to
+     * collect speech and once again call us so we can send to GPT, effectively
+     * looping until we call a terminating event like Quit or Transfer.
      *
      * @param lexRequest
      * @param response
      * @return
      */
-    private LexV2Response buildResponse(LexV2Event lexRequest, String response) {
+    private LexV2Response buildResponse(LexV2EventWrapper lexRequest, String response, ImageResponseCard card) {
+
+        final var messages = new ArrayList<LexV2Response.Message>(card != null ? 2 : 1);
+
+        // Always send a plain text response
+        //  If this is not first in the list, Lex will error
+        messages.add(LexV2Response.Message.builder()
+                .withContentType(PlainText)
+                .withContent(response)
+                .build());
+
+        if (card != null) {
+            // Add a card if present
+            messages.add(LexV2Response.Message.builder()
+                    .withContentType(ImageResponseCard)
+                    .withImageResponseCard(card)
+                    .build());
+        }
 
         // State to return
-        final var ss = LexV2Event.SessionState.builder()
+        final var ss = SessionState.builder()
                 // Retain the current session attributes
-                .withSessionAttributes(lexRequest.getSessionState().getSessionAttributes())
+                .withSessionAttributes(lexRequest.getSessionAttributes())
                 // Always ElictIntent, so you're back at the LEX Bot looking for more input
-                .withDialogAction(LexV2Event.DialogAction.builder().withType("ElicitIntent").build())
+                .withDialogAction(ElicitIntent.getDialogAction())
                 .build();
 
         final var lexV2Res = LexV2Response.builder()
                 .withSessionState(ss)
-                // We are using plain text responses
-                .withMessages(new LexV2Response.Message[]{new LexV2Response.Message(PlainText, response, null)})
+                // List of messages to send back
+                .withMessages(messages.toArray(LexV2Response.Message[]::new))
                 .build();
-        //log.debug("Response is " + mapper.valueToTree(lexV2Res));
+        log.debug("Response is " + lexV2Res);
         return lexV2Res;
+    }
+
+    /**
+     * Send a response without a card.
+     *
+     * @param lexRequest
+     * @param response
+     * @return
+     */
+    protected LexV2Response buildResponse(LexV2EventWrapper lexRequest, String response) {
+        return buildResponse(lexRequest, response, null);
+    }
+
+    /**
+     * Welcome card which would be displayed for FaceBook Users in Messenger.
+     *
+     * @return
+     */
+    private LexV2Response.ImageResponseCard buildWelcomeCard() {
+        return LexV2Response.ImageResponseCard.builder()
+                .withTitle("Welcome to Copper Fox Gifts")
+                .withImageUrl("https://www.copperfoxgifts.com/logo.png")
+                .withSubtitle("Ask us anything or use a quick action below")
+                // Messenger will only display 3 buttons
+                .withButtons(List.of(
+                        LexV2Response.Button.builder().withText("Hours").withValue("What are you business hours?").build(),
+                        //Button.builder().withText("Location").withValue("What is your address and driving directions?").build(),
+                        LexV2Response.Button.builder().withText("Person").withValue("Please hand this conversation over to a person").build(),
+                        LexV2Response.Button.builder().withText("Private Shopping").withValue("Info about Private Shopping and link").build()
+                ).toArray(LexV2Response.Button[]::new))
+                .build();
+    }
+
+    /**
+     * Transfer from Bot to Inbox Card for Facebook Messenger.
+     *
+     * @return
+     */
+    private LexV2Response.ImageResponseCard buildTransferCard() {
+        return LexV2Response.ImageResponseCard.builder()
+                .withTitle("Conversation will move to Inbox")
+                .withImageUrl("https://www.copperfoxgifts.com/logo.png")
+                .withSubtitle("Please tell us how Copper Bot did?")
+                .withButtons(List.of(
+                        LexV2Response.Button.builder().withText("Epic Fail").withValue("Chatbot was not Helpful.").build(),
+                        LexV2Response.Button.builder().withText("Needs Work").withValue("Chatbot needs some work.").build(),
+                        LexV2Response.Button.builder().withText("Great Job!").withValue("Chatbot did a great job!").build()
+                ).toArray(LexV2Response.Button[]::new))
+                .build();
     }
 
     /**
