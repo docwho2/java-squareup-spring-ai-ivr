@@ -1003,16 +1003,16 @@ Resources:
           SQUARE_API_KEY: !Ref SQUAREAPIKEY
           SQUARE_LOCATION_ID: !Ref SQUARELOCATIONID
           SQUARE_ENVIRONMENT: !Ref SQUAREENVIRONMENT
-          SESSION_TABLE_NAME: !Ref SessionTable
+          CHAT_MEMORY_TABLE: !Ref ChatSessionTable
           MAIN_NUMBER: !Ref TRANSFERNUMBER
           VC_ARN: !Ref VOICECONNECTORARN
           FB_PAGE_ID: !Ref FBPAGEID
           FB_PAGE_ACCESS_TOKEN: !Ref FBPAGEACCESSTOKEN
       Policies: 
         - DynamoDBReadPolicy:
-            TableName: !Ref SessionTable
+            TableName: !Ref ChatSessionTable
         - DynamoDBWritePolicy:
-            TableName: !Ref SessionTable
+            TableName: !Ref ChatSessionTable
         - !Ref BedrockInvokeManagedPolicy
         - Version: '2012-10-17' 
           Statement:
@@ -1110,13 +1110,13 @@ Resources:
           SQUARE_API_KEY: !Ref SQUAREAPIKEY
           SQUARE_LOCATION_ID: !Ref SQUARELOCATIONID
           SQUARE_ENVIRONMENT: !Ref SQUAREENVIRONMENT
-          SESSION_TABLE_NAME: !Ref SessionTable
+          CHAT_MEMORY_TABLE: !Ref ChatSessionTable
           MAIN_NUMBER: !Ref TRANSFERNUMBER
       Policies: 
         - DynamoDBReadPolicy:
-            TableName: !Ref SessionTable
+            TableName: !Ref ChatSessionTable
         - DynamoDBWritePolicy:
-            TableName: !Ref SessionTable
+            TableName: !Ref ChatSessionTable
         - !Ref BedrockInvokeManagedPolicy
         - Version: '2012-10-17' 
           Statement:
@@ -1143,22 +1143,22 @@ Resources:
       LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-SpringAIPinpoint'
       RetentionInDays: 90  
   
-  SessionTable:
+  ChatSessionTable:
     Type: AWS::DynamoDB::Table
     UpdateReplacePolicy: Retain
     DeletionPolicy: Delete
     Properties:
-      TableName: !Sub ${AWS::StackName}-sessions
+      TableName: !Sub ${AWS::StackName}-chat-memory
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
-        - AttributeName: sessionId
+        - AttributeName: conversationId
           AttributeType: S
-        - AttributeName: date
-          AttributeType: S
+        - AttributeName: messageIndex
+          AttributeType: N
       KeySchema:
-        - AttributeName: sessionId
+        - AttributeName: conversationId
           KeyType: HASH
-        - AttributeName: date
+        - AttributeName: messageIndex
           KeyType: RANGE
       TimeToLiveSpecification:
           AttributeName: ttl
