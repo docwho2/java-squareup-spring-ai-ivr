@@ -110,30 +110,32 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
             item.setMetadataJson(null);
 
             // Basic text & tool storage
-            if (msg instanceof AssistantMessage am) {
-                item.setText(sanitizeAssistantText(am.getText()));
-                writeToolCalls(item, am);
-                writeMetadata(item, am.getMetadata());
-            }
-            else if (msg instanceof UserMessage um) {
-                item.setText(um.getText());
-                writeMetadata(item, um.getMetadata());
-            }
-            else if (msg instanceof SystemMessage sm) {
-                item.setText(sm.getText());
-                writeMetadata(item, sm.getMetadata());
-            }
-            else if (msg instanceof ToolResponseMessage trm) {
-                // Tool responses; messageType is TOOL already but enforce for clarity
-                item.setMessageType(MessageType.TOOL.name());
-                item.setText(null);
-                writeToolResponses(item, trm);
-                writeMetadata(item, trm.getMetadata());
-            }
-            else {
-                // Fallback: just persist text
-                item.setText(msg.getText());
-                writeMetadata(item, msg.getMetadata());
+            switch (msg) {
+                case AssistantMessage am -> {
+                    item.setText(sanitizeAssistantText(am.getText()));
+                    writeToolCalls(item, am);
+                    //writeMetadata(item, am.getMetadata());
+                }
+                case UserMessage um -> {
+                    item.setText(um.getText());
+                    //writeMetadata(item, um.getMetadata());
+                }
+                case SystemMessage sm -> {
+                    item.setText(sm.getText());
+                    writeMetadata(item, sm.getMetadata());
+                }
+                case ToolResponseMessage trm -> {
+                    // Tool responses; messageType is TOOL already but enforce for clarity
+                    item.setMessageType(MessageType.TOOL.name());
+                    item.setText(null);
+                    writeToolResponses(item, trm);
+                    writeMetadata(item, trm.getMetadata());
+                }
+                default -> {
+                    // Fallback: just persist text
+                    item.setText(msg.getText());
+                    writeMetadata(item, msg.getMetadata());
+                }
             }
 
             table.putItem(item); // upsert, NOT delete-all + rewrite
@@ -261,7 +263,7 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
             return switch (type) {
                 case USER -> UserMessage.builder()
                         .text(text)
-                        .metadata(metadata)
+                        //.metadata(metadata)
                         .build();
 
                 case SYSTEM -> SystemMessage.builder()
@@ -272,8 +274,8 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
                 case ASSISTANT -> {
                     List<ToolCall> toolCalls = readToolCalls(item);
                     AssistantMessage.Builder builder = AssistantMessage.builder()
-                            .content(text)
-                            .properties(metadata);
+                            .content(text);
+                            //.properties(metadata);
 
                     if (!toolCalls.isEmpty()) {
                         builder.toolCalls(toolCalls);
