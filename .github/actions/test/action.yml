@@ -1,0 +1,79 @@
+## YAML Template.
+name: 'Run Lex ChatGPT Tests'
+description: 'Run tests in the provided region'
+inputs:
+  region:  # id of input
+    description: 'What AWS Region to execute tests in'
+    required: true
+    default: 'us-east-1'
+  stack-name:
+    description: 'The stack name to pull params from'
+    required: true
+    default: 'chatgpt-square-ivr'
+  aws-role:
+    description: 'The AWS Role to assume'
+    required: true
+  session-id:
+    description: 'Lex Session ID'
+    required: true
+outputs:
+  result:
+    description: "All Good"
+    value: "All Good"
+runs:
+  using: "composite"
+  steps:
+    - name: Setup AWS Credentials
+      id: aws-creds
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: ${{ inputs.region }}
+        role-to-assume: ${{ inputs.aws-role }}
+        mask-aws-account-id: true
+    
+    - name: Set Bot ID and Alias ID and Lex session ID in Env
+      shell: bash
+      run: |
+        echo "BOT_ID=$(aws ssm get-parameter --name /${{ inputs.stack-name }}/BOT_ID --query Parameter.Value --output text)" >> $GITHUB_ENV
+        echo "BOT_ALIAS_ID=$(aws ssm get-parameter --name /${{ inputs.stack-name }}/BOT_ALIAS_ID --query Parameter.Value --output text)" >> $GITHUB_ENV
+    
+    - name: Chuckles Test
+      shell: bash
+      run: |
+        RESULT=$(aws lexv2-runtime recognize-text --text 'Do you have Chuckles?' --output text --query 'messages[0].content' --bot-id ${BOT_ID} --bot-alias-id ${BOT_ALIAS_ID} --locale-id en_US --session-id ${{ inputs.session-id }})
+        echo "Result is [${RESULT}]"
+        if [[ $RESULT != *"Yes"* && $RESULT != *"We have"* && $RESULT != *"Chuckles"* ]]; then
+          echo "Did not pass Chuckles test"
+          exit 1
+        fi
+        echo "Chuckles Test Passed"
+    
+    - name: Sleeping for 5 seconds to keep rate limit down
+      shell: bash
+      run: sleep 5
+        
+    - name: Muggs Restaurant Test
+      shell: bash
+      run: |    
+        RESULT=$(aws lexv2-runtime recognize-text --text 'Please recommend a restaurant in the area?' --output text --query 'messages[0].content' --bot-id ${BOT_ID} --bot-alias-id ${BOT_ALIAS_ID} --locale-id en_US --session-id ${{ inputs.session-id }})
+        echo "Result is [${RESULT}]"
+        if [[ $RESULT != *"Mugg"* ]]; then
+          echo "Did not pass Mugg's restaurant test"
+          exit 1
+        fi
+        echo "Restaurant Test Passed"
+    
+    - name: Sleeping for 5 seconds to keep rate limit down
+      shell: bash
+      run: sleep 5
+    
+    - name: Address Test
+      shell: bash
+      run: |  
+        RESULT=$(aws lexv2-runtime recognize-text --text 'What is your address?' --output text --query 'messages[0].content' --bot-id ${BOT_ID} --bot-alias-id ${BOT_ALIAS_ID} --locale-id en_US --session-id ${{ inputs.session-id }})
+        echo "Result is [${RESULT}]"
+        if [[ $RESULT != *"160 Main"* ]]; then
+          echo "Did not pass Address Test"
+          exit 1
+        fi
+        echo "Address Test Passed"
