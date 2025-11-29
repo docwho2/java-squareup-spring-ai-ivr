@@ -18,6 +18,8 @@ lint = true
 
 [default.deploy]
 [default.deploy.parameters]
+resolve_s3 = true
+capabilities = "CAPABILITY_IAM"
 
 [default.package]
 [default.package.parameters]
