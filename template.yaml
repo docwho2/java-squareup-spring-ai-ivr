@@ -999,6 +999,7 @@ Resources:
           MAIN_CLASS: cloud.cleo.squareup.SpringApp
           SPRING_CLOUD_FUNCTION_DEFINITION: lexFunction
           SPRING_AI_OPENAI_CHAT_OPTIONS_MODEL: !Ref OPENAIMODEL
+          SPRING_AI_BEDROCK_CHAT_OPTIONS_MODEL: !GetAtt NovaLiteInferenceProfile.InferenceProfileArn
           SPRING_AI_OPENAI_API_KEY: !Ref OPENAIAPIKEY
           SQUARE_API_KEY: !Ref SQUAREAPIKEY
           SQUARE_LOCATION_ID: !Ref SQUARELOCATIONID
@@ -1106,6 +1107,7 @@ Resources:
           MAIN_CLASS: cloud.cleo.squareup.SpringApp
           SPRING_CLOUD_FUNCTION_DEFINITION: pinpointFunction
           SPRING_AI_OPENAI_CHAT_OPTIONS_MODEL: !Ref OPENAIMODEL
+          SPRING_AI_BEDROCK_CHAT_OPTIONS_MODEL: !GetAtt NovaLiteInferenceProfile.InferenceProfileArn
           SPRING_AI_OPENAI_API_KEY: !Ref OPENAIAPIKEY
           SQUARE_API_KEY: !Ref SQUAREAPIKEY
           SQUARE_LOCATION_ID: !Ref SQUARELOCATIONID
@@ -1200,5 +1202,14 @@ Resources:
                 - bedrock:Converse
                 - bedrock:ConverseStream
               Resource: '*'
+    
+  NovaLiteInferenceProfile:
+        Type: AWS::Bedrock::ApplicationInferenceProfile
+        Properties:
+            InferenceProfileName: !Sub "${AWS::StackName}-nova-lite"
+            Description: !Sub "Nova Lite inference profile for ${AWS::StackName}"
+            ModelSource:
+                CopyFrom: !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/amazon.nova-lite-v1:0"
+
       
       
