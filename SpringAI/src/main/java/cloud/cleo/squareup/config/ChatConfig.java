@@ -1,7 +1,5 @@
 package cloud.cleo.squareup.config;
 
-
-
 import cloud.cleo.squareup.memory.DynamoDbChatMemoryRepository;
 import java.time.Clock;
 import java.time.Duration;
@@ -49,8 +47,6 @@ public class ChatConfig {
                 .build();
     }
 
-    
-
     //@Primary - using Bedrock for now
     @Bean(name = "customOpenAiChatModel")
     public ChatModel chatModel(OpenAiApi api, OpenAiChatOptions options) {
@@ -59,16 +55,18 @@ public class ChatConfig {
                 .defaultOptions(options)
                 .build();
     }
-    
 
     @Bean
-    public BedrockChatOptions bedrockChatOptions(@Value("${spring.ai.bedrock.chat.options.model:anthropic.claude-sonnet-4-5-20250929-v1\\:0}") String model) {
+    public BedrockChatOptions bedrockChatOptions(@Value("${spring.ai.bedrock.chat.options.model:}") String model) {
+        String resolved = (model == null || model.isBlank())
+                ? "anthropic.claude-sonnet-4-5-20250929-v1:0"
+                : model;
+
         return BedrockChatOptions.builder()
-                .model(model)
+                .model(resolved)
                 .build();
     }
 
-  
     @Primary
     @Bean(name = "bedrockChatModel")
     public ChatModel bedrockChatModel(BedrockRuntimeAsyncClient bedrockRuntimeAsyncClient, BedrockRuntimeClient bedrockRuntimeClient, BedrockChatOptions options) {
@@ -79,7 +77,6 @@ public class ChatConfig {
                 .build();
     }
 
-    
     @Bean
     public ChatMemoryRepository chatMemoryRepository(DynamoDbEnhancedClient enhancedClient) {
         return new DynamoDbChatMemoryRepository(
@@ -96,8 +93,7 @@ public class ChatConfig {
                 .maxMessages(30) // whatever you like
                 .build();
     }
-    
-    
+
     @Bean
     @Primary
     public ChatClient chatClient(ChatModel model, ChatMemory memory) {
