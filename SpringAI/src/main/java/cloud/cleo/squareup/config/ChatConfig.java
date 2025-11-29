@@ -64,7 +64,7 @@ public class ChatConfig {
     @Bean
     public BedrockChatOptions bedrockChatOptions() {
         return BedrockChatOptions.builder()
-                .model("amazon.nova-lite-v1:0")
+                .model("amazon.nova-micro-v1:0")
                 .build();
     }
 
