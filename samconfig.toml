@@ -18,12 +18,6 @@ lint = true
 
 [default.deploy]
 [default.deploy.parameters]
-region = "us-east-1"
-capabilities = "CAPABILITY_IAM"
-confirm_changeset = true
-resolve_s3 = true
-profile = "CLEO"
-parameter_overrides = "SQUAREAPIKEY=/cfox-squareup-chatgpt-ivr/SQUARE_API_KEY OPENAIAPIKEY=/cfox-squareup-chatgpt-ivr/OPENAI_API_KEY FBPAGEACCESSTOKEN=/cfox-squareup-chatgpt-ivr/FB_PAGE_ACCESS_TOKEN FBPAGEID=105958158478591 SMAID=/sbx-chime-cdk-provision/SMA_ID VOICECONNECTORARN=/sbx-chime-cdk-provision/VC_ARN SQUAREENVIRONMENT=PRODUCTION SQUARELOCATIONID=L5KK29RDQG17Q TRANSFERNUMBER=+13204952424 OPENAIMODEL=gpt-4.1-nano VOICEIDEN=Ruth VOICEIDES=Lupe VOICEIDDE=Vicki"
 
 [default.package]
 [default.package.parameters]
@@ -40,6 +34,15 @@ warm_containers = "EAGER"
 [default.local_start_lambda]
 [default.local_start_lambda.parameters]
 warm_containers = "EAGER"
+
+[testing.deploy]
+[testing.deploy.parameters]
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+resolve_s3 = true
+profile = "CLEO"
+parameter_overrides = "SQUAREAPIKEY=/cfox-squareup-chatgpt-ivr/SQUARE_API_KEY OPENAIAPIKEY=/cfox-squareup-chatgpt-ivr/OPENAI_API_KEY FBPAGEACCESSTOKEN=/cfox-squareup-chatgpt-ivr/FB_PAGE_ACCESS_TOKEN FBPAGEID=105958158478591 SMAID=/sbx-chime-cdk-provision/SMA_ID VOICECONNECTORARN=/sbx-chime-cdk-provision/VC_ARN SQUAREENVIRONMENT=PRODUCTION SQUARELOCATIONID=L5KK29RDQG17Q TRANSFERNUMBER=+13204952424 OPENAIMODEL=gpt-4.1-nano VOICEIDEN=Ruth VOICEIDES=Lupe VOICEIDDE=Vicki"
 
 [east.deploy]
 [east.deploy.parameters]
