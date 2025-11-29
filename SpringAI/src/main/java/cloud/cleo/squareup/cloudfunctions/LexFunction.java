@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
@@ -39,15 +40,6 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
 
     // Initialize the Log4j logger
     public static final Logger log = LogManager.getLogger(LexFunction.class);
-
-    private static final Pattern THINKING_PATTERN
-            = Pattern.compile("<thinking>.*?</thinking>", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-
-    private static final Pattern OPEN_RESPONSE_PATTERN
-            = Pattern.compile("^\\s*<response>\\s*", Pattern.CASE_INSENSITIVE);
-
-    private static final Pattern CLOSE_RESPONSE_PATTERN
-            = Pattern.compile("\\s*</response>\\s*$", Pattern.CASE_INSENSITIVE);
 
     private final ChatClient chatClient;
     private final List<AbstractTool> tools;
@@ -225,19 +217,54 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
                 .build();
     }
 
+    private static final Pattern RESPONSE_BLOCK_PATTERN
+            = Pattern.compile("(?is)<response>(.*?)</response>");
+
+    private static final Pattern THINKING_BLOCK_PATTERN
+            = Pattern.compile("(?is)<thinking>(.*?)</thinking>");
+
     public static String sanitizeAssistantText(String text) {
-        if (text == null || text.isEmpty()) {
+        if (text == null || text.isBlank()) {
             return text;
         }
 
-        // Remove thinking blocks entirely
-        String cleaned = THINKING_PATTERN.matcher(text).replaceAll("");
+        String original = text;
 
-        // Remove <response> wrapper tags only
-        cleaned = OPEN_RESPONSE_PATTERN.matcher(cleaned).replaceAll("");
-        cleaned = CLOSE_RESPONSE_PATTERN.matcher(cleaned).replaceAll("");
+        // 1) If there's a <response> block, prefer that content.
+        Matcher responseMatcher = RESPONSE_BLOCK_PATTERN.matcher(text);
+        if (responseMatcher.find()) {
+            String inside = responseMatcher.group(1);
 
-        return cleaned.trim();
+            // Strip any thinking that might be inside the response block
+            inside = THINKING_BLOCK_PATTERN.matcher(inside).replaceAll("");
+            inside = inside.trim();
+
+            if (!inside.isBlank()) {
+                return inside;
+            }
+            // fall through if somehow empty
+        }
+
+        // 2) No usable <response>. Strip thinking and see what's left.
+        String withoutThinking = THINKING_BLOCK_PATTERN.matcher(text)
+                .replaceAll("")
+                .trim();
+
+        if (!withoutThinking.isBlank()) {
+            return withoutThinking;
+        }
+
+        // 3) If we got here, it was *only* thinking. Return the thinking content.
+        Matcher thinkingMatcher = THINKING_BLOCK_PATTERN.matcher(text);
+        if (thinkingMatcher.find()) {
+            String thinkingContent = thinkingMatcher.group(1).trim();
+            if (!thinkingContent.isBlank()) {
+                return thinkingContent;
+            }
+        }
+
+        // 4) Last resort – never return completely blank.
+        return original.trim();
     }
 
 }
