@@ -34,14 +34,14 @@ import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
 public class ChatConfig {
 
     @Bean
-    OpenAiApi openAiApi(@Value("${spring.ai.openai.api-key}") String apiKey) {
+    OpenAiApi openAiApi(@Value("${spring.ai.openai.api-key:}") String apiKey) {
         return OpenAiApi.builder()
                 .apiKey(apiKey)
                 .build();
     }
 
     @Bean
-    public OpenAiChatOptions openAiChatOptions(@Value("${spring.ai.openai.chat.options.model}") String model) {
+    public OpenAiChatOptions openAiChatOptions(@Value("${spring.ai.openai.chat.options.model:gpt-5-nano}") String model) {
         return OpenAiChatOptions.builder()
                 .model(model)
                 //.temperature(.2) Not supported in GOT_5 models, only default value of 1
@@ -62,9 +62,9 @@ public class ChatConfig {
     
 
     @Bean
-    public BedrockChatOptions bedrockChatOptions(@Value("${spring.ai.bedrock.chat.options.model}") String model) {
+    public BedrockChatOptions bedrockChatOptions(@Value("${spring.ai.bedrock.chat.options.model:amazon.nova-lite-v1\\:0}") String model) {
         return BedrockChatOptions.builder()
-                .model("model")
+                .model(model)
                 .build();
     }
 
