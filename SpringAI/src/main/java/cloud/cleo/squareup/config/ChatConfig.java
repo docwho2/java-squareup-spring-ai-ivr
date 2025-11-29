@@ -62,7 +62,7 @@ public class ChatConfig {
     
 
     @Bean
-    public BedrockChatOptions bedrockChatOptions(@Value("${spring.ai.bedrock.chat.options.model:amazon.nova-lite-v1\\:0}") String model) {
+    public BedrockChatOptions bedrockChatOptions(@Value("${spring.ai.bedrock.chat.options.model:anthropic.claude-sonnet-4-5-20250929-v1\\:0}") String model) {
         return BedrockChatOptions.builder()
                 .model(model)
                 .build();
