@@ -33,16 +33,18 @@ public class FacebookHandover extends AbstractTool {
             Should be called when the interaction requires a person to take over 
             the conversation on the Facebook channel. The assistant must NOT guess 
             and should only use this when it clearly cannot resolve the user's issue or
-            the user asks to talk to real person.
+            the user asks to talk to a real person.
             """
     )
     public StatusMessageResult facebookHandover(ToolContext ctx) {
         final var event = getEventWrapper(ctx);
         
+        // Set the action so we short circut and send back card with response
+        event.putSessionAttributeAction(FACEBOOK_HANDOVER_FUNCTION_NAME);
+        
+        // Anything the user types now will go to general inbox and staff will see
         faceBookOperations.transferToInbox(event.getSessionId());
 
-        // The model will surface this message to the user; your app can also
-        // detect this tool call and run the Facebook handover protocol.
         return new StatusMessageResult(
                 "SUCCESS",
                 "Conversation has been moved to the Inbox, a person will respond shortly."
@@ -50,7 +52,7 @@ public class FacebookHandover extends AbstractTool {
     }
 
     /**
-     * Only valid when the incoming channel is Facebook (text).
+     * Only valid when the incoming channel is Facebook.
      */
     @Override
     public boolean isValidForRequest(LexV2EventWrapper event) {

@@ -1,6 +1,8 @@
 package cloud.cleo.squareup.cloudfunctions;
 
-import cloud.cleo.squareup.ClearChatMemory;
+import cloud.cleo.squareup.LexV2EventWrapper;
+import cloud.cleo.squareup.LexV2Response;
+import static cloud.cleo.squareup.lang.LangUtil.LanguageIds.UNHANDLED_EXCEPTION;
 import com.amazonaws.services.lambda.runtime.events.SNSEvent;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -13,10 +15,9 @@ import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.model.ChatModel;
 
 import org.springframework.stereotype.Component;
+import software.amazon.awssdk.services.sns.SnsClient;
 
 /**
  *
@@ -29,16 +30,9 @@ public class PinpointFunction implements Function<SNSEvent, Void> {
     // Initialize the Log4j logger
     public static final Logger log = LogManager.getLogger(PinpointFunction.class);
 
-
-    private final ChatClient chatClient;
-    private final ChatModel chatModel;
-    private final ClearChatMemory clearChatMemory;
-
-    public final static ObjectMapper mapper = new ObjectMapper();
-
-    record FileLink(String url, String mimeType, String name) {
-
-    }
+    private final LexFunction lexFunction;
+    private final ObjectMapper mapper;
+    private final SnsClient snsClient;
 
     @Override
     public Void apply(SNSEvent input) {
@@ -52,17 +46,33 @@ public class PinpointFunction implements Function<SNSEvent, Void> {
             ppe = mapper.readValue(snsEvent.getMessage(), PinpointEvent.class);
         } catch( JsonProcessingException jpe ) {
             log.error("Cannot convert Pintpoint JSON to Object, processing aborted and returning null",jpe);
+            return null;
         }
+        
+        final LexV2EventWrapper wrapper = new LexV2EventWrapper(ppe);
+        String botResponse;
+        try {
+            // Wrapped Event Class
+            
+            LexV2Response response = lexFunction.apply(wrapper.getEvent());
+
+            // Take repsonse body message from the LexV2Reponse and respond to SMS via SNS
+            botResponse = response.getMessages()[0].getContent();
+        } catch (Exception ex) {
+             log.error("Unhandled Exception", ex);
+            // Unhandled Exception
+            botResponse = wrapper.getLangString(UNHANDLED_EXCEPTION);
+        }
+        
+        final var finalResponse = botResponse;
+        final var result = snsClient.publish(b -> b.phoneNumber(ppe.getOriginationNumber())
+                    .message(finalResponse));
+            log.info("SMS Bot Response sent to " + ppe.getOriginationNumber() + " with SNS id of " + result.messageId());
+
         return null;
     }
 
-    
-
-
- 
-
-
-   /**
+    /**
      * The SNS payload we will receive from Incoming SMS messages.
      *
      */
@@ -72,19 +82,22 @@ public class PinpointFunction implements Function<SNSEvent, Void> {
     public static class PinpointEvent {
 
         /**
-         * The phone number that sent the incoming message to you (in other words, your customer's phone number).
+         * The phone number that sent the incoming message to you (in other
+         * words, your customer's phone number).
          */
         @JsonProperty(value = "originationNumber")
         private String originationNumber;
 
         /**
-         * The phone number that the customer sent the message to (your dedicated phone number).
+         * The phone number that the customer sent the message to (your
+         * dedicated phone number).
          */
         @JsonProperty(value = "destinationNumber")
         private String destinationNumber;
 
         /**
-         * The registered keyword that's associated with your dedicated phone number.
+         * The registered keyword that's associated with your dedicated phone
+         * number.
          */
         @JsonProperty(value = "messageKeyword")
         private String messageKeyword;
@@ -102,7 +115,8 @@ public class PinpointFunction implements Function<SNSEvent, Void> {
         private String inboundMessageId;
 
         /**
-         * The unique identifier of the message that the customer is responding to.
+         * The unique identifier of the message that the customer is responding
+         * to.
          */
         @JsonProperty(value = "previousPublishedMessageId")
         private String previousPublishedMessageId;

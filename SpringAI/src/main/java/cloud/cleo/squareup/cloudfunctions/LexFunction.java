@@ -1,6 +1,5 @@
 package cloud.cleo.squareup.cloudfunctions;
 
-import cloud.cleo.squareup.ClearChatMemory;
 import cloud.cleo.squareup.LexV2Event;
 import cloud.cleo.squareup.LexV2Event.Intent;
 import cloud.cleo.squareup.LexV2Event.SessionState;
@@ -15,12 +14,9 @@ import cloud.cleo.squareup.lang.LangUtil;
 import cloud.cleo.squareup.tools.AbstractTool;
 import static cloud.cleo.squareup.tools.AbstractTool.HANGUP_FUNCTION_NAME;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
@@ -29,9 +25,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.ChatClient.CallResponseSpec;
 import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.chat.prompt.ChatOptions;
 
 import org.springframework.stereotype.Component;
 
@@ -49,50 +43,49 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
     private static final Pattern THINKING_PATTERN
             = Pattern.compile("<thinking>.*?</thinking>", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 
+    private static final Pattern OPEN_RESPONSE_PATTERN
+            = Pattern.compile("^\\s*<response>\\s*", Pattern.CASE_INSENSITIVE);
+
+    private static final Pattern CLOSE_RESPONSE_PATTERN
+            = Pattern.compile("\\s*</response>\\s*$", Pattern.CASE_INSENSITIVE);
+
     private final ChatClient chatClient;
-    private final ChatModel chatModel;
-    private final ClearChatMemory clearChatMemory;
     private final List<AbstractTool> tools;
 
     @Override
     public LexV2Response apply(LexV2Event lexRequest) {
         final var eventWrapper = new LexV2EventWrapper(lexRequest);
 
-        final String sessionId = lexRequest.getSessionId();
-
         // Handle case where there is no input (Caller Silence not saying anything)
         if (eventWrapper.getBlankCounter() > 2 && eventWrapper.isVoice()) {
-            // Call is just hanging there with nothing said so hang up
+            // Call is just hanging there with nothing said over 2 times, so hang up and stop calling model with 'blank'
             return buildTerminatingResponse(Map.of("action", HANGUP_FUNCTION_NAME, "bot_response", eventWrapper.getLangString(LangUtil.LanguageIds.GOODBYE)));
-        } else if (eventWrapper.getBlankCounter() > 0) {
-            // Don't bother calling Model, no input
-            return buildResponse(eventWrapper, eventWrapper.getLangString(LangUtil.LanguageIds.BLANK_RESPONSE));
         }
 
-       
         try {
             final CallResponseSpec chatCall = chatClient.prompt()
                     .system(eventWrapper.getSystemPrompt())
                     .user(lexRequest.getInputTranscript())
                     // Use Lex Session ID for the conversation ID for Chat Memory
-                    .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, sessionId))
+                    .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, eventWrapper.getChatMemorySessionId()))
                     .toolContext(Map.of("eventWrapper", eventWrapper))
                     .tools(tools.stream().filter(t -> t.isValidForRequest(eventWrapper)).toArray())
                     .call();
 
             final ChatResponse resp = chatCall.chatResponse();     // <-- single terminal call
             String botResponse = resp.getResult().getOutput().getText();
-            log.debug("Bot Text Response is: " + botResponse);
-            final String model = getModel(resp);               // reuse the same response
+            log.debug("Raw Bot Text Response is: " + botResponse);
+            botResponse = sanitizeAssistantText(botResponse);
+            log.debug("Sanitized Bot Text Response is: " + botResponse);
 
             // We now need to determine if we should end Lex session for Chime to take back control
             if (eventWrapper.hasSessionAttributeAction()) {
                 // The only FB action is to stop the Bot and transfer conversation to Inbox
-                if ( eventWrapper.isFacebook() ) {
-                    return buildResponse(eventWrapper, "CopperBot will be removed from this conversation after clicking below.", buildTransferCard());
+                if (eventWrapper.isFacebook()) {
+                    return buildResponse(eventWrapper, botResponse, buildTransferCard());
                 } else {
                     // Since not FB, this will be for Voice calls to take action on the call (Hangup, Language Change, Transfer,etc.)
-                    eventWrapper.putSessionAttributeBotResponse(sanitizeOutput(botResponse));
+                    eventWrapper.putSessionAttributeBotResponse(botResponse);
                     return buildTerminatingResponse(eventWrapper.getSessionAttributes());
                 }
             } else {
@@ -102,23 +95,13 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
                     return buildResponse(eventWrapper, botResponse, buildWelcomeCard());
                 } else {
                     // Just a normal turn 
-                    return buildResponse(eventWrapper, sanitizeOutput(botResponse));
+                    return buildResponse(eventWrapper, botResponse);
                 }
             }
         } catch (Exception e) {
-            // Spring AI / Bedrock will throw this for unsupported media like application/zip
-            if (e instanceof IllegalArgumentException) {
-                log.warn("Unsupported media from Lex attachment", e);
-                return buildResponse(eventWrapper, "You have attached an unsupported media type, please try another file type.");
-            } else {
-                log.error(e);
-                return buildResponse(eventWrapper, e.getMessage());
-            }
+            log.error(e);
+            return buildResponse(eventWrapper, eventWrapper.getLangString(LangUtil.LanguageIds.UNHANDLED_EXCEPTION));
         }
-    }
-
-    public static String sanitizeOutput(String txt) {
-        return THINKING_PATTERN.matcher(txt).replaceAll("").trim();
     }
 
     /**
@@ -242,101 +225,19 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
                 .build();
     }
 
-    /**
-     * Obtain the model used from the response if possible.
-     *
-     * @param resp
-     * @return
-     */
-    private String getModel(ChatResponse resp) {
-        // 1) Prefer the configured model on the active ChatModel (works for Bedrock + OpenAI)
-        try {
-            String configured = Optional.ofNullable(chatModel)
-                    .map(ChatModel::getDefaultOptions)
-                    .map(ChatOptions::getModel)
-                    .orElse(null);
-            if (notBlank(configured)) {
-                return configured;
-            }
-        } catch (Exception e) {
-            log.debug("getModel(): unable to read model from ChatModel options", e);
+    public static String sanitizeAssistantText(String text) {
+        if (text == null || text.isEmpty()) {
+            return text;
         }
 
-        // 2) Provider/response metadata (may be empty for Bedrock)
-        String fromResp = extractModelFromMetadata(resp != null ? resp.getMetadata() : null);
-        if (notBlank(fromResp)) {
-            return fromResp;
-        }
+        // Remove thinking blocks entirely
+        String cleaned = THINKING_PATTERN.matcher(text).replaceAll("");
 
-        // 3) Some providers stash metadata on each result/output
-        if (resp != null && resp.getResults() != null) {
-            for (var r : resp.getResults()) {
-                try {
-                    var out = r.getOutput();
-                    String fromOut = extractModelFromMetadata(out != null ? out.getMetadata() : null);
-                    if (notBlank(fromOut)) {
-                        return fromOut;
-                    }
-                } catch (Exception ignore) {
-                    /* no output metadata */ }
-            }
-        }
+        // Remove <response> wrapper tags only
+        cleaned = OPEN_RESPONSE_PATTERN.matcher(cleaned).replaceAll("");
+        cleaned = CLOSE_RESPONSE_PATTERN.matcher(cleaned).replaceAll("");
 
-        // 4) Last resort
-        return "unknown";
-    }
-
-    private static boolean notBlank(String s) {
-        return s != null && !s.isBlank();
-    }
-
-    @SuppressWarnings("unchecked")
-    private String extractModelFromMetadata(Object md) {
-        if (md == null) {
-            return null;
-        }
-
-        // Helpful debug once while tuning (disable after you confirm)
-        log.debug("metadata class={}, value={}", md.getClass().getName(), md);
-
-        // A) Map-like metadata
-        if (md instanceof Map<?, ?> map) {
-            for (String key : List.of(
-                    "model", "modelId", "model_id", "bedrockModelId", "providerModelId", "modelName")) {
-                Object v = map.get(key);
-                if (v != null && !String.valueOf(v).isBlank()) {
-                    return String.valueOf(v);
-                }
-            }
-        }
-
-        // B) POJO: try common getters via reflection
-        for (String getter : List.of(
-                "getModel", "getModelId", "modelId", "getBedrockModelId", "getModelName")) {
-            try {
-                Method m = md.getClass().getMethod(getter);
-                Object v = m.invoke(md);
-                if (v != null && !String.valueOf(v).isBlank()) {
-                    return String.valueOf(v);
-                }
-            } catch (ReflectiveOperationException ignore) {
-            }
-        }
-
-        // C) Fields (some metadata objects are simple records)
-        for (String field : List.of("model", "modelId", "model_id", "bedrockModelId", "providerModelId")) {
-            try {
-                Field f = md.getClass().getDeclaredField(field);
-                f.setAccessible(true);
-                Object v = f.get(md);
-                if (v != null && !String.valueOf(v).isBlank()) {
-                    return String.valueOf(v);
-                }
-            } catch (ReflectiveOperationException ignore) {
-            }
-        }
-
-        return null;
+        return cleaned.trim();
     }
 
 }

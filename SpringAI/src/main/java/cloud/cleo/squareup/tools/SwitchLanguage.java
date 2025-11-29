@@ -19,9 +19,8 @@ public class SwitchLanguage extends AbstractTool {
     @Tool(
         name = SWITCH_LANGUAGE_FUNCTION_NAME,
         description = """
-            Change the language used to interact with the caller. \
-            Use this only for voice calls when the caller clearly \
-            requests to switch languages.
+            Change the language used to interact with the caller. 
+            Use this only when the caller clearly requests to switch languages.
             """
     )
     public StatusMessageResult switchLanguage(SwitchLanguageRequest r, ToolContext ctx) {

@@ -1,5 +1,6 @@
 package cloud.cleo.squareup.memory;
 
+import static cloud.cleo.squareup.cloudfunctions.LexFunction.sanitizeAssistantText;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Clock;
@@ -165,20 +166,6 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
     // Helpers – sanitize, JSON (de)serialization, builders
     // -------------------------------------------------------------------------
 
-    /**
-     * Strip out <thinking>...</thinking> blocks so they don't pollute memory.
-     */
-    private String sanitizeAssistantText(String text) {
-        if (text == null) {
-            return null;
-        }
-        int start = text.indexOf("<thinking>");
-        int end = text.indexOf("</thinking>");
-        if (start >= 0 && end > start) {
-            return text.substring(end + "</thinking>".length()).trim();
-        }
-        return text;
-    }
 
     private void writeToolCalls(DynamoChatMemoryItem item, AssistantMessage am) {
         List<ToolCall> toolCalls = am.getToolCalls();

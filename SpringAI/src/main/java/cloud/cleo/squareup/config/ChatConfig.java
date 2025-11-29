@@ -1,4 +1,4 @@
-package cloud.cleo.squareup;
+package cloud.cleo.squareup.config;
 
 
 

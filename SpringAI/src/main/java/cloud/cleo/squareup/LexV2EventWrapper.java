@@ -22,6 +22,8 @@ import static cloud.cleo.squareup.tools.AbstractTool.SWITCH_LANGUAGE_FUNCTION_NA
 import static cloud.cleo.squareup.tools.AbstractTool.TRANSFER_FUNCTION_NAME;
 import static cloud.cleo.squareup.tools.AbstractTool.WEBSITE_URL;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
@@ -116,7 +118,7 @@ public class LexV2EventWrapper {
                 .withInputTranscript(ppe.getMessageBody())
                 // SMS has no locale target, just use en_US
                 .withBot(Bot.builder().withLocaleId("en_US").build())
-                // Need a Blank Session attributes
+                // Need Blank Session attributes
                 .withSessionState(LexV2Event.SessionState.builder().withSessionAttributes(new HashMap<>()).build())
                 .build());
     }
@@ -274,12 +276,13 @@ public class LexV2EventWrapper {
     }
 
     /**
-     * The textual input to process.
+     * The textual input to process.  No input should changed to "blank" so the model will know caller said nothing.
      *
      * @return
      */
     public String getInputTranscript() {
-        return event.getInputTranscript();
+        final var it =  event.getInputTranscript();
+        return it.isBlank() ? "blank" : it;
     }
 
     /**
@@ -329,12 +332,29 @@ public class LexV2EventWrapper {
     }
 
     /**
-     * Session Id for the interaction.
+     * Session Id for the interaction (raw from the Lex Request).
      *
      * @return
      */
     public String getSessionId() {
         return event.getSessionId();
+    }
+
+    /**
+     * Session Id used for Chat Memory. Since some channels like Pinpoint and
+     * Twilio send in phone number, append date to those that use static values.
+     * Chime will have unique sessionId per call for example so no need to 
+     * change that.
+     * 
+     * @return
+     */
+    public String getChatMemorySessionId() {
+        return switch (getChannelPlatform()) {
+            case FACEBOOK, TWILIO, PINPOINT ->
+                getSessionId() + LocalDate.now(ZoneId.of("America/Chicago"));
+            default ->
+                getSessionId();
+        };
     }
 
     /**
@@ -449,7 +469,7 @@ public class LexV2EventWrapper {
                 sb.append("The user is interacting with speech via a telephone call.  please keep answers short and concise.  ");
 
                 // Blank input, meaning silienece timeout which is a speech only thing
-                sb.append("When the prompt is exactly blank, this means the caller did not say anything, so try and engage in conversation and also suggest ")
+                sb.append("When the prompt is exactly 'blank', this means the caller did not say anything, so try and engage in conversation and also suggest ")
                         .append("queries the caller might be interested in (Hours, Private Shopping, Location, Product Search, Language Change, etc.).  ");
 
                 // Hangup

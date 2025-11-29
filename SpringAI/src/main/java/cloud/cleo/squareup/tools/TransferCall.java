@@ -17,8 +17,8 @@ public class TransferCall extends AbstractTool {
     @Tool(
         name = TRANSFER_FUNCTION_NAME,
         description = """
-            Transfer the caller to an employee or the main store number. \
-            The assistant MUST NOT transfer to arbitrary numbers. \
+            Transfer the caller to an employee or the main store number. 
+            The assistant MUST NOT transfer to arbitrary numbers. 
             Only valid internal/store numbers are permitted.
             """
     )
