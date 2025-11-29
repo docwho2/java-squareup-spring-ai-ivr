@@ -59,7 +59,7 @@ public class ChatConfig {
     @Bean
     public BedrockChatOptions bedrockChatOptions(@Value("${spring.ai.bedrock.chat.options.model:}") String model) {
         String resolved = (model == null || model.isBlank())
-                ? "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
+                ? "anthropic.claude-3-haiku-20240307-v1:0"
                 : model;
 
         return BedrockChatOptions.builder()
