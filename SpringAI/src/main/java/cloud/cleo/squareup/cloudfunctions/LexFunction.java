@@ -57,7 +57,7 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
         try {
             final CallResponseSpec chatCall = chatClient.prompt()
                     .system(eventWrapper.getSystemPrompt())
-                    .user(lexRequest.getInputTranscript())
+                    .user(eventWrapper.getInputTranscript())
                     // Use Lex Session ID for the conversation ID for Chat Memory
                     .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, eventWrapper.getChatMemorySessionId()))
                     .toolContext(Map.of("eventWrapper", eventWrapper))
