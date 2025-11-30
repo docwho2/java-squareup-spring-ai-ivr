@@ -169,32 +169,49 @@ jobs:
       with:
         use-installer: true
         
-    - name: Push Square API Key to Parameter store
-      run: >
-        aws ssm put-parameter
-        --name /${STACK_NAME}/SQUARE_API_KEY
-        --description "Square API Key used for stack ${STACK_NAME}"
-        --type String
-        --value ${SQUARE_API_KEY}
-        --overwrite
-    
-    - name: Push OpenAI API Key to Parameter store
-      run: >
-        aws ssm put-parameter
-        --name /${STACK_NAME}/OPENAI_API_KEY
-        --description "OpenAI API Key used for stack ${STACK_NAME}"
-        --type String
-        --value ${OPENAI_API_KEY}
-        --overwrite
-    
-    - name: Push Facebook Access Token to Parameter store
-      run: >
-        aws ssm put-parameter
-        --name /${STACK_NAME}/FB_PAGE_ACCESS_TOKEN
-        --description "Facebook Access token used for stack ${STACK_NAME}"
-        --type String
-        --value ${FB_PAGE_ACCESS_TOKEN}
-        --overwrite
+    - name: Sync Parameters to SSM (only if changed)
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        update_param_if_changed() {
+          local name="$1"
+          local value="$2"
+          local description="$3"
+
+          echo "Checking SSM parameter: $name"
+
+          # Get current value (if it exists). Suppress error if not found.
+          local current_value=""
+          if current_value_json=$(aws ssm get-parameter --name "$name" --query 'Parameter.Value' --output text 2>/dev/null); then
+            current_value="$current_value_json"
+          fi
+
+          if [[ "$current_value" == "$value" ]]; then
+            echo "No change for $name, skipping put-parameter"
+          else
+            echo "Value changed for $name, updating in SSM"
+            aws ssm put-parameter \
+              --name "$name" \
+              --description "$description" \
+              --type String \
+              --value "$value" \
+              --overwrite
+          fi
+        }
+
+        update_param_if_changed "/${STACK_NAME}/SQUARE_API_KEY" \
+          "${SQUARE_API_KEY}" \
+          "Square API Key used for stack ${STACK_NAME}"
+
+        update_param_if_changed "/${STACK_NAME}/OPENAI_API_KEY" \
+          "${OPENAI_API_KEY}" \
+          "OpenAI API Key used for stack ${STACK_NAME}"
+
+        update_param_if_changed "/${STACK_NAME}/FB_PAGE_ACCESS_TOKEN" \
+          "${FB_PAGE_ACCESS_TOKEN}" \
+          "Facebook Access token used for stack ${STACK_NAME}"
+
     
     - name: Cache SAM Build files
       uses: actions/cache@v4
