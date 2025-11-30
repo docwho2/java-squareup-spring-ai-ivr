@@ -40,7 +40,7 @@ runs:
     - name: Chuckles Candy Test
       shell: bash
       run: |
-        RESULT=$(aws lexv2-runtime recognize-text --text 'Do you have Chuckles?' --output text --query 'messages[0].content' --bot-id ${BOT_ID} --bot-alias-id ${BOT_ALIAS_ID} --locale-id en_US --session-id ${{ inputs.session-id }})
+        RESULT=$(aws lexv2-runtime recognize-text --text 'Do you have Chuckles Candy in stock?' --output text --query 'messages[0].content' --bot-id ${BOT_ID} --bot-alias-id ${BOT_ALIAS_ID} --locale-id en_US --session-id ${{ inputs.session-id }})
         echo "Result is [${RESULT}]"
         if [[ $RESULT != *"Yes"* && $RESULT != *"We have"* && $RESULT != *"Chuckles"* ]]; then
           echo "Did not pass Chuckles test"
@@ -65,6 +65,17 @@ runs:
         RESULT=$(aws lexv2-runtime recognize-text --text 'What is your address?' --output text --query 'messages[0].content' --bot-id ${BOT_ID} --bot-alias-id ${BOT_ALIAS_ID} --locale-id en_US --session-id ${{ inputs.session-id }})
         echo "Result is [${RESULT}]"
         if [[ $RESULT != *"160 Main"* ]]; then
+          echo "Did not pass Address Test"
+          exit 1
+        fi
+        echo "Address Test Passed" 
+        
+    - name: Staff Test
+      shell: bash
+      run: |  
+        RESULT=$(aws lexv2-runtime recognize-text --text 'Does Steve work there?' --output text --query 'messages[0].content' --bot-id ${BOT_ID} --bot-alias-id ${BOT_ALIAS_ID} --locale-id en_US --session-id ${{ inputs.session-id }})
+        echo "Result is [${RESULT}]"
+        if [[ $RESULT != *"Steve Jensen"* ]]; then
           echo "Did not pass Address Test"
           exit 1
         fi

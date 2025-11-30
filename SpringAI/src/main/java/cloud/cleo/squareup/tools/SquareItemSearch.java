@@ -20,22 +20,24 @@ import org.springframework.stereotype.Component;
 public class SquareItemSearch extends AbstractTool {
 
     @Tool(
-        name = "store_product_item",
-        description = """
+            name = "store_product_item",
+            description = """
             Search for store product items by text and return up to 5 item names. \
             The result may not include all matching items if more than 5 exist.
             """
     )
     public SquareItemSearchResult searchItems(SquareItemSearchRequest r, ToolContext ctx) {
 
-        if ( r == null || r.searchText == null || r.searchText.isBlank() ) {
+        if (r == null || r.searchText == null || r.searchText.isBlank()) {
+            log.debug("Empty or null input detected on Square Item search tool");
             return new SquareItemSearchResult(
                     List.of(),
                     "FAILED",
                     "search_text is required to search inventory"
             );
         }
-        
+
+        log.debug("Square Item Search for {}", r.searchText);
         List<String> tokens = allCombinations(r.searchText);
         List<String> itemNames = new ArrayList<>();
 
@@ -45,15 +47,15 @@ public class SquareItemSearch extends AbstractTool {
             // Use the shared virtual-thread executor from AbstractTool
             List<Future<SearchCatalogItemsResponse>> futures = tokens.stream()
                     .map(token -> VIRTUAL_THREAD_EXECUTOR.submit(() -> {
-                        log.debug("Executing search for [{}]", token);
-                        return getSquareClient()
-                                .catalog()
-                                .searchItems(SearchCatalogItemsRequest.builder()
-                                        .textFilter(token)
-                                        .limit(5)
-                                        .build())
-                                .join(); // block only inside virtual thread
-                    }))
+                log.debug("Executing search for [{}]", token);
+                return getSquareClient()
+                        .catalog()
+                        .searchItems(SearchCatalogItemsRequest.builder()
+                                .textFilter(token)
+                                .limit(5)
+                                .build())
+                        .join(); // block only inside virtual thread
+            }))
                     .collect(Collectors.toList());
 
             // Collect results
@@ -63,8 +65,8 @@ public class SquareItemSearch extends AbstractTool {
                     if (response.getItems() != null && response.getItems().isPresent()) {
                         response.getItems().get().stream()
                                 .map(item -> item.getItem().get()
-                                        .getItemData().get()
-                                        .getName().get())
+                                .getItemData().get()
+                                .getName().get())
                                 .forEach(itemNames::add);
                     }
                 } catch (Exception e) {
@@ -88,12 +90,14 @@ public class SquareItemSearch extends AbstractTool {
                 .toList();
 
         if (distinct.isEmpty()) {
+            log.debug("Square Item Search Result is Empty");
             return new SquareItemSearchResult(
                     List.of(),
                     "SUCCESS",
                     "No items match the search query."
             );
         } else {
+            log.debug("Square Item Search Result: {}", distinct.stream().collect(Collectors.joining(",")));
             return new SquareItemSearchResult(
                     distinct,
                     "SUCCESS",
@@ -128,5 +132,7 @@ public class SquareItemSearch extends AbstractTool {
             String status,
             @JsonProperty("message")
             String message
-    ) { }
+            ) {
+
+    }
 }
