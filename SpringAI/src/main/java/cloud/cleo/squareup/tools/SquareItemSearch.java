@@ -28,6 +28,14 @@ public class SquareItemSearch extends AbstractTool {
     )
     public SquareItemSearchResult searchItems(SquareItemSearchRequest r, ToolContext ctx) {
 
+        if ( r == null || r.searchText == null || r.searchText.isBlank() ) {
+            return new SquareItemSearchResult(
+                    List.of(),
+                    "FAILED",
+                    "search_text is required to search inventory"
+            );
+        }
+        
         List<String> tokens = allCombinations(r.searchText);
         List<String> itemNames = new ArrayList<>();
 

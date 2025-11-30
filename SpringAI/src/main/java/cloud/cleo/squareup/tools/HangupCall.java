@@ -26,7 +26,7 @@ public class HangupCall extends AbstractTool {
         // The actual hangup is handled by your app / IVR logic when it sees this tool result.
         return new StatusMessageResult(
                 "SUCCESS",
-                "The caller is now ready to hang up. Session ended."
+                "The caller is now ready to hang up. Do not ask further questions, thank the caller and say good bye."
         );
     }
 
