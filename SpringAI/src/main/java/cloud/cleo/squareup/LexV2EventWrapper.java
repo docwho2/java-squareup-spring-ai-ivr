@@ -455,11 +455,11 @@ public class LexV2EventWrapper {
                         .append("""
                          function to get the direct booking URL when the person is interested in the private shopping experience.  This is 
                          really one of the more innovative services we provide and we want to ensure its as easy as possible for customers
-                         to book their appointments. 
+                         to book their appointments.  
                         """);
 
-                // Since we are fallback intent, from a Text input perspective, we can support any language ChatGPT understands
-                sb.append("Detect the language of the prompt and respond in that language only at the start of the conversation, only change language after that if the user requests a change.  ");
+                // Since we are fallback intent, from a Text input perspective, we can support any language the model understands
+                sb.append("Detect the language only on the initial prompt and respond in that language for the whole conversation, only change language after that if the user requests it.  ");
             }
             case SPEECH, DTMF -> {
                 sb.append("The user is interacting with speech via a telephone call.  please keep answers short and concise.  ");
