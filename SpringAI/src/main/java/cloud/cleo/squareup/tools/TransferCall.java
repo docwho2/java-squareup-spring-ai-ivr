@@ -29,7 +29,7 @@ public class TransferCall extends AbstractTool {
         
         return new StatusMessageResult(
                 "SUCCESS",
-                "The caller is now ready to be transferred to " + r.transferNumber()
+                "The caller is now ready to be transferred to " + r.transferNumber() + ".  Do not ask further questions, just say you will now be transferred."
         );
     }
 

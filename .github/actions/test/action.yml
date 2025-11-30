@@ -79,4 +79,4 @@ runs:
           echo "Did not pass Staff Test"
           exit 1
         fi
-        echo "Address Test Passed"
+        echo "Staff Test Passed"
