@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package cloud.cleo.squareup;
 
 import cloud.cleo.squareup.LexV2Event.Bot;
@@ -463,7 +459,7 @@ public class LexV2EventWrapper {
                         """);
 
                 // Since we are fallback intent, from a Text input perspective, we can support any language ChatGPT understands
-                sb.append("Detect the language of the prompt and respond in that language.  ");
+                sb.append("Detect the language of the prompt and respond in that language only at the start of the conversation, only change language after that if the user requests a change.  ");
             }
             case SPEECH, DTMF -> {
                 sb.append("The user is interacting with speech via a telephone call.  please keep answers short and concise.  ");
