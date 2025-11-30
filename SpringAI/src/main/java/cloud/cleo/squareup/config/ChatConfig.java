@@ -32,19 +32,18 @@ import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
 public class ChatConfig {
 
     @Bean
-    OpenAiApi openAiApi(@Value("${spring.ai.openai.api-key:}") String apiKey) {
-        return OpenAiApi.builder()
-                .apiKey(apiKey)
-                .build();
-    }
-
-    @Bean
     public OpenAiChatOptions openAiChatOptions(@Value("${spring.ai.openai.chat.options.model:gpt-5-nano}") String model) {
-        return OpenAiChatOptions.builder()
+        var builder = OpenAiChatOptions.builder()
                 .model(model)
-                //.temperature(.2) Not supported in GOT_5 models, only default value of 1
-                .N(1)
-                .build();
+                .parallelToolCalls(true)
+                .N(1);  // We only ever want 1 response
+        
+        if ( model.startsWith("gpt-4") ) {
+            //.temperature(.2) Not supported in GPT_5 models, only default value of 1
+            builder = builder.temperature(.2);
+        }
+        
+        return builder.build();
     }
 
     @Primary
@@ -90,7 +89,7 @@ public class ChatConfig {
     public ChatMemory chatMemory(ChatMemoryRepository chatMemoryRepository) {
         return MessageWindowChatMemory.builder()
                 .chatMemoryRepository(chatMemoryRepository)
-                .maxMessages(30) // whatever you like
+                .maxMessages(30)
                 .build();
     }
 
