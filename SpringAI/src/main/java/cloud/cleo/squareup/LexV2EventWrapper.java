@@ -52,6 +52,8 @@ public class LexV2EventWrapper {
     private static final FaceBookService faceBookOperations = SpringContext.getBean(FaceBookService.class);
 
     private static final SquareProperties squareProperties = SpringContext.getBean(SquareProperties.class);
+    
+    private static final ZoneId storeTimezone = SpringContext.getBean(ZoneId.class);
 
     @Getter
     private int blankCounter = 0;
@@ -346,7 +348,7 @@ public class LexV2EventWrapper {
     public String getChatMemorySessionId() {
         return switch (getChannelPlatform()) {
             case FACEBOOK, TWILIO, PINPOINT ->
-                getSessionId() + LocalDate.now(ZoneId.of("America/Chicago"));
+                getSessionId() + LocalDate.now(storeTimezone);
             default ->
                 getSessionId();
         };

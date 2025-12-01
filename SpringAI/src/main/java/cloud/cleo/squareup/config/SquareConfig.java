@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package cloud.cleo.squareup.config;
 
 import cloud.cleo.squareup.service.SquareLocationService;
@@ -59,19 +55,17 @@ public class SquareConfig {
                 .environment(environment)
                 .build();
     }
-    
 
     /**
      * Store timezone from Square location – convenient to inject directly.
+     *
      * @param squareLocationService
-     * @return 
+     * @return
      */
     @Bean
     public ZoneId storeZoneId(SquareLocationService squareLocationService) {
-        return squareLocationService.isEnabled()
-                ? squareLocationService.getZoneId()
-                : ZoneId.of("America/Chicago");  // or a sensible default, e.g. America/Chicago
+        // This is now completely safe; failure path is DEFAULT_ZONE.
+        return squareLocationService.getZoneId();
     }
 
-    
 }
