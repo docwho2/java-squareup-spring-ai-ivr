@@ -3,15 +3,23 @@ package cloud.cleo.squareup.config;
 import cloud.cleo.squareup.memory.DynamoDbChatMemoryRepository;
 import java.time.Clock;
 import java.time.Duration;
+import java.util.Comparator;
+import java.util.List;
 import org.springframework.ai.bedrock.converse.BedrockChatOptions;
 import org.springframework.ai.bedrock.converse.BedrockProxyChatModel;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.ChatClientRequest;
+import org.springframework.ai.chat.client.ChatClientResponse;
 import org.springframework.ai.chat.client.advisor.ChatModelCallAdvisor;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.ai.chat.client.advisor.api.AdvisorChain;
+import org.springframework.ai.chat.client.advisor.api.BaseAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
+import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
@@ -38,12 +46,12 @@ public class ChatConfig {
                 .parallelToolCalls(true)
                 .promptCacheKey("cloud-cleo-squareup-spring-ai")
                 .N(1);  // We only ever want 1 response
-        
-        if ( model.startsWith("gpt-4") ) {
+
+        if (model.startsWith("gpt-4")) {
             //.temperature(.2) Not supported in GPT_5 models, only default value of 1
             builder = builder.temperature(.2);
         }
-        
+
         return builder.build();
     }
 
@@ -67,7 +75,6 @@ public class ChatConfig {
                 .build();
     }
 
-    
     @Bean(name = "bedrockChatModel")
     public ChatModel bedrockChatModel(BedrockRuntimeAsyncClient bedrockRuntimeAsyncClient, BedrockRuntimeClient bedrockRuntimeClient, BedrockChatOptions options) {
         return BedrockProxyChatModel.builder()
@@ -99,11 +106,38 @@ public class ChatConfig {
     public ChatClient chatClient(ChatModel model, ChatMemory memory) {
         return ChatClient.builder(model)
                 .defaultAdvisors(
-                        //MessageChatMemoryAdvisor.builder(memory).build(),
+                        MessageChatMemoryAdvisor.builder(memory).build(),
+                        // Ensures SystemMessage is always first for model compatibility
+                        new SystemFirstSortingAdvisor(),
                         // call advisor LAST so the chain actually invokes the model
                         ChatModelCallAdvisor.builder().chatModel(model).build(),
                         new SimpleLoggerAdvisor()
                 )
                 .build();
+    }
+
+    /**
+     * 
+     */
+    private static class SystemFirstSortingAdvisor implements BaseAdvisor {
+
+        @Override
+        public ChatClientRequest before(ChatClientRequest chatClientRequest, AdvisorChain advisorChain) {
+            List<Message> processedMessages = chatClientRequest.prompt().getInstructions();
+            processedMessages.sort(Comparator.comparing(m -> m.getMessageType() == MessageType.SYSTEM ? 0 : 1));
+            return chatClientRequest.mutate()
+                    .prompt(chatClientRequest.prompt().mutate().messages(processedMessages).build())
+                    .build();
+        }
+
+        @Override
+        public ChatClientResponse after(ChatClientResponse chatClientResponse, AdvisorChain advisorChain) {
+            return chatClientResponse; // no-op
+        }
+
+        @Override
+        public int getOrder() {
+            return 0; // larger than MessageChatMemoryAdvisor so it runs afterwards
+        }
     }
 }

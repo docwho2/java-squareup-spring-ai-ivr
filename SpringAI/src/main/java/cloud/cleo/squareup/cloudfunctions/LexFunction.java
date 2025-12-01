@@ -43,7 +43,6 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
     public static final Logger log = LogManager.getLogger(LexFunction.class);
 
     private final ChatClient chatClient;
-    private final ChatMemory memory;
     private final List<AbstractTool> tools;
 
     @Override
@@ -62,7 +61,6 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
                     .user(eventWrapper.getInputTranscript())
                     // Use Lex Session ID for the conversation ID for Chat Memory
                     .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, eventWrapper.getChatMemorySessionId()))
-                    .advisors(MessageChatMemoryAdvisor.builder(memory).build())
                     .toolContext(Map.of("eventWrapper", eventWrapper))
                     .tools(tools.stream().filter(t -> t.isValidForRequest(eventWrapper)).toArray())
                     .call();
