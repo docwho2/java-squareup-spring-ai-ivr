@@ -34,12 +34,13 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
     private final DynamoDbTable<DynamoChatMemoryItem> table;
     private final Duration ttlDuration;
     private final Clock clock;
+    private final int maxMessages;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public DynamoDbChatMemoryRepository(DynamoDbEnhancedClient enhancedClient,
             String tableName,
             Duration ttlDuration,
-            Clock clock) {
+            Clock clock, int maxMessages) {
 
         this.enhancedClient = enhancedClient;
         this.table = enhancedClient.table(
@@ -47,6 +48,7 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
                 TableSchema.fromBean(DynamoChatMemoryItem.class));
         this.ttlDuration = ttlDuration;
         this.clock = (clock != null) ? clock : Clock.systemUTC();
+        this.maxMessages = maxMessages;
     }
 
     // -------------------------------------------------------------------------
@@ -72,7 +74,8 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
         // Use SK ordering from Dynamo instead of client-side sort
         return table.query(r -> r
                 .queryConditional(condition)
-                .scanIndexForward(true)) // ascending messageIndex
+                .scanIndexForward(true) // ascending messageIndex
+                .limit(maxMessages))
                 .items()
                 .stream()
                 .map(this::toMessage)
@@ -143,7 +146,9 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
         List<DynamoChatMemoryItem> existingItems = table
                 .query(r -> r
                 .queryConditional(condition)
-                .scanIndexForward(true))
+                .scanIndexForward(true)
+                .limit(maxMessages)
+                )
                 .items()
                 .stream()
                 .toList();

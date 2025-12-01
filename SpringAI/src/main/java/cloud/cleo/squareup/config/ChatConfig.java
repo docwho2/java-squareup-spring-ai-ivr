@@ -25,6 +25,7 @@ import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -44,6 +45,7 @@ public class ChatConfig {
         var builder = OpenAiChatOptions.builder()
                 .model(model)
                 .parallelToolCalls(true)
+                // We want cache to work across different Lambda IPs(AZ) and across regions
                 .promptCacheKey("cloud-cleo-squareup-spring-ai")
                 .N(1);  // We only ever want 1 response
 
@@ -83,14 +85,36 @@ public class ChatConfig {
                 .defaultOptions(options)
                 .build();
     }
+    
+    @Bean
+    @ConfigurationProperties(prefix = "chat.memory")
+    public ChatMemoryProperties chatMemoryProperties() {
+        return new ChatMemoryProperties();
+    }
+
+    public static class ChatMemoryProperties {
+        /**
+         * Max messages to keep in active window per conversation.
+         */
+        private int maxMessages = 30;
+
+        public int getMaxMessages() {
+            return maxMessages;
+        }
+
+        public void setMaxMessages(int maxMessages) {
+            this.maxMessages = maxMessages;
+        }
+    }
 
     @Bean
-    public ChatMemoryRepository chatMemoryRepository(DynamoDbEnhancedClient enhancedClient) {
+    public ChatMemoryRepository chatMemoryRepository(DynamoDbEnhancedClient enhancedClient, ChatMemoryProperties props) {
         return new DynamoDbChatMemoryRepository(
                 enhancedClient,
                 System.getenv().getOrDefault("CHAT_MEMORY_TABLE", "chat-memory"),
                 Duration.ofDays(1),
-                Clock.systemUTC());
+                Clock.systemUTC(),
+                props.getMaxMessages());
     }
 
     @Bean
