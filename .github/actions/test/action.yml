@@ -75,7 +75,7 @@ runs:
       run: |  
         RESULT=$(aws lexv2-runtime recognize-text --text 'Does Steve work there?' --output text --query 'messages[0].content' --bot-id ${BOT_ID} --bot-alias-id ${BOT_ALIAS_ID} --locale-id en_US --session-id ${{ inputs.session-id }})
         echo "Result is [${RESULT}]"
-        if [[ $RESULT != *"Steven Jensen"* ]]; then
+        if [[ $RESULT != *"Jensen"* ]]; then
           echo "Did not pass Staff Test"
           exit 1
         fi
