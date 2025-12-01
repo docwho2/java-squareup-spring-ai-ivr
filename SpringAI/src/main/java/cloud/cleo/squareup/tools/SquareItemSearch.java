@@ -1,19 +1,13 @@
 package cloud.cleo.squareup.tools;
 
 import cloud.cleo.squareup.LexV2EventWrapper;
+import cloud.cleo.squareup.service.SquareItemService;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import com.squareup.square.AsyncSquareClient;
-import com.squareup.square.types.SearchCatalogItemsRequest;
-import com.squareup.square.types.SearchCatalogItemsResponse;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Future;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 /**
@@ -23,8 +17,8 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class SquareItemSearch extends AbstractTool {
 
-    private final @Nullable AsyncSquareClient asyncSquareClient;
-    
+    private final SquareItemService squareItemService;
+
     @Tool(
             name = "store_product_item",
             description = """
@@ -43,57 +37,21 @@ public class SquareItemSearch extends AbstractTool {
             );
         }
 
-        log.debug("Square Item Search for {}", r.searchText);
-        List<String> tokens = allCombinations(r.searchText);
-        List<String> itemNames = new ArrayList<>();
-
-        log.debug("Launching {} item searches in parallel using virtual threads", tokens.size());
-
-        try {
-            // Use the shared virtual-thread executor from AbstractTool
-            List<Future<SearchCatalogItemsResponse>> futures = tokens.stream()
-                    .map(token -> VIRTUAL_THREAD_EXECUTOR.submit(() -> {
-                log.debug("Executing search for [{}]", token);
-                return asyncSquareClient
-                        .catalog()
-                        .searchItems(SearchCatalogItemsRequest.builder()
-                                .textFilter(token)
-                                .limit(5)
-                                .build())
-                        .join(); // block only inside virtual thread
-            }))
-                    .collect(Collectors.toList());
-
-            // Collect results
-            for (Future<SearchCatalogItemsResponse> future : futures) {
-                try {
-                    SearchCatalogItemsResponse response = future.get(); // blocking in virtual thread
-                    if (response.getItems() != null && response.getItems().isPresent()) {
-                        response.getItems().get().stream()
-                                .map(item -> item.getItem().get()
-                                .getItemData().get()
-                                .getName().get())
-                                .forEach(itemNames::add);
-                    }
-                } catch (Exception e) {
-                    log.error("Error processing search request", e);
-                }
-            }
-
-        } catch (Exception ex) {
-            log.error("Unhandled error in Square item search", ex);
+        if (!squareItemService.isEnabled()) {
+            log.debug("Square not enabled; item search tool is effectively disabled");
             return new SquareItemSearchResult(
                     List.of(),
                     "FAILED",
-                    ex.getLocalizedMessage()
+                    "Square is not enabled; cannot search inventory items."
             );
         }
 
-        // De-duplicate and limit to 5 overall
-        List<String> distinct = itemNames.stream()
-                .distinct()
-                .limit(5)
-                .toList();
+        log.debug("Square Item Search for {}", r.searchText);
+
+        // Use AbstractTool helper to generate combinations
+        List<String> tokens = allCombinations(r.searchText);
+
+        List<String> distinct = squareItemService.searchItemNames(tokens);
 
         if (distinct.isEmpty()) {
             log.debug("Square Item Search Result is Empty");
@@ -103,7 +61,8 @@ public class SquareItemSearch extends AbstractTool {
                     "No items match the search query."
             );
         } else {
-            log.debug("Square Item Search Result: {}", distinct.stream().collect(Collectors.joining(",")));
+            log.debug("Square Item Search Result: {}",
+                    distinct.stream().collect(java.util.stream.Collectors.joining(",")));
             return new SquareItemSearchResult(
                     distinct,
                     "SUCCESS",
@@ -114,8 +73,8 @@ public class SquareItemSearch extends AbstractTool {
 
     @Override
     public boolean isValidForRequest(LexV2EventWrapper event) {
-        // Same semantics as old isEnabled(): only expose when Square is enabled
-        return asyncSquareClient != null;
+        // Only expose when Square is actually enabled
+        return squareItemService.isEnabled();
     }
 
     /**
