@@ -99,7 +99,7 @@ public class ChatConfig {
     public ChatClient chatClient(ChatModel model, ChatMemory memory) {
         return ChatClient.builder(model)
                 .defaultAdvisors(
-                        MessageChatMemoryAdvisor.builder(memory).build(),
+                        //MessageChatMemoryAdvisor.builder(memory).build(),
                         // call advisor LAST so the chain actually invokes the model
                         ChatModelCallAdvisor.builder().chatModel(model).build(),
                         new SimpleLoggerAdvisor()
