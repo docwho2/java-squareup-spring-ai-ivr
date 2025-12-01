@@ -81,33 +81,30 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
 
     @Override
     public void saveAll(String conversationId, List<Message> messages) {
+        // If Spring AI passes no messages, we do nothing.
+        // TTL will eventually clear any old rows for this conversation.
         if (messages == null || messages.isEmpty()) {
-            // If Spring AI decides there is no history, wipe the partition
-            deleteByConversationId(conversationId);
             return;
         }
 
-        // TTL for new messages only (per-message TTL model)
-        long ttlEpochSeconds = clock.instant().plus(ttlDuration).getEpochSecond();
+        // TTL for *new* messages only (per-message TTL model)
+        long ttlEpochSeconds = clock.instant()
+                .plus(ttlDuration)
+                .getEpochSecond();
 
-        // Find the last stored index for this conversation, if any
+        // Find the highest stored index, if any
         long lastIndex = findLastIndex(conversationId).orElse(-1L);
         int oldSize = (lastIndex >= 0) ? (int) (lastIndex + 1) : 0;
         int newSize = messages.size();
 
-        // If the new list is *smaller* than what we previously had, Spring AI has
-        // trimmed the window. In that case, we reset the partition for correctness.
-        if (newSize < oldSize) {
-            deleteByConversationId(conversationId);
-            oldSize = 0;
-        }
-
+        // If newSize <= oldSize, there are no new messages to persist.
+        // This can happen when the advisor trims the window; we simply
+        // keep the extra older rows in Dynamo and let TTL reap them.
         if (newSize <= oldSize) {
-            // Nothing new to persist (no-op)
             return;
         }
 
-        // Append-only for indices [oldSize .. newSize-1]
+        // Append-only: write messages [oldSize .. newSize-1]
         List<DynamoChatMemoryItem> newItems = new ArrayList<>(newSize - oldSize);
         for (int i = oldSize; i < newSize; i++) {
             Message msg = messages.get(i);
@@ -115,7 +112,7 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
             newItems.add(item);
         }
 
-        // Batch write new items in chunks of 25 (DynamoDB limit)
+        // Batch write new items (up to 25 per batch)
         batchPutItems(newItems);
     }
 

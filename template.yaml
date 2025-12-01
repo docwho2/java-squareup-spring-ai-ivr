@@ -1018,9 +1018,7 @@ Resources:
           FB_PAGE_ID: !Ref FBPAGEID
           FB_PAGE_ACCESS_TOKEN: !Ref FBPAGEACCESSTOKEN
       Policies: 
-        - DynamoDBReadPolicy:
-            TableName: !Ref ChatSessionTable
-        - DynamoDBWritePolicy:
+        - DynamoDBCrudPolicy:
             TableName: !Ref ChatSessionTable
         - !Ref BedrockInvokeManagedPolicy
         - Version: '2012-10-17' 
@@ -1122,9 +1120,7 @@ Resources:
           CHAT_MEMORY_TABLE: !Ref ChatSessionTable
           MAIN_NUMBER: !Ref TRANSFERNUMBER
       Policies: 
-        - DynamoDBReadPolicy:
-            TableName: !Ref ChatSessionTable
-        - DynamoDBWritePolicy:
+        - DynamoDBCrudPolicy:
             TableName: !Ref ChatSessionTable
         - !Ref BedrockInvokeManagedPolicy
         - Version: '2012-10-17' 
