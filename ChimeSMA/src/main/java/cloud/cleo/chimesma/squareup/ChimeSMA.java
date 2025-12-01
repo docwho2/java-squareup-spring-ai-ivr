@@ -42,7 +42,14 @@ public class ChimeSMA extends AbstractFlow {
 
         // Play open or closed prompt based on Square Hours  
         final var openClosed = PlayAudioAction.builder()
-                .withKeyF(f -> squareHours.isOpen() ? "open.wav" : "closed.wav") // This is always in english
+                .withKeyF(f -> switch (squareHours.getStatus()) {
+            case OPEN ->
+                "open.wav";
+            case EXTENDED_CLOSED ->
+                "extended_closed.wav";
+            case CLOSED ->
+                "closed.wav";
+        }) // This is always in english
                 .withNextAction(MAIN_MENU)
                 .withErrorAction(MAIN_MENU)
                 .build();
