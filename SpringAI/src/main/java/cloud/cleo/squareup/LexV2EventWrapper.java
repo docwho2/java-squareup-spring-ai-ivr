@@ -52,7 +52,7 @@ public class LexV2EventWrapper {
     private static final FaceBookService faceBookOperations = SpringContext.getBean(FaceBookService.class);
 
     private static final SquareProperties squareProperties = SpringContext.getBean(SquareProperties.class);
-    
+
     private static final ZoneId storeTimezone = SpringContext.getBean(ZoneId.class);
 
     @Getter
@@ -382,6 +382,31 @@ public class LexV2EventWrapper {
                   We have a one hour lead time on appointments so if we're closed, they could be shopping privately within one hour! 
                   Do mention how great it would be to have the store all to themselves and how we try to accommodate all requests.  
                   """);
+
+        // 🔻 NEW: Rich, static store description to increase shared prefix length
+        sb.append("""
+              Copper Fox Gifts is a destination shop for people visiting Wahkon and the Mille Lacs Lake area.
+              Many customers stop in while on vacation, spending the weekend at their cabin, or exploring nearby towns.
+              The store focuses on fun, giftable items that are easy to browse and discover, including:
+              - Apparel such as graphic tees, cozy sweatshirts, hats, scarves, and seasonal clothing.
+              - Home decor including wall art, signs, candles, kitchen towels, drinkware, and small accent pieces.
+              - Specialty foods like dips, sauces, candies, drink mixes, and other treats that are great to share.
+              - Greeting cards, stationery, and small add-on items that round out a present.
+              - Rotating seasonal and holiday collections (fall, winter, lake life, Minnesota-themed items, and more).
+              When a shopper is unsure what they want, suggest a few categories to explore and mention that new items arrive regularly.
+              The store is known for having a warm, cozy, and slightly whimsical feel that makes browsing enjoyable.
+              """);
+
+        // 🔻 NEW: General response guidelines (also static and reusable)
+        sb.append("""
+              When answering questions, follow these guidelines:
+              - Be positive, upbeat, and welcoming, like a friendly employee working in the shop.
+              - When a question is ambiguous, briefly ask a clarifying question instead of guessing.
+              - When recommending products, connect them to the shopper's occasion when possible (birthday, holiday, cabin weekend, hostess gift, etc.).
+              - If the exact requested item is not available, suggest similar alternatives and invite the customer to visit the store or contact the shop.
+              - Avoid inventing specific prices or exact inventory counts; speak generally (for example, "we often carry...", "we frequently stock...").
+              - It is fine to remind customers that inventory can change quickly and that in-store selection may vary.
+              """);
 
         // Main Website adn FB
         sb.append("The Web Site for Copper Fox Gifts is ").append(WEBSITE_URL).append(" and we frequently post our events and information on sales ")

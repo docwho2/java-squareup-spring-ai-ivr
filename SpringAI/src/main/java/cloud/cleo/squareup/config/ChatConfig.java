@@ -36,6 +36,7 @@ public class ChatConfig {
         var builder = OpenAiChatOptions.builder()
                 .model(model)
                 .parallelToolCalls(true)
+                .promptCacheKey("cloud-cleo-squareup-spring-ai")
                 .N(1);  // We only ever want 1 response
         
         if ( model.startsWith("gpt-4") ) {
