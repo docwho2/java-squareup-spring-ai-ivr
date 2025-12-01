@@ -117,7 +117,9 @@ public class ChatConfig {
     }
 
     /**
+     * Fix until Spring AI fixes ordering such that system prompt is always sent first.
      * 
+     * @see https://github.com/spring-projects/spring-ai/issues/4170
      */
     private static class SystemFirstSortingAdvisor implements BaseAdvisor {
 

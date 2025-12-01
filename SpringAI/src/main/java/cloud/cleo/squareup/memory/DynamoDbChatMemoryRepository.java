@@ -1,11 +1,13 @@
 package cloud.cleo.squareup.memory;
 
 import static cloud.cleo.squareup.cloudfunctions.LexFunction.sanitizeAssistantText;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.*;
+
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.AssistantMessage.ToolCall;
@@ -15,34 +17,31 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.ToolResponseMessage;
 import org.springframework.ai.chat.messages.ToolResponseMessage.ToolResponse;
 import org.springframework.ai.chat.messages.UserMessage;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
-import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
-import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
+
+import software.amazon.awssdk.enhanced.dynamodb.*;
+import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 
 /**
  * Spring AI ChatMemoryRepository backed by DynamoDB Enhanced Client.
  *
- * Table schema (Dynamo):
- *   PK: conversationId (String)
- *   SK: messageIndex   (Number, 0..N-1)
- *   ttl: epoch seconds for TTL
+ * Table schema (Dynamo): PK: conversationId (String) SK: messageIndex (Number, 0..N-1) ttl: epoch seconds for TTL
+ * (per-message)
  */
 public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
 
+    private final DynamoDbEnhancedClient enhancedClient;
     private final DynamoDbTable<DynamoChatMemoryItem> table;
     private final Duration ttlDuration;
     private final Clock clock;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public DynamoDbChatMemoryRepository(DynamoDbEnhancedClient enhancedClient,
-                                        String tableName,
-                                        Duration ttlDuration,
-                                        Clock clock) {
+            String tableName,
+            Duration ttlDuration,
+            Clock clock) {
 
+        this.enhancedClient = enhancedClient;
         this.table = enhancedClient.table(
                 tableName,
                 TableSchema.fromBean(DynamoChatMemoryItem.class));
@@ -53,11 +52,10 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
     // -------------------------------------------------------------------------
     // ChatMemoryRepository
     // -------------------------------------------------------------------------
-
     @Override
     public List<String> findConversationIds() {
-        PageIterable<DynamoChatMemoryItem> pages =
-                table.scan(ScanEnhancedRequest.builder().build());
+        PageIterable<DynamoChatMemoryItem> pages
+                = table.scan(ScanEnhancedRequest.builder().build());
 
         return pages.items()
                 .stream()
@@ -71,85 +69,54 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
         QueryConditional condition = QueryConditional.keyEqualTo(
                 Key.builder().partitionValue(conversationId).build());
 
-        return table.query(r -> r.queryConditional(condition))
+        // Use SK ordering from Dynamo instead of client-side sort
+        return table.query(r -> r
+                .queryConditional(condition)
+                .scanIndexForward(true)) // ascending messageIndex
                 .items()
                 .stream()
-                .sorted(Comparator.comparing(DynamoChatMemoryItem::getMessageIndex))
                 .map(this::toMessage)
                 .toList();
     }
 
     @Override
     public void saveAll(String conversationId, List<Message> messages) {
+        if (messages == null || messages.isEmpty()) {
+            // If Spring AI decides there is no history, wipe the partition
+            deleteByConversationId(conversationId);
+            return;
+        }
+
+        // TTL for new messages only (per-message TTL model)
         long ttlEpochSeconds = clock.instant().plus(ttlDuration).getEpochSecond();
 
-        // Load existing items so we can delete stale tail indexes
-        QueryConditional condition = QueryConditional.keyEqualTo(
-                Key.builder().partitionValue(conversationId).build());
-
-        List<DynamoChatMemoryItem> existing = table
-                .query(r -> r.queryConditional(condition))
-                .items()
-                .stream()
-                .toList();
-
+        // Find the last stored index for this conversation, if any
+        long lastIndex = findLastIndex(conversationId).orElse(-1L);
+        int oldSize = (lastIndex >= 0) ? (int) (lastIndex + 1) : 0;
         int newSize = messages.size();
 
-        // Upsert per index
-        for (int i = 0; i < newSize; i++) {
+        // If the new list is *smaller* than what we previously had, Spring AI has
+        // trimmed the window. In that case, we reset the partition for correctness.
+        if (newSize < oldSize) {
+            deleteByConversationId(conversationId);
+            oldSize = 0;
+        }
+
+        if (newSize <= oldSize) {
+            // Nothing new to persist (no-op)
+            return;
+        }
+
+        // Append-only for indices [oldSize .. newSize-1]
+        List<DynamoChatMemoryItem> newItems = new ArrayList<>(newSize - oldSize);
+        for (int i = oldSize; i < newSize; i++) {
             Message msg = messages.get(i);
-
-            DynamoChatMemoryItem item = new DynamoChatMemoryItem();
-            item.setConversationId(conversationId);
-            item.setMessageIndex((long) i);
-            item.setMessageType(msg.getMessageType().name());
-            item.setTtl(ttlEpochSeconds);
-
-            // clear optional fields
-            item.setToolCallsJson(null);
-            item.setToolResponseJson(null);
-            item.setMetadataJson(null);
-
-            // Basic text & tool storage
-            switch (msg) {
-                case AssistantMessage am -> {
-                    item.setText(sanitizeAssistantText(am.getText()));
-                    writeToolCalls(item, am);
-                    //writeMetadata(item, am.getMetadata());
-                }
-                case UserMessage um -> {
-                    item.setText(um.getText());
-                    //writeMetadata(item, um.getMetadata());
-                }
-                case SystemMessage sm -> {
-                    item.setText(sm.getText());
-                    writeMetadata(item, sm.getMetadata());
-                }
-                case ToolResponseMessage trm -> {
-                    // Tool responses; messageType is TOOL already but enforce for clarity
-                    item.setMessageType(MessageType.TOOL.name());
-                    item.setText(null);
-                    writeToolResponses(item, trm);
-                    writeMetadata(item, trm.getMetadata());
-                }
-                default -> {
-                    // Fallback: just persist text
-                    item.setText(msg.getText());
-                    writeMetadata(item, msg.getMetadata());
-                }
-            }
-
-            table.putItem(item); // upsert, NOT delete-all + rewrite
+            DynamoChatMemoryItem item = buildItem(conversationId, i, msg, ttlEpochSeconds);
+            newItems.add(item);
         }
 
-        // Delete any existing items whose index is now outside the window
-        if (!existing.isEmpty()) {
-            for (DynamoChatMemoryItem e : existing) {
-                if (e.getMessageIndex() >= newSize) {
-                    table.deleteItem(e);
-                }
-            }
-        }
+        // Batch write new items in chunks of 25 (DynamoDB limit)
+        batchPutItems(newItems);
     }
 
     @Override
@@ -158,15 +125,112 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
                 Key.builder().partitionValue(conversationId).build());
 
         table.query(r -> r.queryConditional(condition))
-             .items()
-             .forEach(table::deleteItem);
+                .items()
+                .forEach(table::deleteItem);
     }
 
     // -------------------------------------------------------------------------
-    // Helpers – sanitize, JSON (de)serialization, builders
+    // Internal helpers
     // -------------------------------------------------------------------------
+    /**
+     * Find the highest messageIndex for a conversation using a descending query with limit(1). This is O(1) in terms of
+     * returned items.
+     */
+    private OptionalLong findLastIndex(String conversationId) {
+        QueryConditional condition = QueryConditional.keyEqualTo(
+                Key.builder().partitionValue(conversationId).build());
 
+        return table.query(r -> r
+                .queryConditional(condition)
+                .scanIndexForward(false) // highest SK first
+                .limit(1))
+                .items()
+                .stream()
+                .findFirst()
+                .map(i -> OptionalLong.of(i.getMessageIndex()))
+                .orElse(OptionalLong.empty());
+    }
 
+    /**
+     * Build a DynamoChatMemoryItem from a Spring AI Message.
+     */
+    private DynamoChatMemoryItem buildItem(String conversationId,
+            int index,
+            Message msg,
+            long ttlEpochSeconds) {
+
+        DynamoChatMemoryItem item = new DynamoChatMemoryItem();
+        item.setConversationId(conversationId);
+        item.setMessageIndex((long) index);
+        item.setMessageType(msg.getMessageType().name());
+        item.setTtl(ttlEpochSeconds);
+
+        // clear optional fields
+        item.setToolCallsJson(null);
+        item.setToolResponseJson(null);
+        item.setMetadataJson(null);
+
+        switch (msg) {
+            case AssistantMessage am -> {
+                item.setText(sanitizeAssistantText(am.getText()));
+                writeToolCalls(item, am);
+                //writeMetadata(item, am.getMetadata());
+            }
+            case UserMessage um -> {
+                item.setText(um.getText());
+                //writeMetadata(item, um.getMetadata());
+            }
+            case SystemMessage sm -> {
+                item.setText(sm.getText());
+                writeMetadata(item, sm.getMetadata());
+            }
+            case ToolResponseMessage trm -> {
+                item.setMessageType(MessageType.TOOL.name());
+                item.setText(null);
+                writeToolResponses(item, trm);
+                writeMetadata(item, trm.getMetadata());
+            }
+            default -> {
+                item.setText(msg.getText());
+                writeMetadata(item, msg.getMetadata());
+            }
+        }
+
+        return item;
+    }
+
+    /**
+     * Batch-write items in groups of 25 using the Enhanced Client.
+     */
+    private void batchPutItems(List<DynamoChatMemoryItem> items) {
+        if (items.isEmpty()) {
+            return;
+        }
+
+        final int batchSize = 25;
+        for (int from = 0; from < items.size(); from += batchSize) {
+            int to = Math.min(from + batchSize, items.size());
+            List<DynamoChatMemoryItem> batch = items.subList(from, to);
+
+            BatchWriteItemEnhancedRequest.Builder requestBuilder
+                    = BatchWriteItemEnhancedRequest.builder();
+
+            WriteBatch.Builder<DynamoChatMemoryItem> writeBatch
+                    = WriteBatch.builder(DynamoChatMemoryItem.class)
+                            .mappedTableResource(table);
+
+            for (DynamoChatMemoryItem item : batch) {
+                writeBatch.addPutItem(item);
+            }
+
+            requestBuilder.addWriteBatch(writeBatch.build());
+            enhancedClient.batchWriteItem(requestBuilder.build());
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // JSON helpers (unchanged)
+    // -------------------------------------------------------------------------
     private void writeToolCalls(DynamoChatMemoryItem item, AssistantMessage am) {
         List<ToolCall> toolCalls = am.getToolCalls();
         if (toolCalls == null || toolCalls.isEmpty()) {
@@ -175,7 +239,7 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
         try {
             item.setToolCallsJson(objectMapper.writeValueAsString(toolCalls));
         } catch (Exception e) {
-            // fail-soft: just skip toolCalls serialization
+            // fail-soft
         }
     }
 
@@ -209,7 +273,8 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
         try {
             return objectMapper.readValue(
                     item.getMetadataJson(),
-                    new TypeReference<Map<String, Object>>() {});
+                    new TypeReference<Map<String, Object>>() {
+            });
         } catch (Exception e) {
             return Collections.emptyMap();
         }
@@ -222,7 +287,8 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
         try {
             return objectMapper.readValue(
                     item.getToolCallsJson(),
-                    new TypeReference<List<ToolCall>>() {});
+                    new TypeReference<List<ToolCall>>() {
+            });
         } catch (Exception e) {
             return Collections.emptyList();
         }
@@ -235,7 +301,8 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
         try {
             return objectMapper.readValue(
                     item.getToolResponseJson(),
-                    new TypeReference<List<ToolResponse>>() {});
+                    new TypeReference<List<ToolResponse>>() {
+            });
         } catch (Exception e) {
             return Collections.emptyList();
         }
@@ -248,21 +315,23 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
 
         try {
             return switch (type) {
-                case USER -> UserMessage.builder()
-                        .text(text)
-                        //.metadata(metadata)
-                        .build();
+                case USER ->
+                    UserMessage.builder()
+                    .text(text)
+                    //.metadata(metadata)
+                    .build();
 
-                case SYSTEM -> SystemMessage.builder()
-                        .text(text)
-                        .metadata(metadata)
-                        .build();
+                case SYSTEM ->
+                    SystemMessage.builder()
+                    .text(text)
+                    .metadata(metadata)
+                    .build();
 
                 case ASSISTANT -> {
                     List<ToolCall> toolCalls = readToolCalls(item);
                     AssistantMessage.Builder builder = AssistantMessage.builder()
                             .content(text);
-                            //.properties(metadata);
+                    //.properties(metadata);
 
                     if (!toolCalls.isEmpty()) {
                         builder.toolCalls(toolCalls);
@@ -283,9 +352,7 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
                     yield builder.build();
                 }
             };
-        }
-        catch (Exception e) {
-            // As a last resort, fall back to a system message capturing the error.
+        } catch (Exception e) {
             return SystemMessage.builder()
                     .text("[memory-deser-error " + type + "]: " + (text == null ? "" : text))
                     .metadata(metadata)

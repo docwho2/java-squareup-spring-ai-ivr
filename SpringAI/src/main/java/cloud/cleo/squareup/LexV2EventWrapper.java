@@ -49,7 +49,7 @@ public class LexV2EventWrapper {
 
     private static final ObjectMapper mapper = SpringContext.getBean(ObjectMapper.class);
 
-    private static final FaceBookService faceBookOperations = SpringContext.getBean(FaceBookService.class);
+    private static final FaceBookService faceBookService = SpringContext.getBean(FaceBookService.class);
 
     private static final SquareProperties squareProperties = SpringContext.getBean(SquareProperties.class);
 
@@ -447,22 +447,6 @@ public class LexV2EventWrapper {
                     case FACEBOOK -> {
                         // Don't need very short or char limit, but we don't want to output a book either
                         sb.append("The user is interacting via Facebook Messenger.  Use emoji in responses when appropiate.  ");
-
-                        // Personalize with Name
-                        // 👇 Try to get from Lex session cache first
-                        String name = getSessionAttribute("fb_user_name");
-
-                        if (name == null) {
-                            // Not cached yet, call Facebook API once
-                            name = faceBookOperations.getFacebookName(getSessionId());
-                            // Cache it even if it's "Unknown" to avoid repeated calls
-                            putSessionAttribute("fb_user_name", name);
-                        }
-
-                        if (!"Unknown".equalsIgnoreCase(name)) {
-                            sb.append("The user's name is ").append(name)
-                                    .append(".  Please greet the user by name and personalize responses when appropiate.  ");
-                        }
                     }
                     case TWILIO, PINPOINT -> {
                         // Try and keep SMS segements down, hence the "very" short reference and character preference
@@ -525,8 +509,28 @@ public class LexV2EventWrapper {
                         .append("""
                          function to get the direct booking URL when the person is interested in the private shopping experience.  This is 
                          really one of the more innovative services we provide and we want to ensure its as easy as possible for customers
-                         to book their appointments. The function will tell if you the message was sent to their device or unable to send.
+                         to book their appointments. The function will tell if you the message was sent to their device or unable to send.  
                         """);
+            }
+        }
+
+        // Any personalization should always be last so as many tokens above can be used by caching at the model side
+        if (isFacebook()) {
+
+            // Personalize with Name
+            // 👇 Try to get from Lex session cache first
+            String name = getSessionAttribute("fb_user_name");
+
+            if (name == null) {
+                // Not cached yet, call Facebook API once
+                name = faceBookService.getFacebookName(getSessionId());
+                // Cache it even if it's "Unknown" to avoid repeated calls
+                putSessionAttribute("fb_user_name", name);
+            }
+
+            if (!"Unknown".equalsIgnoreCase(name)) {
+                sb.append("The user's name is ").append(name)
+                        .append(".  Please greet the user by name and personalize responses when appropiate.  ");
             }
         }
 
