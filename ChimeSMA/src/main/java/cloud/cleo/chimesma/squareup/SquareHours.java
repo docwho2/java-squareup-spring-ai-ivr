@@ -22,11 +22,10 @@ import java.util.concurrent.locks.ReentrantLock;
 import lombok.Data;
 
 /**
- * Determine whether open or closed based on Square Hours from API call.
- * Cache and hold last result, so if API is down, we always have a value to return.
+ * Determine whether open or closed based on Square Hours from API call. Cache and hold last result, so if API is down,
+ * we always have a value to return.
  *
- * Also distinguishes an "extended closed" period when the location has
- * no business hours configured at all.
+ * Also distinguishes an "extended closed" period when the location has no business hours configured at all.
  *
  * SnapStart-friendly, no Spring.
  *
@@ -53,9 +52,11 @@ public class SquareHours {
     private static final SquareClient client = SquareClient.builder()
             .token(SQUARE_API_KEY)
             .environment(switch (SQUARE_ENVIRONMENT) {
-                default -> Environment.PRODUCTION;
-                case "SANDBOX", "sandbox" -> Environment.SANDBOX;
-            })
+        default ->
+            Environment.PRODUCTION;
+        case "SANDBOX", "sandbox" ->
+            Environment.SANDBOX;
+    })
             .build();
 
     private static final LocationsClient locationsApi = client.locations();
@@ -74,10 +75,8 @@ public class SquareHours {
 
     private SquareHours() {
         // Enabled if we have what looks like key and location set
-        squareEnabled = !(
-                SQUARE_LOCATION_ID == null || SQUARE_LOCATION_ID.isBlank() || "DISABLED".equalsIgnoreCase(SQUARE_LOCATION_ID)
-             || SQUARE_API_KEY == null     || SQUARE_API_KEY.isBlank()     || "DISABLED".equalsIgnoreCase(SQUARE_API_KEY)
-        );
+        squareEnabled = !(SQUARE_LOCATION_ID == null || SQUARE_LOCATION_ID.isBlank() || "DISABLED".equalsIgnoreCase(SQUARE_LOCATION_ID)
+                || SQUARE_API_KEY == null || SQUARE_API_KEY.isBlank() || "DISABLED".equalsIgnoreCase(SQUARE_API_KEY));
         System.out.println("Square Enabled check = " + squareEnabled);
 
         // Warm cache once at startup (good for SnapStart),
@@ -97,8 +96,7 @@ public class SquareHours {
     }
 
     /**
-     * Load and cache location; may return null if unable to retrieve
-     * and we have no previous cached value.
+     * Load and cache location; may return null if unable to retrieve and we have no previous cached value.
      */
     private Location getLocation() {
         if (!squareEnabled) {
@@ -167,8 +165,7 @@ public class SquareHours {
     /**
      * Is the store currently open?
      *
-     * If we don't have a valid key/location or cannot reach Square,
-     * this returns false.
+     * If we don't have a valid key/location or cannot reach Square, this returns false.
      */
     public boolean isOpen() {
         return getStatus() == StoreStatus.OPEN;
@@ -183,7 +180,8 @@ public class SquareHours {
 
     /**
      * Overall status based on Square location + business hours.
-     * @return 
+     *
+     * @return
      */
     public StoreStatus getStatus() {
         if (!squareEnabled) {
@@ -219,9 +217,9 @@ public class SquareHours {
 
         BusinessHours(Location location) {
             this(
-                location.getBusinessHours()
-                        .flatMap(bh -> bh.getPeriods())
-                        .orElse(null)
+                    location.getBusinessHours()
+                            .flatMap(bh -> bh.getPeriods())
+                            .orElse(null)
             );
         }
 
@@ -243,7 +241,7 @@ public class SquareHours {
                     .filter(p -> p.getDow().equals(now.getDayOfWeek()))
                     .anyMatch(p -> {
                         final var start = LocalDateTime.of(today, p.getStart()).atZone(zone);
-                        final var end   = LocalDateTime.of(today, p.getEnd()).atZone(zone);
+                        final var end = LocalDateTime.of(today, p.getEnd()).atZone(zone);
                         return now.isAfter(start) && now.isBefore(end);
                     });
         }
@@ -258,19 +256,26 @@ public class SquareHours {
 
         OpenPeriod(BusinessHoursPeriod bhp) {
             dow = switch (bhp.getDayOfWeek().get().getEnumValue()) {
-                case SUN -> SUNDAY;
-                case MON -> MONDAY;
-                case TUE -> TUESDAY;
-                case WED -> WEDNESDAY;
-                case THU -> THURSDAY;
-                case FRI -> FRIDAY;
-                case SAT -> SATURDAY;
+                case SUN ->
+                    SUNDAY;
+                case MON ->
+                    MONDAY;
+                case TUE ->
+                    TUESDAY;
+                case WED ->
+                    WEDNESDAY;
+                case THU ->
+                    THURSDAY;
+                case FRI ->
+                    FRIDAY;
+                case SAT ->
+                    SATURDAY;
                 case UNKNOWN ->
-                        throw new RuntimeException("Day of Week cannot be matched " + bhp.getDayOfWeek().get());
+                    throw new RuntimeException("Day of Week cannot be matched " + bhp.getDayOfWeek().get());
             };
 
             start = LocalTime.parse(bhp.getStartLocalTime().get());
-            end   = LocalTime.parse(bhp.getEndLocalTime().get());
+            end = LocalTime.parse(bhp.getEndLocalTime().get());
         }
     }
 }
