@@ -3,22 +3,28 @@ package cloud.cleo.squareup.tools;
 import cloud.cleo.squareup.LexV2EventWrapper;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import com.squareup.square.AsyncSquareClient;
 import com.squareup.square.types.SearchCatalogItemsRequest;
 import com.squareup.square.types.SearchCatalogItemsResponse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 /**
  * Search for items based on search query using virtual threads.
  */
 @Component
+@RequiredArgsConstructor
 public class SquareItemSearch extends AbstractTool {
 
+    private final @Nullable AsyncSquareClient asyncSquareClient;
+    
     @Tool(
             name = "store_product_item",
             description = """
@@ -48,7 +54,7 @@ public class SquareItemSearch extends AbstractTool {
             List<Future<SearchCatalogItemsResponse>> futures = tokens.stream()
                     .map(token -> VIRTUAL_THREAD_EXECUTOR.submit(() -> {
                 log.debug("Executing search for [{}]", token);
-                return getSquareClient()
+                return asyncSquareClient
                         .catalog()
                         .searchItems(SearchCatalogItemsRequest.builder()
                                 .textFilter(token)
@@ -109,7 +115,7 @@ public class SquareItemSearch extends AbstractTool {
     @Override
     public boolean isValidForRequest(LexV2EventWrapper event) {
         // Same semantics as old isEnabled(): only expose when Square is enabled
-        return isSquareEnabled();
+        return asyncSquareClient != null;
     }
 
     /**

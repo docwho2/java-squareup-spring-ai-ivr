@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  * Driving directions when the user is interacting via a text interface.
  */
 @Component
-public class DrivingDirectionsText extends DrivingDirections {
+public class DrivingDirectionsText extends AbstractTool {
 
     @Tool(
         name = DRIVING_DIRECTIONS_TEXT_FUNCTION_NAME,

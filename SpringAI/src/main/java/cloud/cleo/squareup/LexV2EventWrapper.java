@@ -1,7 +1,9 @@
 package cloud.cleo.squareup;
 
+import cloud.cleo.squareup.service.FaceBookService;
 import cloud.cleo.squareup.LexV2Event.Bot;
 import cloud.cleo.squareup.cloudfunctions.PinpointFunction.PinpointEvent;
+import cloud.cleo.squareup.config.SquareConfig.SquareProperties;
 import cloud.cleo.squareup.enums.*;
 import static cloud.cleo.squareup.enums.ChannelPlatform.*;
 import static cloud.cleo.squareup.enums.LexInputMode.DTMF;
@@ -9,7 +11,6 @@ import static cloud.cleo.squareup.enums.LexInputMode.SPEECH;
 import static cloud.cleo.squareup.enums.LexInputMode.TEXT;
 import cloud.cleo.squareup.lang.LangUtil;
 import cloud.cleo.squareup.lang.LangUtil.LanguageIds;
-import cloud.cleo.squareup.tools.AbstractTool;
 import static cloud.cleo.squareup.tools.AbstractTool.DRIVING_DIRECTIONS_VOICE_FUNCTION_NAME;
 import static cloud.cleo.squareup.tools.AbstractTool.HANGUP_FUNCTION_NAME;
 import static cloud.cleo.squareup.tools.AbstractTool.PRIVATE_SHOPPING_TEXT_FUNCTION_NAME;
@@ -48,7 +49,9 @@ public class LexV2EventWrapper {
 
     private static final ObjectMapper mapper = SpringContext.getBean(ObjectMapper.class);
 
-    private static final FaceBookOperations faceBookOperations = SpringContext.getBean(FaceBookOperations.class);
+    private static final FaceBookService faceBookOperations = SpringContext.getBean(FaceBookService.class);
+
+    private static final SquareProperties squareProperties = SpringContext.getBean(SquareProperties.class);
 
     @Getter
     private int blankCounter = 0;
@@ -189,8 +192,8 @@ public class LexV2EventWrapper {
     }
 
     /**
-     * Get the calling (or SMS originating) number for the session. For Channels
-     * like Facebook or CLI testing, this will not be available and null.
+     * Get the calling (or SMS originating) number for the session. For Channels like Facebook or CLI testing, this will
+     * not be available and null.
      *
      * @return E164 number or null if not applicable to channel.
      */
@@ -224,10 +227,8 @@ public class LexV2EventWrapper {
     }
 
     /**
-     * Store this in case we try and send SMS twice ever, don't want to pay for
-     * the lookup again since it costs money. AWS usually calls the same Lambda,
-     * but anyways no harm to try and cache to save a couple cents here and
-     * there.
+     * Store this in case we try and send SMS twice ever, don't want to pay for the lookup again since it costs money.
+     * AWS usually calls the same Lambda, but anyways no harm to try and cache to save a couple cents here and there.
      */
     private static final Map<String, NumberValidateResponse> validatePhoneMap = new HashMap<>();
 
@@ -272,12 +273,12 @@ public class LexV2EventWrapper {
     }
 
     /**
-     * The textual input to process.  No input should changed to "blank" so the model will know caller said nothing.
+     * The textual input to process. No input should changed to "blank" so the model will know caller said nothing.
      *
      * @return
      */
     public String getInputTranscript() {
-        final var it =  event.getInputTranscript();
+        final var it = event.getInputTranscript();
         return it.isBlank() ? "blank" : it;
     }
 
@@ -337,11 +338,9 @@ public class LexV2EventWrapper {
     }
 
     /**
-     * Session Id used for Chat Memory. Since some channels like Pinpoint and
-     * Twilio send in phone number, append date to those that use static values.
-     * Chime will have unique sessionId per call for example so no need to 
-     * change that.
-     * 
+     * Session Id used for Chat Memory. Since some channels like Pinpoint and Twilio send in phone number, append date
+     * to those that use static values. Chime will have unique sessionId per call for example so no need to change that.
+     *
      * @return
      */
     public String getChatMemorySessionId() {
@@ -397,7 +396,7 @@ public class LexV2EventWrapper {
         sb.append("When executing send_email_message function, translate the subject and message request parameteres to English.  ");
 
         // Square must be enabled for all of the below, so exclude when deploying without Sqaure enabled
-        if (AbstractTool.isSquareEnabled()) {
+        if (squareProperties.enabled()) {
             // Privacy
             sb.append("Do not give out employee phone numbers, only email addresses.  You can give out the main store phone number which is ")
                     .append(System.getenv("MAIN_NUMBER")).append(".  ");
@@ -484,7 +483,7 @@ public class LexV2EventWrapper {
                         .append(" function and then respond to all future prompts in that language.  ");
 
                 // Transferring
-                if (AbstractTool.isSquareEnabled()) {
+                if (squareProperties.enabled()) {
                     sb.append("To transfer or speak with an employee that has a phone number, execute the ").append(TRANSFER_FUNCTION_NAME).append(" function.  ");
                     sb.append("Do not provide callers employee phone numbers, you can only use the phone numbers to execute the ").append(TRANSFER_FUNCTION_NAME).append(" function.  ");
                 }

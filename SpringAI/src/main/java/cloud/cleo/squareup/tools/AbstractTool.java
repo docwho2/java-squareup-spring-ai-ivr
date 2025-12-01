@@ -1,16 +1,13 @@
 package cloud.cleo.squareup.tools;
 
 import cloud.cleo.squareup.LexV2EventWrapper;
-import com.squareup.square.AsyncSquareClient;
-import com.squareup.square.core.Environment;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import lombok.Getter;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.AccessLevel;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.ai.chat.model.ToolContext;
 import software.amazon.awssdk.services.sns.SnsClient;
 
@@ -19,15 +16,8 @@ import software.amazon.awssdk.services.sns.SnsClient;
  *
  * @author sjensen
  */
+@Log4j2(access = AccessLevel.PROTECTED)
 public abstract class AbstractTool {
-
-    // Initialize the Log4j logger.
-    protected static final Logger log = LogManager.getLogger(AbstractTool.class);
-
-    @Getter
-    private final static boolean squareEnabled;
-    @Getter
-    private final static AsyncSquareClient squareClient;
 
     protected static final ExecutorService VIRTUAL_THREAD_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
 
@@ -43,28 +33,12 @@ public abstract class AbstractTool {
     public final static String PRIVATE_SHOPPING_TEXT_FUNCTION_NAME = "private_shopping_url_text";
     public final static String PRIVATE_SHOPPING_VOICE_FUNCTION_NAME = "private_shopping_url_voice";
 
-    static {
-        final var key = System.getenv("SQUARE_API_KEY");
-        final var loc = System.getenv("SQUARE_LOCATION_ID");
-        final var senv = System.getenv("SQUARE_ENVIRONMENT");
+    /**
+     * URL for driving directions with Place ID so it comes up as Copper Fox properly for the pin.
+     */
+    protected static final String DRIVING_DIRECTIONS_URL
+            = "google.com/maps/dir/?api=1&destination=160+Main+St+Wahkon+MN+56386&destination_place_id=ChIJWxVcpjffs1IRcSX7D8pJSUY";
 
-        squareEnabled = !((loc == null || loc.isBlank() || loc.equalsIgnoreCase("DISABLED")) || (key == null || key.isBlank() || key.equalsIgnoreCase("DISABLED")));
-        //log.debug("Square Enabled = " + squareEnabled);
-
-        // If square enabled, then configure the client
-        if (squareEnabled) {
-            squareClient = AsyncSquareClient.builder()
-                    .token(key)
-                    .environment(switch (senv) {
-                default ->
-                    Environment.PRODUCTION;
-                case "SANDBOX", "sandbox" ->
-                    Environment.SANDBOX;
-            }).build();
-        } else {
-            squareClient = null;
-        }
-    }
 
     /**
      * Get the wrapper from the tool Context
@@ -77,8 +51,7 @@ public abstract class AbstractTool {
     }
 
     /**
-     * Given a String with several words, return all combinations of that in
-     * specific order for passing to searches.
+     * Given a String with several words, return all combinations of that in specific order for passing to searches.
      *
      * @param input
      * @return
@@ -104,9 +77,8 @@ public abstract class AbstractTool {
     }
 
     /**
-     * Given an incoming LEX event, should this tool be included in the Chat
-     * Request. Some tools are not relevant for certain channels (Like Voice vs
-     * Text).
+     * Given an incoming LEX event, should this tool be included in the Chat Request. Some tools are not relevant for
+     * certain channels (Like Voice vs Text).
      *
      * @param event
      * @return
@@ -114,8 +86,8 @@ public abstract class AbstractTool {
     public abstract boolean isValidForRequest(LexV2EventWrapper event);
 
     /**
-     * Used to send SMS to the caller's cell phone. We will also validate the
-     * number as part of the request before attempting send.
+     * Used to send SMS to the caller's cell phone. We will also validate the number as part of the request before
+     * attempting send.
      *
      * @param snsClient
      * @param event event that contains the number to send the message to
@@ -156,9 +128,8 @@ public abstract class AbstractTool {
     }
 
     /**
-     * Simple result that will be used by many tools to report back whether
-     * something succeeded to failed with a message describing the success or
-     * failure.
+     * Simple result that will be used by many tools to report back whether something succeeded to failed with a message
+     * describing the success or failure.
      */
     public record StatusMessageResult(String status, String message) {
 

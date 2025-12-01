@@ -1,30 +1,38 @@
-package cloud.cleo.squareup;
+package cloud.cleo.squareup.service;
 
 import static cloud.cleo.squareup.tools.AbstractTool.PRIVATE_SHOPPING_URL;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.stereotype.Component;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 /**
  * Perform various Facebook operations. Used when Channel is FB.
  * Uses Spring's RestClient for HTTP calls to the Facebook Graph API.
  */
-@Component
+@Log4j2
+@Service
 @RequiredArgsConstructor
-public class FaceBookOperations {
-
-    private static final Logger log = LogManager.getLogger(FaceBookOperations.class);
+public class FaceBookService {
 
     private final ObjectMapper mapper;
     private final RestClient facebookRestClient;
 
-    private final String pageId = System.getenv("FB_PAGE_ID");
-    private final String pageAccessToken = System.getenv("FB_PAGE_ACCESS_TOKEN");
+    // Inject from env/properties instead of System.getenv
+    @Value("${fb.page-id:${FB_PAGE_ID:}}")
+    private String pageId;
+
+    @Value("${fb.page-access-token:${FB_PAGE_ACCESS_TOKEN:}}")
+    private String pageAccessToken;
+
+    public boolean isEnabled() {
+        return pageId != null && !pageId.isBlank()
+            && pageAccessToken != null && !pageAccessToken.isBlank();
+    }
 
     /**
      * Transfer control of the Messenger thread session from Bot control to the Inbox.

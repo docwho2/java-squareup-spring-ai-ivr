@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * IVR for Square Retail using Lex Bot backed by ChatGPT.
+ * IVR for Square Retail using Lex Bot backed by Spring AI.
  *
  * @author sjensen
  */
@@ -58,7 +58,7 @@ public class ChimeSMA extends AbstractFlow {
     }
 
     /**
-     * Main menu is just a LexBox.
+     * Main menu is just a LexBot.
      *
      * @return
      */
@@ -75,77 +75,19 @@ public class ChimeSMA extends AbstractFlow {
         // Map to Hold all all our Bots by Language
         Map<Language, StartBotConversationAction> botLangMap = new EnumMap<>(Language.class);
 
-        final var lexBotEN = StartBotConversationAction.builder()
-                .withDescription("ChatGPT English")
-                .withLocale(Locale.forLanguageTag("en-US"))
-                .withContent("Tell us how we can help today?")
-                .withSessionAttributesF(attributesFunction)
-                .build();
-        botLangMap.put(Language.English, lexBotEN);
+        // Build all bots from enum config
+        for (Language lang : Language.values()) {
+            StartBotConversationAction bot = StartBotConversationAction.builder()
+                    .withDescription("Bot " + lang.name())
+                    .withLocale(lang.getLocale())
+                    .withContent(lang.getInitialPrompt())
+                    .withSessionAttributesF(attributesFunction)
+                    .build();
+            botLangMap.put(lang, bot);
+        }
 
-        // Spanish
-        botLangMap.put(Language.Spanish, StartBotConversationAction.builder()
-                .withDescription("ChatGPT Spanish")
-                .withLocale(Locale.forLanguageTag("es-US"))
-                .withContent("Cuéntanos ¿cómo podemos ayudar hoy?") // Tell us how we can help today?
-                .withSessionAttributesF(attributesFunction)
-                .build());
-
-        // German
-        botLangMap.put(Language.German, StartBotConversationAction.builder()
-                .withDescription("ChatGPT German")
-                .withLocale(Locale.forLanguageTag("de-DE"))
-                .withContent("Sagen Sie uns, wie wir heute helfen können?") // Tell us how we can help today?
-                .withSessionAttributesF(attributesFunction)
-                .build());
-
-        // Finnish
-        botLangMap.put(Language.Finnish, StartBotConversationAction.builder()
-                .withDescription("ChatGPT Finnish")
-                .withLocale(Locale.forLanguageTag("fi-FI"))
-                .withContent("Kerro meille, kuinka voimme auttaa tänään?") // Tell us how we can help today?
-                .withSessionAttributesF(attributesFunction)
-                .build());
-
-        // French
-        botLangMap.put(Language.French, StartBotConversationAction.builder()
-                .withDescription("ChatGPT French")
-                .withLocale(Locale.forLanguageTag("fr-CA"))
-                .withContent("Dites-nous comment nous pouvons vous aider aujourd'hui ?") // Tell us how we can help today?
-                .withSessionAttributesF(attributesFunction)
-                .build());
-
-        // Dutch
-        botLangMap.put(Language.Dutch, StartBotConversationAction.builder()
-                .withDescription("ChatGPT Dutch")
-                .withLocale(Locale.forLanguageTag("nl-NL"))
-                .withContent("Vertel ons hoe we vandaag kunnen helpen?") // Tell us how we can help today?
-                .withSessionAttributesF(attributesFunction)
-                .build());
-
-        // Norwegian
-        botLangMap.put(Language.Norwegian, StartBotConversationAction.builder()
-                .withDescription("ChatGPT Norwegian")
-                .withLocale(Locale.forLanguageTag("no-NO"))
-                .withContent("Fortell oss hvordan vi kan hjelpe i dag?") // Tell us how we can help today?
-                .withSessionAttributesF(attributesFunction)
-                .build());
-
-        // Polish
-        botLangMap.put(Language.Polish, StartBotConversationAction.builder()
-                .withDescription("ChatGPT Polish")
-                .withLocale(Locale.forLanguageTag("pl-PL"))
-                .withContent("Powiedz nam, jak możemy dziś pomóc?") // Tell us how we can help today?
-                .withSessionAttributesF(attributesFunction)
-                .build());
-
-        // Swedish
-        botLangMap.put(Language.Swedish, StartBotConversationAction.builder()
-                .withDescription("ChatGPT Swedish")
-                .withLocale(Locale.forLanguageTag("sv-SE"))
-                .withContent("Berätta för oss hur vi kan hjälpa till idag?") // Tell us how we can help today?
-                .withSessionAttributesF(attributesFunction)
-                .build());
+        // Start in English by default
+        final var lexBotEN = botLangMap.get(Language.English);
 
         //
         // MOH Flow TODO
@@ -170,7 +112,7 @@ public class ChimeSMA extends AbstractFlow {
         // Create a Next Action handler to be shared by all the Bots
         Function<StartBotConversationAction, Action> botNextAction = (a) -> {
             final var attrs = a.getActionData().getIntentResult().getSessionState().getSessionAttributes();
-            final var botResponse = attrs.get("bot_response");  // When transferring or hanging up, play back GPT's last response
+            final var botResponse = attrs.get("bot_response");  // When transferring or hanging up, play back Model's last response
             final var action = BotActions.fromString(attrs.get("action"));  // We don't need or want real intents, so the action when exiting the Bot will be set
             return switch (action) {
                 case transfer_call -> {
@@ -201,13 +143,13 @@ public class ChimeSMA extends AbstractFlow {
                 case hangup_call ->
                     SpeakAction.builder()
                     .withDescription("Saying Good Bye")
-                    .withTextF(tf -> botResponse)
+                    .withText(botResponse)
                     .withNextAction(hangup)
                     .build();
                 case switch_language -> {
                     // Obtain the bot locale based on the language attribute from the session
                     final var bot = botLangMap.getOrDefault(Language.valueOf(attrs.get("language")), lexBotEN);
-                    // Start bot in that language with GPT response (which will be in the target language)
+                    // Start bot in that language with Model's response (which will be in the target language)
                     bot.setContentF(f -> botResponse);
                     yield bot;
                 }
@@ -219,7 +161,7 @@ public class ChimeSMA extends AbstractFlow {
         // All Bots regardless of language will use the next action handler above
         botLangMap.values().forEach(bot -> bot.setNextActionF(botNextAction));
 
-        // We will start in English and GPT will detect and call back to us to switch languages as necessary
+        // We will start in English and the model will detect and call back to us to switch languages as necessary
         return lexBotEN;
     }
 
@@ -291,15 +233,31 @@ public class ChimeSMA extends AbstractFlow {
      * Voice Languages we support (that are built out in Lex)
      */
     static enum Language {
-        English,
-        Spanish,
-        German,
-        Finnish,
-        French,
-        Dutch,
-        Norwegian,
-        Polish,
-        Swedish;
+        English("en-US", "Tell us how we can help today?"),
+        Spanish("es-US", "Cuéntanos ¿cómo podemos ayudar hoy?"),
+        German("de-DE", "Sagen Sie uns, wie wir heute helfen können?"),
+        Finnish("fi-FI", "Kerro meille, kuinka voimme auttaa tänään?"),
+        French("fr-CA", "Dites-nous comment nous pouvons vous aider aujourd'hui ?"),
+        Dutch("nl-NL", "Vertel ons hoe we vandaag kunnen helpen?"),
+        Norwegian("no-NO", "Fortell oss hvordan vi kan hjelpe i dag?"),
+        Polish("pl-PL", "Powiedz nam, jak możemy dziś pomóc?"),
+        Swedish("sv-SE", "Berätta för oss hur vi kan hjälpa till idag?");
+
+        private final Locale locale;
+        private final String initialPrompt;
+
+        Language(String localeTag, String initialPrompt) {
+            this.locale = Locale.forLanguageTag(localeTag);
+            this.initialPrompt = initialPrompt;
+        }
+
+        public Locale getLocale() {
+            return locale;
+        }
+
+        public String getInitialPrompt() {
+            return initialPrompt;
+        }
     }
 
 }

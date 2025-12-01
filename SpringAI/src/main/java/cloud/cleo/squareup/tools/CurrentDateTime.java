@@ -18,13 +18,14 @@ import org.springframework.stereotype.Component;
 public class CurrentDateTime extends AbstractTool {
 
     private final ObjectMapper mapper;
+    private final ZoneId storeZoneId;
 
     @Tool(
         name = "get_current_date_time",
         description = "Returns the current date/time in ISO format and timezone."
     )
     public JsonNode getCurrentDateTime() {
-        var now = ZonedDateTime.now(ZoneId.of("America/Chicago"));
+        var now = ZonedDateTime.now(storeZoneId);
         var root = mapper.createObjectNode();
         root.put("iso", now.toString());
         root.put("date", now.toLocalDate().toString());

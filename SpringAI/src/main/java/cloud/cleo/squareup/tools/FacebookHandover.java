@@ -1,7 +1,6 @@
 package cloud.cleo.squareup.tools;
 
-import cloud.cleo.squareup.FaceBookOperations;
-import static cloud.cleo.squareup.enums.ChannelPlatform.FACEBOOK;
+import cloud.cleo.squareup.service.FaceBookService;
 
 import cloud.cleo.squareup.LexV2EventWrapper;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +15,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class FacebookHandover extends AbstractTool {
 
-    private final FaceBookOperations faceBookOperations;
+    private final FaceBookService faceBookOperations;
     
     /**
      * Tool the model can call when it has decided a human should take over.
@@ -56,7 +55,7 @@ public class FacebookHandover extends AbstractTool {
      */
     @Override
     public boolean isValidForRequest(LexV2EventWrapper event) {
-        return event.getChannelPlatform().equals(FACEBOOK);
+        return event.isFacebook();
     }
 
 }

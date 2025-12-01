@@ -1,17 +1,14 @@
 package cloud.cleo.squareup.tools;
 
-import cloud.cleo.squareup.FaceBookOperations;
+import cloud.cleo.squareup.service.FaceBookService;
 import cloud.cleo.squareup.LexV2EventWrapper;
+import cloud.cleo.squareup.service.SquareCustomerService;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.squareup.square.types.Customer;
-import com.squareup.square.types.CustomerFilter;
-import com.squareup.square.types.CustomerQuery;
-import com.squareup.square.types.CustomerTextFilter;
-import com.squareup.square.types.SearchCustomersRequest;
 import java.util.concurrent.CompletionException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ToolContext;
@@ -30,7 +27,8 @@ public class SendEmail extends AbstractTool {
 
     private final SesClient sesClient;
     private final ObjectMapper mapper;
-    private final FaceBookOperations faceBookOperations;
+    private final FaceBookService faceBookService;
+    private final SquareCustomerService squareCustomerService;
 
     @Tool(
         name = "send_email_message",
@@ -49,33 +47,13 @@ public class SendEmail extends AbstractTool {
             Customer customer = null;
 
             // If we have a valid phone number and Square is enabled, try to look up the customer.
-            if (event != null && event.hasValidUSE164Number() && isSquareEnabled()) {
-                try {
-                    final var customerList = getSquareClient()
-                            .customers()
-                            .search(SearchCustomersRequest.builder()
-                                    .query(CustomerQuery.builder()
-                                            .filter(CustomerFilter.builder()
-                                                    .phoneNumber(CustomerTextFilter.builder()
-                                                            .exact(event.getPhoneE164())
-                                                            .build())
-                                                    .build())
-                                            .build())
-                                    .limit(1L)   // only need first match
-                                    .build())
-                            .get()
-                            .getCustomers()
+            if (event != null && event.hasValidUSE164Number() && squareCustomerService.isEnabled()) {
+                var optCustomer = squareCustomerService.findCustomerByPhone(event.getPhoneE164());
+                if (optCustomer.isPresent()) {
+                    customer = optCustomer.get();
+                    customerEmail = customer.getEmailAddress()
+                            .filter(email -> !email.isBlank())
                             .orElse(null);
-
-                    if (customerList != null && !customerList.isEmpty()) {
-                        customer = customerList.get(0);
-                        if (customer.getEmailAddress() != null && customer.getEmailAddress().isPresent()) {
-                            customerEmail = customer.getEmailAddress().get();
-                        }
-                    }
-                } catch (Exception e) {
-                    // Don't fail the email if customer lookup breaks.
-                    log.error("Error in Square customer lookup", e);
                 }
             }
 
@@ -88,7 +66,7 @@ public class SendEmail extends AbstractTool {
                     case TWILIO -> subjectPrefix =
                             "[From SMS " + event.getPhoneE164() + "] ";
                     case FACEBOOK -> subjectPrefix =
-                            "[From Facebook User " + faceBookOperations.getFacebookName(event.getSessionId()) + "] ";
+                            "[From Facebook User " + faceBookService.getFacebookName(event.getSessionId()) + "] ";
                     default -> subjectPrefix =
                             "[From " + event.getChannelPlatform() + "/" + event.getSessionId() + "] ";
                 }

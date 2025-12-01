@@ -2,7 +2,7 @@ package cloud.cleo.squareup.tools;
 
 import static cloud.cleo.squareup.enums.ChannelPlatform.FACEBOOK;
 
-import cloud.cleo.squareup.FaceBookOperations;
+import cloud.cleo.squareup.service.FaceBookService;
 import cloud.cleo.squareup.LexV2EventWrapper;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class PrivateShoppingLinkText extends AbstractTool {
 
-    private final FaceBookOperations faceBookOperations;
+    private final FaceBookService faceBookOperations;
     
     @Tool(
         name = PRIVATE_SHOPPING_TEXT_FUNCTION_NAME,

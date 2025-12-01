@@ -14,7 +14,7 @@ import software.amazon.awssdk.services.sns.SnsClient;
  */
 @Component
 @RequiredArgsConstructor
-public class DrivingDirectionsVoice extends DrivingDirections {
+public class DrivingDirectionsVoice extends AbstractTool {
 
     private final SnsClient snsClient;
     

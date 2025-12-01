@@ -1,14 +1,12 @@
 package cloud.cleo.squareup.tools;
 
 import cloud.cleo.squareup.LexV2EventWrapper;
+import cloud.cleo.squareup.service.SquareTeamMemberService;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import com.squareup.square.types.SearchTeamMembersFilter;
-import com.squareup.square.types.SearchTeamMembersQuery;
-import com.squareup.square.types.SearchTeamMembersRequest;
 import com.squareup.square.types.TeamMember;
-import com.squareup.square.types.TeamMemberStatus;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Component;
@@ -17,11 +15,14 @@ import org.springframework.stereotype.Component;
  * Return employees (team members) from the Square API.
  */
 @Component
+@RequiredArgsConstructor
 public class SquareTeamMembers extends AbstractTool {
 
+    private final SquareTeamMemberService squareTeamMemberService;
+
     @Tool(
-        name = "team_members",
-        description = """
+            name = "team_members",
+            description = """
             Return the employee names, phone numbers, and email addresses for \
             this store location. The assistant MUST NOT reveal employee phone \
             numbers to callers or read the entire list aloud; phone numbers are \
@@ -29,7 +30,8 @@ public class SquareTeamMembers extends AbstractTool {
             """
     )
     public SquareTeamMembersResult getTeamMembers(ToolContext ctx) {
-        if (!isSquareEnabled()) {
+
+        if (!squareTeamMemberService.isEnabled()) {
             return new SquareTeamMembersResult(
                     List.of(),
                     "FAILED",
@@ -38,21 +40,9 @@ public class SquareTeamMembers extends AbstractTool {
         }
 
         try {
-            final var response = getSquareClient()
-                    .teamMembers()
-                    .search(SearchTeamMembersRequest.builder()
-                            .query(SearchTeamMembersQuery.builder()
-                                    .filter(SearchTeamMembersFilter.builder()
-                                            .status(TeamMemberStatus.ACTIVE)
-                                            .locationIds(List.of(System.getenv("SQUARE_LOCATION_ID")))
-                                            .build())
-                                    .build())
-                            .build())
-                    .get();
+            List<TeamMember> teamMembers = squareTeamMemberService.getActiveTeamMembers();
 
-            final var teamMembersOpt = response.getTeamMembers();
-
-            if (teamMembersOpt.isEmpty() || teamMembersOpt.get().isEmpty()) {
+            if (teamMembers.isEmpty()) {
                 return new SquareTeamMembersResult(
                         List.of(),
                         "SUCCESS",
@@ -60,7 +50,7 @@ public class SquareTeamMembers extends AbstractTool {
                 );
             }
 
-            List<Employee> employees = teamMembersOpt.get().stream()
+            List<Employee> employees = teamMembers.stream()
                     .map(Employee::new)
                     .toList();
 
@@ -83,7 +73,7 @@ public class SquareTeamMembers extends AbstractTool {
     @Override
     public boolean isValidForRequest(LexV2EventWrapper event) {
         // Only expose this tool when Square is enabled
-        return isSquareEnabled();
+        return squareTeamMemberService.isEnabled();
     }
 
     /**
@@ -112,10 +102,10 @@ public class SquareTeamMembers extends AbstractTool {
         public String email;
 
         public Employee(TeamMember tm) {
-            this.firstName   = tm.getGivenName().orElse(null);
-            this.lastName    = tm.getFamilyName().orElse(null);
+            this.firstName = tm.getGivenName().orElse(null);
+            this.lastName = tm.getFamilyName().orElse(null);
             this.phoneNumber = tm.getPhoneNumber().orElse(null);
-            this.email       = tm.getEmailAddress().orElse(null);
+            this.email = tm.getEmailAddress().orElse(null);
         }
     }
 
@@ -129,5 +119,7 @@ public class SquareTeamMembers extends AbstractTool {
             String status,
             @JsonProperty("message")
             String message
-    ) { }
+            ) {
+
+    }
 }
