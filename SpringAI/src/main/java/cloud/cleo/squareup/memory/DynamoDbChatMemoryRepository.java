@@ -81,39 +81,140 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
 
     @Override
     public void saveAll(String conversationId, List<Message> messages) {
-        // If Spring AI passes no messages, we do nothing.
-        // TTL will eventually clear any old rows for this conversation.
+        // Nothing to do if Spring AI passes no messages.
         if (messages == null || messages.isEmpty()) {
             return;
         }
 
-        // TTL for *new* messages only (per-message TTL model)
         long ttlEpochSeconds = clock.instant()
                 .plus(ttlDuration)
                 .getEpochSecond();
 
-        // Find the highest stored index, if any
-        long lastIndex = findLastIndex(conversationId).orElse(-1L);
-        int oldSize = (lastIndex >= 0) ? (int) (lastIndex + 1) : 0;
-        int newSize = messages.size();
+        // 1) Fast path: try to use ONLY the last stored item
+        Optional<DynamoChatMemoryItem> lastItemOpt = findLastItem(conversationId);
 
-        // If newSize <= oldSize, there are no new messages to persist.
-        // This can happen when the advisor trims the window; we simply
-        // keep the extra older rows in Dynamo and let TTL reap them.
-        if (newSize <= oldSize) {
+        if (lastItemOpt.isEmpty()) {
+            // New conversation – just write everything starting at index 0
+            List<DynamoChatMemoryItem> allItems = new ArrayList<>(messages.size());
+            long idx = 0;
+            for (Message m : messages) {
+                allItems.add(buildItem(conversationId, (int) idx++, m, ttlEpochSeconds));
+            }
+            batchPutItems(allItems);
             return;
         }
 
-        // Append-only: write messages [oldSize .. newSize-1]
-        List<DynamoChatMemoryItem> newItems = new ArrayList<>(newSize - oldSize);
-        for (int i = oldSize; i < newSize; i++) {
-            Message msg = messages.get(i);
-            DynamoChatMemoryItem item = buildItem(conversationId, i, msg, ttlEpochSeconds);
-            newItems.add(item);
+        DynamoChatMemoryItem lastItem = lastItemOpt.get();
+        long lastIndex = lastItem.getMessageIndex();
+        Message lastPersistedMessage = toMessage(lastItem);
+
+        // 2) Walk incoming messages backwards to find where we left off
+        int pivot = findLastPersistedPosition(messages, lastPersistedMessage);
+
+        if (pivot >= 0) {
+            // We found the last persisted message inside the incoming list.
+            // Everything AFTER pivot is new.
+            int totalMessages = messages.size();
+            if (pivot + 1 >= totalMessages) {
+                // No new messages to write
+                return;
+            }
+
+            List<DynamoChatMemoryItem> newItems
+                    = new ArrayList<>(totalMessages - (pivot + 1));
+
+            long nextIndex = lastIndex;
+            for (int i = pivot + 1; i < totalMessages; i++) {
+                Message msg = messages.get(i);
+                nextIndex++;
+                newItems.add(buildItem(conversationId, (int) nextIndex, msg, ttlEpochSeconds));
+            }
+
+            batchPutItems(newItems);
+            return;
         }
 
-        // Batch write new items (up to 25 per batch)
+        // 3) Slow fallback: we couldn't match the last stored message
+        //    in the incoming list (edge case: advisor trimmed differently,
+        //    message sanitized, etc). Fall back to full-partition approach.
+        QueryConditional condition = QueryConditional.keyEqualTo(
+                Key.builder().partitionValue(conversationId).build());
+
+        List<DynamoChatMemoryItem> existingItems = table
+                .query(r -> r
+                .queryConditional(condition)
+                .scanIndexForward(true))
+                .items()
+                .stream()
+                .toList();
+
+        int existingCount = existingItems.size();
+        long maxIndex = existingItems.isEmpty()
+                ? -1L
+                : existingItems.get(existingCount - 1).getMessageIndex();
+
+        int totalMessages = messages.size();
+        int alreadyPersistedCount = Math.min(existingCount, totalMessages);
+
+        if (alreadyPersistedCount >= totalMessages) {
+            return;
+        }
+
+        List<DynamoChatMemoryItem> newItems
+                = new ArrayList<>(totalMessages - alreadyPersistedCount);
+
+        long nextIndex = maxIndex;
+        for (int i = alreadyPersistedCount; i < totalMessages; i++) {
+            Message msg = messages.get(i);
+            nextIndex++;
+            newItems.add(buildItem(conversationId, (int) nextIndex, msg, ttlEpochSeconds));
+        }
+
         batchPutItems(newItems);
+    }
+
+    private int findLastPersistedPosition(List<Message> messages,
+            Message lastPersisted) {
+
+        for (int i = messages.size() - 1; i >= 0; i--) {
+            Message m = messages.get(i);
+            if (sameMessageForMatch(m, lastPersisted)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private boolean sameMessageForMatch(Message a, Message b) {
+        if (a.getMessageType() != b.getMessageType()) {
+            return false;
+        }
+
+        // We store only sanitized text for USER / ASSISTANT / SYSTEM.
+        // For TOOL messages, text is usually null; you could extend this to
+        // compare toolCalls/toolResponses if you care.
+        String at = a.getText();
+        String bt = b.getText();
+        if (at == null && bt == null) {
+            return true;
+        }
+        if (at == null || bt == null) {
+            return false;
+        }
+        return at.equals(bt);
+    }
+
+    private Optional<DynamoChatMemoryItem> findLastItem(String conversationId) {
+        QueryConditional condition = QueryConditional.keyEqualTo(
+                Key.builder().partitionValue(conversationId).build());
+
+        return table.query(r -> r
+                .queryConditional(condition)
+                .scanIndexForward(false) // highest SK first
+                .limit(1))
+                .items()
+                .stream()
+                .findFirst();
     }
 
     @Override
