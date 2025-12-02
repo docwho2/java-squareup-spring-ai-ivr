@@ -16,5 +16,15 @@ updates:
       interval: "daily"
       time: "03:40"
       timezone: "America/Chicago"
+    exclude-paths:
+      # Exclude looking into submodules
+      - "ChimeSMALibrary"
+      - "ChimeCDKProvision"
+  - package-ecosystem: "gitsubmodule"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "04:40"
+      timezone: "America/Chicago"
       
       
