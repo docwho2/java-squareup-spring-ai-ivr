@@ -21,8 +21,7 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.ChatClient.CallResponseSpec;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -36,10 +35,8 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
+@Log4j2
 public class LexFunction implements Function<LexV2Event, LexV2Response> {
-
-    // Initialize the Log4j logger
-    public static final Logger log = LogManager.getLogger(LexFunction.class);
 
     private final ChatClient chatClient;
     private final List<AbstractTool> tools;

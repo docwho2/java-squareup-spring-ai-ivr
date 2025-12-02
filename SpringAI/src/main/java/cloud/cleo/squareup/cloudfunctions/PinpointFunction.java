@@ -13,8 +13,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.log4j.Log4j2;
 
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.sns.SnsClient;
@@ -25,10 +24,8 @@ import software.amazon.awssdk.services.sns.SnsClient;
  */
 @Component
 @RequiredArgsConstructor
+@Log4j2
 public class PinpointFunction implements Function<SNSEvent, Void> {
-
-    // Initialize the Log4j logger
-    public static final Logger log = LogManager.getLogger(PinpointFunction.class);
 
     private final LexFunction lexFunction;
     private final ObjectMapper mapper;

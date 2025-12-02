@@ -30,8 +30,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.Getter;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.log4j.Log4j2;
 import software.amazon.awssdk.services.pinpoint.PinpointClient;
 import software.amazon.awssdk.services.pinpoint.model.NumberValidateResponse;
 
@@ -40,12 +39,10 @@ import software.amazon.awssdk.services.pinpoint.model.NumberValidateResponse;
  *
  * @author sjensen
  */
-public class LexV2EventWrapper {
+@Log4j2
+public final class LexV2EventWrapper {
     
-    private final static String BLANK_TEXT = "BLANK";
-
-    // Initialize the Log4j logger.
-    private static final Logger log = LogManager.getLogger(LexV2EventWrapper.class);
+    private static final String BLANK_TEXT = "BLANK";
 
     private static final PinpointClient pinpointClient = SpringContext.getBean(PinpointClient.class);
 
