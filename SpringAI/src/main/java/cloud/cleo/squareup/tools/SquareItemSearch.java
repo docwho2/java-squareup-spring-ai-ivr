@@ -2,6 +2,8 @@ package cloud.cleo.squareup.tools;
 
 import cloud.cleo.squareup.LexV2EventWrapper;
 import cloud.cleo.squareup.service.SquareItemService;
+import cloud.cleo.squareup.tools.AbstractTool.StatusMessageResult.Status;
+import static cloud.cleo.squareup.tools.AbstractTool.StatusMessageResult.Status.SUCCESS;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import java.util.List;
@@ -28,21 +30,13 @@ public class SquareItemSearch extends AbstractTool {
     )
     public SquareItemSearchResult searchItems(SquareItemSearchRequest r, ToolContext ctx) {
 
-        if (r == null || r.searchText == null || r.searchText.isBlank()) {
-            log.debug("Empty or null input detected on Square Item search tool");
+        // Centralized validation of required fields
+        StatusMessageResult validationError = validateRequiredFields(r);
+        if (validationError != null) {
             return new SquareItemSearchResult(
                     List.of(),
-                    "FAILED",
-                    "search_text is required to search inventory"
-            );
-        }
-
-        if (!squareItemService.isEnabled()) {
-            log.debug("Square not enabled; item search tool is effectively disabled");
-            return new SquareItemSearchResult(
-                    List.of(),
-                    "FAILED",
-                    "Square is not enabled; cannot search inventory items."
+                    validationError.status(),
+                    validationError.message()
             );
         }
 
@@ -57,7 +51,7 @@ public class SquareItemSearch extends AbstractTool {
             log.debug("Square Item Search Result is Empty");
             return new SquareItemSearchResult(
                     List.of(),
-                    "SUCCESS",
+                    SUCCESS,
                     "No items match the search query."
             );
         } else {
@@ -65,7 +59,7 @@ public class SquareItemSearch extends AbstractTool {
                     distinct.stream().collect(java.util.stream.Collectors.joining(",")));
             return new SquareItemSearchResult(
                     distinct,
-                    "SUCCESS",
+                    SUCCESS,
                     "Found " + distinct.size() + " matching items (up to 5 shown)."
             );
         }
@@ -94,7 +88,7 @@ public class SquareItemSearch extends AbstractTool {
             @JsonProperty("items")
             List<String> items,
             @JsonProperty("status")
-            String status,
+            Status status,
             @JsonProperty("message")
             String message
             ) {

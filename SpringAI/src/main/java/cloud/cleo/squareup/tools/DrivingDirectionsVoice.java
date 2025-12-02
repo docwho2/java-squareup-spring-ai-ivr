@@ -2,6 +2,7 @@ package cloud.cleo.squareup.tools;
 
 
 import cloud.cleo.squareup.LexV2EventWrapper;
+import static cloud.cleo.squareup.tools.AbstractTool.StatusMessageResult.Status.FAILED;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
@@ -30,7 +31,7 @@ public class DrivingDirectionsVoice extends AbstractTool {
         LexV2EventWrapper event = getEventWrapper(ctx);
         if (event == null) {
             return new StatusMessageResult(
-                    "FAILED",
+                    FAILED,
                     "No event context is available; cannot determine caller phone number."
             );
         }

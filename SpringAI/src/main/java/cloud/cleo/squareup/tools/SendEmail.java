@@ -9,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.squareup.square.types.Customer;
-import java.util.concurrent.CompletionException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
@@ -18,8 +17,8 @@ import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.ses.model.SendEmailRequest;
 
 /**
- * Send an email message to an employee, optionally enriching it with
- * Square customer data based on the caller's phone number.
+ * Send an email message to an employee, optionally enriching it with Square customer data based on the caller's phone
+ * number.
  */
 @Component
 @RequiredArgsConstructor
@@ -31,8 +30,8 @@ public class SendEmail extends AbstractTool {
     private final SquareCustomerService squareCustomerService;
 
     @Tool(
-        name = "send_email_message",
-        description = """
+            name = "send_email_message",
+            description = """
             Send an email message to an employee. Use this to relay information \
             from the caller to an employee. The assistant must provide a clear \
             subject and message body in English.
@@ -40,8 +39,15 @@ public class SendEmail extends AbstractTool {
     )
     public StatusMessageResult sendEmail(SendEmailRequestPayload r, ToolContext ctx) {
 
+        // Centralized validation of required fields
+        StatusMessageResult validationError = validateRequiredFields(r);
+        if (validationError != null) {
+            return validationError;
+        }
+
         LexV2EventWrapper event = getEventWrapper(ctx);
 
+        // Need to now check if all required parameters have been set
         try {
             String customerEmail = null;
             Customer customer = null;
@@ -61,14 +67,18 @@ public class SendEmail extends AbstractTool {
             final String subjectPrefix;
             if (event != null) {
                 switch (event.getChannelPlatform()) {
-                    case CHIME, CONNECT -> subjectPrefix =
-                            "[From Voice " + event.getPhoneE164() + "] ";
-                    case TWILIO -> subjectPrefix =
-                            "[From SMS " + event.getPhoneE164() + "] ";
-                    case FACEBOOK -> subjectPrefix =
-                            "[From Facebook User " + faceBookService.getFacebookName(event.getSessionId()) + "] ";
-                    default -> subjectPrefix =
-                            "[From " + event.getChannelPlatform() + "/" + event.getSessionId() + "] ";
+                    case CHIME, CONNECT ->
+                        subjectPrefix
+                                = "[From Voice " + event.getPhoneE164() + "] ";
+                    case TWILIO ->
+                        subjectPrefix
+                                = "[From SMS " + event.getPhoneE164() + "] ";
+                    case FACEBOOK ->
+                        subjectPrefix
+                                = "[From Facebook User " + faceBookService.getFacebookName(event.getSessionId()) + "] ";
+                    default ->
+                        subjectPrefix
+                                = "[From " + event.getChannelPlatform() + "/" + event.getSessionId() + "] ";
                 }
             } else {
                 // No context; fallback prefix.
@@ -94,13 +104,13 @@ public class SendEmail extends AbstractTool {
 
             // must be final for lambda builder
             final var finalMessage = composedMessage;
-            
+
             // Build SES email request.
             final var requestBuilder = SendEmailRequest.builder()
                     .destination(dest -> dest.toAddresses(r.employeeEmail))
                     .message(mesg -> mesg
-                            .body(body -> body.text(cont -> cont.data(finalMessage)))
-                            .subject(cont -> cont.data(subject)))
+                    .body(body -> body.text(cont -> cont.data(finalMessage)))
+                    .subject(cont -> cont.data(subject)))
                     .source("CopperBot@CopperFoxGifts.com");
 
             // If we know the customer's email, set it as reply-to.
@@ -114,31 +124,23 @@ public class SendEmail extends AbstractTool {
             log.info("Subject: {}", subject);
             log.info("Message: {}", composedMessage);
 
-            return new StatusMessageResult(
-                    "SUCCESS",
+            return logAndReturnSuccess(
                     "The email has been successfully sent."
             );
 
-        } catch (CompletionException e) {
-            log.error("Unhandled error sending email (wrapped)", e.getCause());
-            return new StatusMessageResult(
-                    "FAILED",
-                    "An error has occurred, the email could not be sent."
-            );
         } catch (Exception e) {
-            log.error("Unhandled error sending email", e);
-            return new StatusMessageResult(
-                    "FAILED",
-                    "An error has occurred, the email could not be sent."
+            return logAndReturnError(
+                    "An error has occurred, the email could not be sent.",
+                    e
             );
         }
     }
 
     /**
      * Valid for all channels.
-     * 
+     *
      * @param event
-     * @return 
+     * @return
      */
     @Override
     public boolean isValidForRequest(LexV2EventWrapper event) {

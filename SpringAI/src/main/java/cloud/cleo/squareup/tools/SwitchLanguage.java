@@ -24,12 +24,18 @@ public class SwitchLanguage extends AbstractTool {
             """
     )
     public StatusMessageResult switchLanguage(SwitchLanguageRequest r, ToolContext ctx) {
+        
+        // Centralized validation of required fields
+        StatusMessageResult validationError = validateRequiredFields(r);
+        if (validationError != null) {
+            return validationError;
+        }
+        
         final var wrapper = getEventWrapper(ctx);
         wrapper.putSessionAttributeAction(SWITCH_LANGUAGE_FUNCTION_NAME);
         wrapper.putSessionAttribute("language", r.language.toString());
         
-        return new StatusMessageResult(
-                "SUCCESS",
+        return logAndReturnSuccess(
                 "The caller is now ready to interact in " + r.language()
         );
     }

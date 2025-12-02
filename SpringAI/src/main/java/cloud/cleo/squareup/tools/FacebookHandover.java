@@ -3,6 +3,7 @@ package cloud.cleo.squareup.tools;
 import cloud.cleo.squareup.service.FaceBookService;
 
 import cloud.cleo.squareup.LexV2EventWrapper;
+import static cloud.cleo.squareup.tools.AbstractTool.StatusMessageResult.Status.SUCCESS;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
@@ -44,8 +45,7 @@ public class FacebookHandover extends AbstractTool {
         // Anything the user types now will go to general inbox and staff will see
         faceBookOperations.transferToInbox(event.getSessionId());
 
-        return new StatusMessageResult(
-                "SUCCESS",
+        return logAndReturnSuccess(
                 "Conversation has been moved to the Inbox, a person will respond shortly."
         );
     }

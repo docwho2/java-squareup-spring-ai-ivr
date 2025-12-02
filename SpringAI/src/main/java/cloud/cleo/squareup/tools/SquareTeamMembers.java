@@ -2,6 +2,9 @@ package cloud.cleo.squareup.tools;
 
 import cloud.cleo.squareup.LexV2EventWrapper;
 import cloud.cleo.squareup.service.SquareTeamMemberService;
+import cloud.cleo.squareup.tools.AbstractTool.StatusMessageResult.Status;
+import static cloud.cleo.squareup.tools.AbstractTool.StatusMessageResult.Status.FAILED;
+import static cloud.cleo.squareup.tools.AbstractTool.StatusMessageResult.Status.SUCCESS;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.squareup.square.types.TeamMember;
@@ -34,7 +37,7 @@ public class SquareTeamMembers extends AbstractTool {
         if (!squareTeamMemberService.isEnabled()) {
             return new SquareTeamMembersResult(
                     List.of(),
-                    "FAILED",
+                    FAILED,
                     "Square is not enabled; cannot retrieve team members."
             );
         }
@@ -45,7 +48,7 @@ public class SquareTeamMembers extends AbstractTool {
             if (teamMembers.isEmpty()) {
                 return new SquareTeamMembersResult(
                         List.of(),
-                        "SUCCESS",
+                        SUCCESS,
                         "No active team members were found for this location."
                 );
             }
@@ -56,16 +59,16 @@ public class SquareTeamMembers extends AbstractTool {
 
             return new SquareTeamMembersResult(
                     employees,
-                    "SUCCESS",
+                    SUCCESS,
                     "Returned active employees for this store location."
             );
 
         } catch (Exception ex) {
-            log.error("Unhandled error retrieving Square team members", ex);
+            final var er = logAndReturnError(ex);
             return new SquareTeamMembersResult(
                     List.of(),
-                    "FAILED",
-                    ex.getLocalizedMessage()
+                    er.status(),
+                    er.message()
             );
         }
     }
@@ -116,7 +119,7 @@ public class SquareTeamMembers extends AbstractTool {
             @JsonProperty("employees")
             List<Employee> employees,
             @JsonProperty("status")
-            String status,
+            Status status,
             @JsonProperty("message")
             String message
             ) {

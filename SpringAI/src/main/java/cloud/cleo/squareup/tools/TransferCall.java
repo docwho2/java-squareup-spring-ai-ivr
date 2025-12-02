@@ -23,12 +23,18 @@ public class TransferCall extends AbstractTool {
             """
     )
     public StatusMessageResult transfer(TransferCallRequest r, ToolContext ctx) {
+        
+        // Centralized validation of required fields
+        StatusMessageResult validationError = validateRequiredFields(r);
+        if (validationError != null) {
+            return validationError;
+        }
+        
         final var wrapper = getEventWrapper(ctx);
         wrapper.putSessionAttributeAction(TRANSFER_FUNCTION_NAME);
         wrapper.putSessionAttribute("transfer_number", r.transferNumber);
         
-        return new StatusMessageResult(
-                "SUCCESS",
+        return logAndReturnSuccess(
                 "The caller is now ready to be transferred to " + r.transferNumber() + ".  Do not ask further questions, just say you will now be transferred."
         );
     }

@@ -25,12 +25,6 @@ public class PrivateShoppingLinkVoice extends AbstractTool {
     )
     public StatusMessageResult sendPrivateShoppingLinkVoice(ToolContext ctx) {
         LexV2EventWrapper event = getEventWrapper(ctx);
-        if (event == null) {
-            return new StatusMessageResult(
-                    "FAILED",
-                    "No event context is available; cannot determine caller phone number."
-            );
-        }
 
         // Reuse the shared SMS helper on AbstractTool
         return sendSMS(snsClient, event, PRIVATE_SHOPPING_URL);
