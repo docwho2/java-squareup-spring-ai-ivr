@@ -41,6 +41,8 @@ import software.amazon.awssdk.services.pinpoint.model.NumberValidateResponse;
  * @author sjensen
  */
 public class LexV2EventWrapper {
+    
+    private final static String BLANK_TEXT = "BLANK";
 
     // Initialize the Log4j logger.
     private static final Logger log = LogManager.getLogger(LexV2EventWrapper.class);
@@ -93,7 +95,7 @@ public class LexV2EventWrapper {
         }
         this.newSession = fresh;
 
-        if (getInputTranscript().isBlank()) {
+        if (BLANK_TEXT.equals(getInputTranscript())) {
             log.debug("Got blank input, so just silent or nothing");
             blankCounter = Integer.parseInt(attrs.getOrDefault("blankCounter", "0")) + 1;
             attrs.put("blankCounter", String.valueOf(blankCounter));
@@ -281,7 +283,7 @@ public class LexV2EventWrapper {
      */
     public String getInputTranscript() {
         final var it = event.getInputTranscript();
-        return it.isBlank() ? "blank" : it;
+        return it.isBlank() ? BLANK_TEXT : it;
     }
 
     /**
@@ -475,7 +477,7 @@ public class LexV2EventWrapper {
                 sb.append("The user is interacting with speech via a telephone call.  please keep answers short and concise.  ");
 
                 // Blank input, meaning silienece timeout which is a speech only thing
-                sb.append("When the prompt is exactly 'blank', this means the caller did not say anything, so try and engage in conversation and also suggest ")
+                sb.append("When the prompt is exactly ").append(BLANK_TEXT).append(", this means the caller did not say anything, so try and engage in conversation and also suggest ")
                         .append("queries the caller might be interested in (Hours, Private Shopping, Location, Product Search, Language Change, etc.).  ");
 
                 // Hangup
