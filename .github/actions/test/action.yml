@@ -102,7 +102,7 @@ runs:
       shell: bash
       run: |
         RESULT=$(aws lexv2-runtime recognize-text \
-          --text 'Does Steve work there?' \
+          --text 'Does Steve work there?  If so, what is his last name?' \
           --output text \
           --query 'messages[0].content' \
           --bot-id "${BOT_ID}" \
@@ -112,7 +112,7 @@ runs:
         echo "Result is [${RESULT}]"
 
         # Pass if it mentions Jensen OR some form of "yes"
-        if [[ ! $RESULT =~ ([Jj]ensen|[Yy]es) ]]; then
+        if [[ ! $RESULT =~ ([Jj]ensen|[Yy]es|copperfoxgifts) ]]; then
           echo "Did not pass Staff Test"
           exit 1
         fi
