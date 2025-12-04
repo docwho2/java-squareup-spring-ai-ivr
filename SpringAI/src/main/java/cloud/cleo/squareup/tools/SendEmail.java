@@ -46,8 +46,6 @@ public class SendEmail extends AbstractTool {
         }
 
         LexV2EventWrapper event = getEventWrapper(ctx);
-
-        // Need to now check if all required parameters have been set
         try {
             String customerEmail = null;
             Customer customer = null;
@@ -64,26 +62,16 @@ public class SendEmail extends AbstractTool {
             }
 
             // Build subject based on channel, like the original switch.
-            final String subjectPrefix;
-            if (event != null) {
-                switch (event.getChannelPlatform()) {
-                    case CHIME, CONNECT ->
-                        subjectPrefix
-                                = "[From Voice " + event.getPhoneE164() + "] ";
-                    case TWILIO ->
-                        subjectPrefix
-                                = "[From SMS " + event.getPhoneE164() + "] ";
-                    case FACEBOOK ->
-                        subjectPrefix
-                                = "[From Facebook User " + faceBookService.getFacebookName(event.getSessionId()) + "] ";
-                    default ->
-                        subjectPrefix
-                                = "[From " + event.getChannelPlatform() + "/" + event.getSessionId() + "] ";
-                }
-            } else {
-                // No context; fallback prefix.
-                subjectPrefix = "[From Unknown Channel] ";
-            }
+            final String subjectPrefix = switch (event.getChannelPlatform()) {
+                case CHIME, CONNECT ->
+                    "[From Voice " + event.getPhoneE164() + "] ";
+                case TWILIO ->
+                    "[From SMS " + event.getPhoneE164() + "] ";
+                case FACEBOOK ->
+                    "[From Facebook User " + faceBookService.getFacebookName(event.getSessionId()) + "] ";
+                default ->
+                    "[From " + event.getChannelPlatform() + "/" + event.getSessionId() + "] ";
+            };
 
             final String subject = subjectPrefix + r.subject;
 
@@ -93,7 +81,7 @@ public class SendEmail extends AbstractTool {
             if (customer != null) {
                 // Append Square customer record to email for reference, stripping cards.
                 final var myMapper = mapper.copy()
-                        .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+                        .setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
                 ObjectNode custJson = myMapper.valueToTree(customer);
                 custJson.remove("cards");
 

@@ -182,6 +182,14 @@ public abstract class AbstractTool {
             FAILED
         }
     }
+    
+    /**
+     * Used when returning a single URL as result (Driving directions, Private Shopping, etc.
+     * 
+     */
+    public record UrlResult(String url) {
+        
+    }
 
     
     protected StatusMessageResult logAndReturnSuccess(String mesg) {

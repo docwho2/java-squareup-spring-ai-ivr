@@ -3,7 +3,6 @@ package cloud.cleo.squareup.tools;
 import cloud.cleo.squareup.LexV2EventWrapper;
 import cloud.cleo.squareup.service.SquareTeamMemberService;
 import cloud.cleo.squareup.tools.AbstractTool.StatusMessageResult.Status;
-import static cloud.cleo.squareup.tools.AbstractTool.StatusMessageResult.Status.FAILED;
 import static cloud.cleo.squareup.tools.AbstractTool.StatusMessageResult.Status.SUCCESS;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -33,14 +32,6 @@ public class SquareTeamMembers extends AbstractTool {
             """
     )
     public SquareTeamMembersResult getTeamMembers(ToolContext ctx) {
-
-        if (!squareTeamMemberService.isEnabled()) {
-            return new SquareTeamMembersResult(
-                    List.of(),
-                    FAILED,
-                    "Square is not enabled; cannot retrieve team members."
-            );
-        }
 
         try {
             List<TeamMember> teamMembers = squareTeamMemberService.getActiveTeamMembers();

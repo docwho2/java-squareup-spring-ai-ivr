@@ -4,7 +4,6 @@ import static cloud.cleo.squareup.enums.ChannelPlatform.FACEBOOK;
 
 import cloud.cleo.squareup.service.FaceBookService;
 import cloud.cleo.squareup.LexV2EventWrapper;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
@@ -27,7 +26,7 @@ public class PrivateShoppingLinkText extends AbstractTool {
             or wants to book a private appointment.
             """
     )
-    public PrivateShoppingLinkTextResult getPrivateShoppingLinkText(ToolContext ctx) {
+    public UrlResult getPrivateShoppingLinkText(ToolContext ctx) {
         LexV2EventWrapper event = getEventWrapper(ctx);
 
         // Preserve old behavior: for Facebook, persist as a menu choice
@@ -35,7 +34,7 @@ public class PrivateShoppingLinkText extends AbstractTool {
             faceBookOperations.addPrivateShoppingMenu(event.getSessionId());
         }
 
-        return new PrivateShoppingLinkTextResult(PRIVATE_SHOPPING_URL);
+        return new UrlResult(PRIVATE_SHOPPING_URL);
     }
 
     @Override
@@ -44,8 +43,5 @@ public class PrivateShoppingLinkText extends AbstractTool {
         return event.isText();
     }
 
-    public record PrivateShoppingLinkTextResult(
-            @JsonProperty("url")
-            String url
-    ) { }
+   
 }

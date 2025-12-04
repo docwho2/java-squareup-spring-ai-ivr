@@ -2,8 +2,6 @@ package cloud.cleo.squareup.tools;
 
 
 import cloud.cleo.squareup.LexV2EventWrapper;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Component;
@@ -22,9 +20,9 @@ public class DrivingDirectionsText extends AbstractTool {
             or requests directions.
             """
     )
-    public DrivingDirectionsTextResult getDrivingDirectionsText(ToolContext ctx) {
+    public UrlResult getDrivingDirectionsText(ToolContext ctx) {
         // No need to inspect the event here – it's always the same URL.
-        return new DrivingDirectionsTextResult(DRIVING_DIRECTIONS_URL);
+        return new UrlResult(DRIVING_DIRECTIONS_URL);
     }
 
     @Override
@@ -33,9 +31,4 @@ public class DrivingDirectionsText extends AbstractTool {
         return event.isText();
     }
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record DrivingDirectionsTextResult(
-            @JsonProperty("url")
-            String url
-    ) { }
 }

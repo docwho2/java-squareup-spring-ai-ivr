@@ -1,7 +1,6 @@
 package cloud.cleo.squareup.tools;
 
 import cloud.cleo.squareup.LexV2EventWrapper;
-import static cloud.cleo.squareup.tools.AbstractTool.StatusMessageResult.Status.SUCCESS;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Component;
@@ -24,7 +23,7 @@ public class HangupCall extends AbstractTool {
         // Inform Chime we want to terminate the call
         getEventWrapper(ctx).putSessionAttributeAction(HANGUP_FUNCTION_NAME);
 
-        // The actual hangup is handled by your app / IVR logic when it sees this tool result.
+        // The actual hangup is handled by Chime
         return logAndReturnSuccess(
                 "The caller is now ready to hang up. Do not ask further questions, thank the caller and say good bye."
         );

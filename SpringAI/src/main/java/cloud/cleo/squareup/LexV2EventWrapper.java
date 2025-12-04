@@ -25,7 +25,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.CompletionException;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
@@ -260,9 +259,6 @@ public final class LexV2EventWrapper {
                 default ->
                     false;
             };
-        } catch (CompletionException e) {
-            log.error("Unhandled Error", e.getCause());
-            return false;
         } catch (Exception e) {
             log.error("Error making pinpoint call", e);
             return false;
@@ -407,7 +403,7 @@ public final class LexV2EventWrapper {
               - It is fine to remind customers that inventory can change quickly and that in-store selection may vary.
               """);
 
-        // Main Website adn FB
+        // Main Website and FB
         sb.append("The Web Site for Copper Fox Gifts is ").append(WEBSITE_URL).append(" and we frequently post our events and information on sales ")
                 .append(" on our Facebook Page which is also linked at top level menu on our website.  ");
 
