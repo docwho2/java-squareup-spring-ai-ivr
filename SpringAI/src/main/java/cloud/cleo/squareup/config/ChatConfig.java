@@ -59,7 +59,7 @@ public class ChatConfig {
         return builder.build();
     }
 
-    
+    @Primary
     @Bean(name = "customOpenAiChatModel")
     public ChatModel chatModel(OpenAiApi api, OpenAiChatOptions options) {
         return OpenAiChatModel.builder()
@@ -80,7 +80,7 @@ public class ChatConfig {
                 .build();
     }
 
-    @Primary
+    
     @Bean(name = "bedrockChatModel")
     public ChatModel bedrockChatModel(BedrockRuntimeAsyncClient bedrockRuntimeAsyncClient, BedrockRuntimeClient bedrockRuntimeClient, BedrockChatOptions options) {
         return BedrockProxyChatModel.builder()
