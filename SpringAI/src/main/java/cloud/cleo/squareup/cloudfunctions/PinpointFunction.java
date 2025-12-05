@@ -54,7 +54,7 @@ public class PinpointFunction implements Function<SNSEvent, Void> {
             LexV2Response response = lexFunction.apply(wrapper.getEvent());
 
             // Take repsonse body message from the LexV2Reponse and respond to SMS via SNS
-            botResponse = response.getMessages()[0].getContent();
+            botResponse = response.getMessages().getFirst().getContent();
         } catch (Exception ex) {
              log.error("Unhandled Exception", ex);
             // Unhandled Exception

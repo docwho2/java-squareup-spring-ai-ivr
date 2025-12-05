@@ -21,6 +21,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -37,7 +38,7 @@ import java.util.Map;
 public class LexV2Response implements Serializable {
 
     private SessionState sessionState;
-    private Message[] messages;
+    private List<Message> messages;
     private Map<String, String> requestAttributes;
 
     @Data
@@ -60,7 +61,7 @@ public class LexV2Response implements Serializable {
         private String title;
         private String subtitle;
         private String imageUrl;
-        private Button[] buttons;
+        private List<Button> buttons;
     }
 
     @Data

@@ -63,9 +63,9 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
 
             final ChatResponse resp = chatCall.chatResponse();     // <-- single terminal call
             String botResponse = resp.getResult().getOutput().getText();
-            log.debug("Raw Bot Text Response is: " + botResponse);
+            log.debug("Raw Bot Text Response is: {}", botResponse);
             botResponse = sanitizeAssistantText(botResponse);
-            log.debug("Sanitized Bot Text Response is: " + botResponse);
+            log.debug("Sanitized Bot Text Response is: {}", botResponse);
 
             // We now need to determine if we should end Lex session for Chime to take back control
             if (eventWrapper.hasSessionAttributeAction()) {
@@ -159,9 +159,9 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
         final var lexV2Res = LexV2Response.builder()
                 .withSessionState(ss)
                 // List of messages to send back
-                .withMessages(messages.toArray(LexV2Response.Message[]::new))
+                .withMessages(messages)
                 .build();
-        log.debug("Response is " + lexV2Res);
+        log.debug("Lex Response is {}", lexV2Res);
         return lexV2Res;
     }
 
@@ -192,7 +192,7 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
                         //Button.builder().withText("Location").withValue("What is your address and driving directions?").build(),
                         LexV2Response.Button.builder().withText("Person").withValue("Please hand this conversation over to a person").build(),
                         LexV2Response.Button.builder().withText("Private Shopping").withValue("Info about Private Shopping and link").build()
-                ).toArray(LexV2Response.Button[]::new))
+                ))
                 .build();
     }
 
@@ -210,7 +210,7 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
                         LexV2Response.Button.builder().withText("Epic Fail").withValue("Chatbot was not Helpful.").build(),
                         LexV2Response.Button.builder().withText("Needs Work").withValue("Chatbot needs some work.").build(),
                         LexV2Response.Button.builder().withText("Great Job!").withValue("Chatbot did a great job!").build()
-                ).toArray(LexV2Response.Button[]::new))
+                ))
                 .build();
     }
 
