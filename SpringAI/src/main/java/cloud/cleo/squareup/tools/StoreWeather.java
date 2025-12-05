@@ -122,13 +122,15 @@ public class StoreWeather extends AbstractTool {
                 ));
             }
 
-            return new StoreWeatherResponse(
+            final var res = new StoreWeatherResponse(
                     "Wahkon, MN",
                     currentSummary,
                     temperatureF,
                     windSpeedMph,
                     forecast
             );
+            log.debug(res);
+            return res;
         } catch (Exception e) {
             // Anything (timeout, connection error, JSON issues) -> safe fallback
             log.warn("Failed to retrieve store weather", e);
