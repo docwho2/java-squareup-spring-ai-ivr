@@ -24,6 +24,11 @@
             <artifactId>aws-lambda-java-events</artifactId>
         </dependency>
         
+          <!-- Lambda Logging -->
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-lambda-java-log4j2</artifactId>
+        </dependency>
         
         <!-- Spring AI/Cloud/Logging -->
         <dependency>
