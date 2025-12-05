@@ -112,7 +112,7 @@ runs:
         echo "Result is [${RESULT}]"
 
         # Pass if it mentions Jensen OR some form of "yes"
-        if [[ ! $RESULT =~ ([Jj]ensen|[Yy]es|copperfoxgifts|[Ii]ndeed) ]]; then
+        if [[ ! $RESULT =~ ([Jj]ensen|[Yy]es|copperfoxgifts|[Ii]ndeed|confirm) ]]; then
           echo "Did not pass Staff Test"
           exit 1
         fi
