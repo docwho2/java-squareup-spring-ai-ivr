@@ -92,12 +92,6 @@ jobs:
       with:
         java-version: '25'
         distribution: 'corretto'
-        
-    - name: Install ChimeSMALibrary Parent POM
-      if: matrix.build-mode == 'manual'
-      shell: bash
-      working-directory: ./ChimeSMALibrary
-      run: mvn -N install --no-transfer-progress
       
     - name: Build up all the libraries
       if: matrix.build-mode == 'manual'

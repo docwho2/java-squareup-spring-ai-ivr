@@ -31,11 +31,8 @@
     </properties>
     
     <modules>
-        <!-- We need flow and event libraries -->
-        <module>ChimeSMALibrary/ChimeSMAEvent</module>
-        <module>ChimeSMALibrary/ChimeSMAFlow</module>
-        <!-- We are creating prompts as well, so pull in Prompt Creation -->
-        <module>ChimeSMALibrary/PollyPromptCreation</module>
+        <!-- We need flow and event and prompt creation libraries -->
+        <module>ChimeSMALibrary</module>
         <!-- Provision Chime Resources -->
         <module>ChimeCDKProvision</module>
         <!-- These are part of the local project -->

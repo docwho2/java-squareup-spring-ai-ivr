@@ -17,17 +17,15 @@
 
 
     <dependencies>
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-lambda-java-core</artifactId>
-        </dependency>
-        
+
+        <!-- Need for incoming SNS events -->
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-lambda-java-events</artifactId>
         </dependency>
         
         
+        <!-- Spring AI/Cloud/Logging -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-function-adapter-aws</artifactId>
@@ -53,29 +51,19 @@
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-model-bedrock-converse</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>software.amazon.awssdk</groupId>
+                    <artifactId>netty-nio-client</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>software.amazon.awssdk</groupId>
+                    <artifactId>apache-client</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         
 
-        
-        
-        <!-- Lambda Logging -->
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-lambda-java-log4j2</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j2-impl</artifactId>
-        </dependency>
-        
         <!-- Savinng ChatGPT Message Context -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
@@ -107,29 +95,30 @@
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>sns</artifactId>
             <exclusions>
-                    <exclusion>
-                        <groupId>software.amazon.awssdk</groupId>
-                        <artifactId>netty-nio-client</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>software.amazon.awssdk</groupId>
-                        <artifactId>apache-client</artifactId>
-                    </exclusion>
-                </exclusions>
+                <exclusion>
+                    <groupId>software.amazon.awssdk</groupId>
+                    <artifactId>netty-nio-client</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>software.amazon.awssdk</groupId>
+                    <artifactId>apache-client</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
+        <!-- Validate Phone numbers for SMS sending -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>pinpoint</artifactId>
             <exclusions>
-                    <exclusion>
-                        <groupId>software.amazon.awssdk</groupId>
-                        <artifactId>netty-nio-client</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>software.amazon.awssdk</groupId>
-                        <artifactId>apache-client</artifactId>
-                    </exclusion>
-                </exclusions>
+                <exclusion>
+                    <groupId>software.amazon.awssdk</groupId>
+                    <artifactId>netty-nio-client</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>software.amazon.awssdk</groupId>
+                    <artifactId>apache-client</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         
         <!-- Send Email Messages -->
@@ -137,33 +126,18 @@
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>ses</artifactId>
             <exclusions>
-                    <exclusion>
-                        <groupId>software.amazon.awssdk</groupId>
-                        <artifactId>netty-nio-client</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>software.amazon.awssdk</groupId>
-                        <artifactId>apache-client</artifactId>
-                    </exclusion>
-                </exclusions>
+                <exclusion>
+                    <groupId>software.amazon.awssdk</groupId>
+                    <artifactId>netty-nio-client</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>software.amazon.awssdk</groupId>
+                    <artifactId>apache-client</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         
-        <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>costexplorer</artifactId>
-            <exclusions>
-                    <exclusion>
-                        <groupId>software.amazon.awssdk</groupId>
-                        <artifactId>netty-nio-client</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>software.amazon.awssdk</groupId>
-                        <artifactId>apache-client</artifactId>
-                    </exclusion>
-                </exclusions>
-        </dependency>
-        
-        
+   
         <!-- Square API Calls -->
         <dependency>
             <groupId>com.squareup</groupId>

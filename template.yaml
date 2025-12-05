@@ -1031,8 +1031,6 @@ Resources:
                 - ses:SendEmail
                 # Validate numbers as mobile with Pinpoint
                 - mobiletargeting:PhoneNumberValidate
-                # AWS Cost forecast
-                - ce:GetCostForecast
               Resource: '*' 
   
   SpringAILogGroup:
@@ -1131,8 +1129,6 @@ Resources:
                 - sns:Publish
                 # Send Emails 
                 - ses:SendEmail
-                # AWS Cost forecast
-                - ce:GetCostForecast
               Resource: '*'
       Events:
         SNSSub:
