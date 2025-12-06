@@ -137,24 +137,23 @@ public abstract class AbstractTool implements InitializingBean {
 
         List<String> missing = new ArrayList<>();
 
-        for (Field field : getRequiredFields(request.getClass())) {
+        for (RequiredFieldMeta meta : getRequiredFields(request.getClass())) {
+            Field field = meta.field();
+            String displayName = meta.jsonName();
 
             Object value;
             try {
                 value = field.get(request);
             } catch (IllegalAccessException e) {
                 // If we somehow can't read it, treat as missing
-                JsonProperty jp = field.getAnnotation(JsonProperty.class);
-                missing.add(resolveFieldName(field, jp));
+                missing.add(displayName);
                 continue;
             }
 
             if (value == null) {
-                JsonProperty jp = field.getAnnotation(JsonProperty.class);
-                missing.add(resolveFieldName(field, jp));
+                missing.add(displayName);
             } else if (value instanceof String s && s.isBlank()) {
-                JsonProperty jp = field.getAnnotation(JsonProperty.class);
-                missing.add(resolveFieldName(field, jp));
+                missing.add(displayName);
             }
         }
 
@@ -166,18 +165,30 @@ public abstract class AbstractTool implements InitializingBean {
         return null; // no errors
     }
 
-    private static final Map<Class<?>, List<Field>> REQUIRED_FIELDS_CACHE = new ConcurrentHashMap<>();
+    private record RequiredFieldMeta(Field field, String jsonName) {
 
-    protected static List<Field> getRequiredFields(Class<?> clazz) {
+    }
+
+    private static final Map<Class<?>, List<RequiredFieldMeta>> REQUIRED_FIELDS_CACHE = new ConcurrentHashMap<>();
+
+    protected static List<RequiredFieldMeta> getRequiredFields(Class<?> clazz) {
         return REQUIRED_FIELDS_CACHE.computeIfAbsent(clazz, cls -> {
-            var list = new ArrayList<Field>();
+            var list = new ArrayList<RequiredFieldMeta>();
+
             for (Field f : cls.getDeclaredFields()) {
                 JsonProperty jp = f.getAnnotation(JsonProperty.class);
                 if (jp != null && jp.required()) {
                     f.setAccessible(true);
-                    list.add(f);
+
+                    // Compute display name once
+                    final String jsonName = (jp.value() != null && !jp.value().isBlank())
+                            ? jp.value()
+                            : f.getName();
+
+                    list.add(new RequiredFieldMeta(f, jsonName));
                 }
             }
+
             return Collections.unmodifiableList(list);
         });
     }
@@ -191,7 +202,7 @@ public abstract class AbstractTool implements InitializingBean {
         Class<?> type = requestPayloadType();
         if (type != null) {
             // prime cache at bean creation time for DTO-based tools
-            log.debug("Priming cache for class [{}]",type.toString());
+            log.debug("Priming cache for class [{}]", type.toString());
             getRequiredFields(type);
         }
     }
