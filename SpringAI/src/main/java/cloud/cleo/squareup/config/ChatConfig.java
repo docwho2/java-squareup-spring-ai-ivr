@@ -52,14 +52,12 @@ public class ChatConfig {
                 .N(1);  // We only ever want 1 response
 
         if (model.startsWith("gpt-4")) {
-            //.temperature(.2) Not supported in GPT_5 models, only default value of 1
-            builder = builder.temperature(.2);
-        }
-        
-        if ( model.startsWith("gpt-5") ) {
-            builder = builder.topP(.2);
+            // GPT-4 family still supports temperature
+            builder = builder.temperature(0.2);
         }
 
+        // GPT-5 family: no temperature, no top_p, no sampling knobs
+        // Just rely on N=1 + tight prompts for consistency.
         return builder.build();
     }
 
@@ -84,7 +82,6 @@ public class ChatConfig {
                 .build();
     }
 
-    
     @Bean(name = "bedrockChatModel")
     public ChatModel bedrockChatModel(BedrockRuntimeAsyncClient bedrockRuntimeAsyncClient, BedrockRuntimeClient bedrockRuntimeClient, BedrockChatOptions options) {
         return BedrockProxyChatModel.builder()
@@ -93,7 +90,7 @@ public class ChatConfig {
                 .defaultOptions(options)
                 .build();
     }
-    
+
     @Bean
     @ConfigurationProperties(prefix = "chat.memory")
     public ChatMemoryProperties chatMemoryProperties() {
@@ -101,6 +98,7 @@ public class ChatConfig {
     }
 
     public static class ChatMemoryProperties {
+
         /**
          * Max messages to keep in active window per conversation.
          */
@@ -150,7 +148,7 @@ public class ChatConfig {
 
     /**
      * Fix until Spring AI fixes ordering such that system prompt is always sent first.
-     * 
+     *
      * @see https://github.com/spring-projects/spring-ai/issues/4170
      */
     private static class SystemFirstSortingAdvisor implements BaseAdvisor {
