@@ -5,8 +5,6 @@
 package cloud.cleo.squareup.tools;
 
 import cloud.cleo.squareup.LexV2EventWrapper;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import lombok.RequiredArgsConstructor;
@@ -17,21 +15,30 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class CurrentDateTime extends AbstractTool {
 
-    private final ObjectMapper mapper;
     private final ZoneId storeZoneId;
 
     @Tool(
-        name = "get_current_date_time",
-        description = "Returns the current date/time in ISO format and timezone."
+            name = "get_current_date_time",
+            description = "Returns the current date/time in ISO format and timezone."
     )
-    public JsonNode getCurrentDateTime() {
+    public CurrentDateTimeResult getCurrentDateTime() {
         var now = ZonedDateTime.now(storeZoneId);
-        var root = mapper.createObjectNode();
-        root.put("iso", now.toString());
-        root.put("date", now.toLocalDate().toString());
-        root.put("time", now.toLocalTime().toString());
-        root.put("zone", now.getZone().toString());
-        return root;
+
+        return new CurrentDateTimeResult(
+                now.toString(),
+                now.toLocalDate().toString(),
+                now.toLocalTime().toString(),
+                now.getZone().toString()
+        );
+    }
+
+    public record CurrentDateTimeResult(
+            String iso,
+            String date,
+            String time,
+            String zone
+            ) {
+
     }
 
     @Override
@@ -39,4 +46,3 @@ public class CurrentDateTime extends AbstractTool {
         return true;
     }
 }
-

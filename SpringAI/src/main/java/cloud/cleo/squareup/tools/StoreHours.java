@@ -4,7 +4,6 @@ import cloud.cleo.squareup.LexV2EventWrapper;
 import cloud.cleo.squareup.service.StoreHoursService;
 import cloud.cleo.squareup.service.StoreHoursService.StoreHoursResult;
 import lombok.RequiredArgsConstructor;
-import org.springframework.ai.chat.model.ToolContext;
 
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Component;
@@ -39,7 +38,7 @@ public class StoreHours extends AbstractTool {
             today's hours are.
             """
     )
-    public StoreHoursResult getStoreHours(ToolContext ctx) {
+    public StoreHoursResult getStoreHours() {
         return storeHoursService.getStoreHours();
     }
 

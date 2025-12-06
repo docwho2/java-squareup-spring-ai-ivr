@@ -9,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.squareup.square.types.TeamMember;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Component;
 
@@ -31,7 +30,7 @@ public class SquareTeamMembers extends AbstractTool {
             only for internal use (e.g., call transfers).
             """
     )
-    public SquareTeamMembersResult getTeamMembers(ToolContext ctx) {
+    public SquareTeamMembersResult getTeamMembers() {
 
         try {
             List<TeamMember> teamMembers = squareTeamMemberService.getActiveTeamMembers();

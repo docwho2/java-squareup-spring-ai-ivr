@@ -2,7 +2,6 @@ package cloud.cleo.squareup.tools;
 
 
 import cloud.cleo.squareup.LexV2EventWrapper;
-import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +19,7 @@ public class DrivingDirectionsText extends AbstractTool {
             or requests directions.
             """
     )
-    public UrlResult getDrivingDirectionsText(ToolContext ctx) {
+    public UrlResult getDrivingDirectionsText() {
         // No need to inspect the event here – it's always the same URL.
         return new UrlResult(DRIVING_DIRECTIONS_URL);
     }

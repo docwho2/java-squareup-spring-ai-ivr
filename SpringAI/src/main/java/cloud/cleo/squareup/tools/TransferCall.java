@@ -56,4 +56,9 @@ public class TransferCall extends AbstractTool {
             @JsonProperty(value = "transfer_number", required = true)
             String transferNumber
     ) {}
+    
+    @Override
+    protected Class<?> requestPayloadType() {
+        return TransferCallRequest.class;
+    }
 }

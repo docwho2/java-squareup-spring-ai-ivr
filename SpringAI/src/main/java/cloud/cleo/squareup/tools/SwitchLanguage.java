@@ -9,32 +9,31 @@ import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Component;
 
 /**
- * Exit the current bot context and return with a new locale (language).
- * The actual language switch is handled by the IVR / Chime logic when
- * it sees this tool result.
+ * Exit the current bot context and return with a new locale (language). The actual language switch is handled by the
+ * IVR / Chime logic when it sees this tool result.
  */
 @Component
 public class SwitchLanguage extends AbstractTool {
 
     @Tool(
-        name = SWITCH_LANGUAGE_FUNCTION_NAME,
-        description = """
+            name = SWITCH_LANGUAGE_FUNCTION_NAME,
+            description = """
             Change the language used to interact with the caller. 
             Use this only when the caller clearly requests to switch languages.
             """
     )
     public StatusMessageResult switchLanguage(SwitchLanguageRequest r, ToolContext ctx) {
-        
+
         // Centralized validation of required fields
         StatusMessageResult validationError = validateRequiredFields(r);
         if (validationError != null) {
             return validationError;
         }
-        
+
         final var wrapper = getEventWrapper(ctx);
         wrapper.putSessionAttributeAction(SWITCH_LANGUAGE_FUNCTION_NAME);
         wrapper.putSessionAttribute("language", r.language.toString());
-        
+
         return logAndReturnSuccess(
                 "The caller is now ready to interact in " + r.language()
         );
@@ -55,5 +54,12 @@ public class SwitchLanguage extends AbstractTool {
             @JsonPropertyDescription("The language to switch to.")
             @JsonProperty(value = "language", required = true)
             Language language
-    ) { }
+            ) {
+
+    }
+
+    @Override
+    protected Class<?> requestPayloadType() {
+        return SwitchLanguageRequest.class;
+    }
 }

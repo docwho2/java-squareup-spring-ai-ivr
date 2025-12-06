@@ -152,4 +152,9 @@ public class SendEmail extends AbstractTool {
         @JsonProperty(value = "message", required = true)
         public String message;
     }
+    
+    @Override
+    protected Class<?> requestPayloadType() {
+        return SendEmailRequest.class;
+    }
 }

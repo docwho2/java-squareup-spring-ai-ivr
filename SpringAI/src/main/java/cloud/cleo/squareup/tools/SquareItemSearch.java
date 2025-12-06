@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +27,7 @@ public class SquareItemSearch extends AbstractTool {
             The result may not include all matching items if more than 5 exist.
             """
     )
-    public SquareItemSearchResult searchItems(SquareItemSearchRequest r, ToolContext ctx) {
+    public SquareItemSearchResult searchItems(SquareItemSearchRequest r) {
 
         // Centralized validation of required fields
         StatusMessageResult validationError = validateRequiredFields(r);
@@ -79,6 +78,11 @@ public class SquareItemSearch extends AbstractTool {
         @JsonPropertyDescription("The search text to search for items for sale in English language.")
         @JsonProperty(value = "search_text", required = true)
         public String searchText;
+    }
+    
+    @Override
+    protected Class<?> requestPayloadType() {
+        return SquareItemSearchRequest.class;
     }
 
     /**
