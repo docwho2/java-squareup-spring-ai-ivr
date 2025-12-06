@@ -15,11 +15,7 @@
             <AppenderRef ref="Lambda"/>
         </Root>
         
-        <Logger name="org.apache.hc.client5.http.wire" level="INFO" additivity="false">
-            <AppenderRef ref="Lambda"/>
-        </Logger>
-
-        <Logger name="org.apache.hc.client5.http.headers" level="INFO" additivity="false">
+        <Logger name="org.apache.hc" level="INFO" additivity="false">
             <AppenderRef ref="Lambda"/>
         </Logger>
         
