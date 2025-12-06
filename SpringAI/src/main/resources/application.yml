@@ -1,1 +1,1 @@
-spring.ai.tools.observations.include-content=true
+spring.ai.tools.observations.include-content=false
