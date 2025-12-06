@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -21,9 +20,7 @@ public class SquareItemService {
 
     private final @Nullable SquareClient squareClient;
 
-    // Dedicated virtual-thread executor for parallel Square searches
-    private static final ExecutorService VIRTUAL_THREAD_EXECUTOR =
-            Executors.newVirtualThreadPerTaskExecutor();
+    private final ExecutorService virtualThreadExecutor;
 
     public boolean isEnabled() {
         return squareClient != null;
@@ -51,7 +48,7 @@ public class SquareItemService {
 
         try {
             List<Future<SearchCatalogItemsResponse>> futures = tokens.stream()
-                    .map(token -> VIRTUAL_THREAD_EXECUTOR.submit(() -> {
+                    .map(token -> virtualThreadExecutor.submit(() -> {
                         log.debug("Executing search for [{}]", token);
                         return squareClient
                                 .catalog()
