@@ -1,7 +1,7 @@
 package cloud.cleo.squareup.config;
 
 import cloud.cleo.squareup.service.SquareLocationService;
-import com.squareup.square.AsyncSquareClient;
+import com.squareup.square.SquareClient;
 import com.squareup.square.core.Environment;
 import java.time.ZoneId;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,7 +38,7 @@ public class SquareConfig {
     }
 
     @Bean
-    public AsyncSquareClient asyncSquareClient(SquareProperties props) {
+    public SquareClient squareClient(SquareProperties props) {
         if (!props.enabled()) {
             return null; // tools should check for null or use SquareXXXXXService.isEnabled()
         }
@@ -50,7 +50,7 @@ public class SquareConfig {
                 Environment.PRODUCTION;
         };
 
-        return AsyncSquareClient.builder()
+        return SquareClient.builder()
                 .token(props.apiKey())
                 .environment(environment)
                 .build();

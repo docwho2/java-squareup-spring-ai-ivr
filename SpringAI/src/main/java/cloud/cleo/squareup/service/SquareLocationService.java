@@ -1,7 +1,7 @@
 package cloud.cleo.squareup.service;
 
 import cloud.cleo.squareup.config.SquareConfig.SquareProperties;
-import com.squareup.square.AsyncSquareClient;
+import com.squareup.square.SquareClient;
 import com.squareup.square.types.GetLocationsRequest;
 import com.squareup.square.types.Location;
 import java.time.Duration;
@@ -23,7 +23,7 @@ public class SquareLocationService {
     private static final ZoneId DEFAULT_ZONE = ZoneId.of("America/Chicago");
 
     private final SquareProperties props;
-    private final @Nullable AsyncSquareClient client;
+    private final @Nullable SquareClient client;
 
     private final AtomicReference<CachedLocation> cachedLocation = new AtomicReference<>();
     private final AtomicReference<ZoneId> cachedZoneId = new AtomicReference<>();
@@ -78,8 +78,7 @@ public class SquareLocationService {
                     .build();
 
             var response = client.locations()
-                    .get(request)
-                    .get();
+                    .get(request);
 
             var locOpt = response.getLocation();
             if (locOpt.isEmpty()) {

@@ -1,6 +1,6 @@
 package cloud.cleo.squareup.service;
 
-import com.squareup.square.AsyncSquareClient;
+import com.squareup.square.SquareClient;
 import com.squareup.square.types.SearchCatalogItemsRequest;
 import com.squareup.square.types.SearchCatalogItemsResponse;
 import java.util.ArrayList;
@@ -19,14 +19,14 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class SquareItemService {
 
-    private final @Nullable AsyncSquareClient asyncSquareClient;
+    private final @Nullable SquareClient squareClient;
 
     // Dedicated virtual-thread executor for parallel Square searches
     private static final ExecutorService VIRTUAL_THREAD_EXECUTOR =
             Executors.newVirtualThreadPerTaskExecutor();
 
     public boolean isEnabled() {
-        return asyncSquareClient != null;
+        return squareClient != null;
     }
 
     /**
@@ -53,13 +53,12 @@ public class SquareItemService {
             List<Future<SearchCatalogItemsResponse>> futures = tokens.stream()
                     .map(token -> VIRTUAL_THREAD_EXECUTOR.submit(() -> {
                         log.debug("Executing search for [{}]", token);
-                        return asyncSquareClient
+                        return squareClient
                                 .catalog()
                                 .searchItems(SearchCatalogItemsRequest.builder()
                                         .textFilter(token)
                                         .limit(5)
-                                        .build())
-                                .join(); // block only inside virtual thread
+                                        .build());
                     }))
                     .toList();
 

@@ -1,7 +1,7 @@
 package cloud.cleo.squareup.service;
 
 import cloud.cleo.squareup.config.SquareConfig.SquareProperties;
-import com.squareup.square.AsyncSquareClient;
+import com.squareup.square.SquareClient;
 import com.squareup.square.types.SearchTeamMembersFilter;
 import com.squareup.square.types.SearchTeamMembersQuery;
 import com.squareup.square.types.SearchTeamMembersRequest;
@@ -20,11 +20,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class SquareTeamMemberService {
 
-    private final @Nullable AsyncSquareClient asyncSquareClient;
+    private final @Nullable SquareClient squareClient;
     private final SquareProperties squareProperties; // from your SquareConfig
 
     public boolean isEnabled() {
-        return asyncSquareClient != null && squareProperties.enabled();
+        return squareClient != null && squareProperties.enabled();
     }
 
     /**
@@ -54,10 +54,9 @@ public class SquareTeamMemberService {
                             .build())
                     .build();
 
-            var response = asyncSquareClient
+            var response = squareClient
                     .teamMembers()
-                    .search(request)
-                    .get();
+                    .search(request);
 
             var teamMembersOpt = response.getTeamMembers();
             if (teamMembersOpt.isEmpty()) {

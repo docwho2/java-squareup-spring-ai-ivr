@@ -66,25 +66,11 @@ public class AWSConfig {
                 .httpClient(crtHttpClient)
                 .build();
     }
-
-    @Bean(destroyMethod = "close")
-    public DynamoDbAsyncClient dynamoDbAsyncClient(SdkAsyncHttpClient crtAsyncHttpClient) {
-        return DynamoDbAsyncClient.builder()
-                .httpClient(crtAsyncHttpClient)
-                .build();
-    }
     
     @Bean
     public DynamoDbEnhancedClient dynamoDbEnhancedClient(DynamoDbClient dynamoDbClient) {
         return DynamoDbEnhancedClient.builder()
                 .dynamoDbClient(dynamoDbClient)
-                .build();
-    }
-
-    @Bean
-    public DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient(DynamoDbAsyncClient dynamoDbAsyncClient) {
-        return DynamoDbEnhancedAsyncClient.builder()
-                .dynamoDbClient(dynamoDbAsyncClient)
                 .build();
     }
 

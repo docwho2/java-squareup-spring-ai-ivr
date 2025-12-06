@@ -1,6 +1,6 @@
 package cloud.cleo.squareup.service;
 
-import com.squareup.square.AsyncSquareClient;
+import com.squareup.square.SquareClient;
 import com.squareup.square.types.Customer;
 import com.squareup.square.types.CustomerFilter;
 import com.squareup.square.types.CustomerQuery;
@@ -22,10 +22,10 @@ public class SquareCustomerService {
     /**
      * Optional Square client – will be null if Square is not enabled.
      */
-    private final @Nullable AsyncSquareClient asyncSquareClient;
+    private final @Nullable SquareClient squareClient;
 
     public boolean isEnabled() {
-        return asyncSquareClient != null;
+        return squareClient != null;
     }
 
     /**
@@ -54,10 +54,9 @@ public class SquareCustomerService {
                     .limit(1L)
                     .build();
 
-            var response = asyncSquareClient
+            var response = squareClient
                     .customers()
-                    .search(request)
-                    .get();
+                    .search(request);
 
             List<Customer> customers = response.getCustomers().orElse(List.of());
             if (customers.isEmpty()) {
