@@ -63,6 +63,7 @@ public class ChatConfig {
         return builder.build();
     }
     
+    @Primary
     @Bean(name = "customOpenAiChatModel")
     public ChatModel chatModel(OpenAiApi api, OpenAiChatOptions options) {
         return OpenAiChatModel.builder()
@@ -93,7 +94,7 @@ public class ChatConfig {
     }
     
     
-    @Primary
+    
     @Bean(name = "customOpenAiSdkChatModel")
     public ChatModel chatModelOpenAiSDK(OpenAiSdkChatOptions options) {
         return new OpenAiSdkChatModel(options);
