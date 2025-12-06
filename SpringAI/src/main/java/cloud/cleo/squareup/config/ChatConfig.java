@@ -55,6 +55,10 @@ public class ChatConfig {
             //.temperature(.2) Not supported in GPT_5 models, only default value of 1
             builder = builder.temperature(.2);
         }
+        
+        if ( model.startsWith("gpt-5") ) {
+            builder = builder.topP(.2);
+        }
 
         return builder.build();
     }
