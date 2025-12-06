@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
 import lombok.Data;
+import lombok.extern.log4j.Log4j2;
 
 /**
  * Determine whether open or closed based on Square Hours from API call. Cache and hold last result, so if API is down,
@@ -31,6 +32,7 @@ import lombok.Data;
  *
  * @author sjensen
  */
+@Log4j2
 public class SquareHours {
 
     public enum StoreStatus {
@@ -77,7 +79,7 @@ public class SquareHours {
         // Enabled if we have what looks like key and location set
         squareEnabled = !(SQUARE_LOCATION_ID == null || SQUARE_LOCATION_ID.isBlank() || "DISABLED".equalsIgnoreCase(SQUARE_LOCATION_ID)
                 || SQUARE_API_KEY == null || SQUARE_API_KEY.isBlank() || "DISABLED".equalsIgnoreCase(SQUARE_API_KEY));
-        System.out.println("Square Enabled check = " + squareEnabled);
+        log.info("Square Enabled check = {}" ,squareEnabled);
 
         // Warm cache once at startup (good for SnapStart),
         // but don't die if Square is unavailable.
@@ -85,8 +87,7 @@ public class SquareHours {
             try {
                 getLocation();
             } catch (Exception e) {
-                System.err.println("Initial Square location warmup failed; will retry lazily.");
-                e.printStackTrace();
+               log.error("Initial Square location warmup failed; will retry lazily.",e);
             }
         }
     }
@@ -136,25 +137,25 @@ public class SquareHours {
                 if (tzOpt != null && tzOpt.isPresent() && !tzOpt.get().isBlank()) {
                     tz = ZoneId.of(tzOpt.get());
                 } else {
-                    System.err.println("Square Location has no timezone; using default " + DEFAULT_ZONE);
+                    log.error("Square Location has no timezone; using default {}", DEFAULT_ZONE);
                     tz = DEFAULT_ZONE;
                 }
 
                 return loaded;
             } else {
-                System.err.println("Square returned empty Location for id " + SQUARE_LOCATION_ID);
+                log.error("Square returned empty Location for id {}", SQUARE_LOCATION_ID);
             }
 
         } catch (Exception e) {
-            System.err.println("Error retrieving Square location " + SQUARE_LOCATION_ID);
-            e.printStackTrace();
+            log.error("Error retrieving Square location {}",SQUARE_LOCATION_ID);
+            log.error(e);
         } finally {
             lock.unlock();
         }
 
         // If we got here, the refresh failed. Use previous cached value if any.
         if (loc != null) {
-            System.err.println("Using previously cached Square location after refresh failure");
+            log.error("Using previously cached Square location after refresh failure");
             return loc;
         }
 
@@ -166,6 +167,7 @@ public class SquareHours {
      * Is the store currently open?
      *
      * If we don't have a valid key/location or cannot reach Square, this returns false.
+     * @return 
      */
     public boolean isOpen() {
         return getStatus() == StoreStatus.OPEN;
@@ -173,6 +175,7 @@ public class SquareHours {
 
     /**
      * Is the store in an "extended closed" state (no business hours defined)?
+     * @return 
      */
     public boolean isExtendedClosed() {
         return getStatus() == StoreStatus.EXTENDED_CLOSED;
