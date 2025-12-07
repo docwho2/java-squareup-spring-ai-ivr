@@ -29,7 +29,7 @@ public class DrivingDirectionsVoice extends AbstractTool {
     public StatusMessageResult sendDrivingDirectionsVoice(ToolContext ctx) {
         LexV2EventWrapper event = getEventWrapper(ctx);
 
-        return sendSMS(snsClient,event, DRIVING_DIRECTIONS_URL);
+        return sendSMS(snsClient,event, DRIVING_DIRECTIONS_URL.toString());
     }
 
     @Override

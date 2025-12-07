@@ -5,6 +5,7 @@ import static cloud.cleo.squareup.tools.AbstractTool.StatusMessageResult.Status.
 import static cloud.cleo.squareup.tools.AbstractTool.StatusMessageResult.Status.SUCCESS;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.lang.reflect.Field;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,21 +28,19 @@ public abstract class AbstractTool implements InitializingBean {
 
     public final static String TRANSFER_FUNCTION_NAME = "transfer_call";
     public final static String HANGUP_FUNCTION_NAME = "hangup_call";
-    public final static String FACEBOOK_HANDOVER_FUNCTION_NAME = "facebook_inbox";
+    public final static String FACEBOOK_HANDOVER_FUNCTION_NAME = "send_to_facebook_inbox";
     public final static String SWITCH_LANGUAGE_FUNCTION_NAME = "switch_language";
-    public final static String DRIVING_DIRECTIONS_TEXT_FUNCTION_NAME = "driving_directions_text";
-    public final static String DRIVING_DIRECTIONS_VOICE_FUNCTION_NAME = "driving_directions_voice";
-
-    public final static String WEBSITE_URL = "CopperFoxGifts.com";
-    public final static String PRIVATE_SHOPPING_URL = WEBSITE_URL + "/book";
-    public final static String PRIVATE_SHOPPING_TEXT_FUNCTION_NAME = "private_shopping_url_text";
-    public final static String PRIVATE_SHOPPING_VOICE_FUNCTION_NAME = "private_shopping_url_voice";
+    public final static String DRIVING_DIRECTIONS_VOICE_FUNCTION_NAME = "send_driving_directions";
+    public final static String SEND_EMAIL_FUNCTION_NAME = "send_email_message";
+    public final static URI WEBSITE_URL = URI.create("https://CopperFoxGifts.com");
+    public final static URI PRIVATE_SHOPPING_URL = WEBSITE_URL.resolve("book");
+    public final static String PRIVATE_SHOPPING_VOICE_FUNCTION_NAME = "send_private_shopping_url";
 
     /**
      * URL for driving directions with Place ID so it comes up as Copper Fox properly for the pin.
      */
-    protected static final String DRIVING_DIRECTIONS_URL
-            = "google.com/maps/dir/?api=1&destination=160+Main+St+Wahkon+MN+56386&destination_place_id=ChIJWxVcpjffs1IRcSX7D8pJSUY";
+    public static final URI DRIVING_DIRECTIONS_URL
+            = URI.create("https://google.com/maps/dir/?api=1&destination=160+Main+St+Wahkon+MN+56386&destination_place_id=ChIJWxVcpjffs1IRcSX7D8pJSUY");
 
     /**
      * Get the wrapper from the tool Context
@@ -230,7 +229,7 @@ public abstract class AbstractTool implements InitializingBean {
      * Used when returning a single URL as result (Driving directions, Private Shopping, etc.
      *
      */
-    public record UrlResult(String url) {
+    public record UrlResult(URI url) {
 
     }
 

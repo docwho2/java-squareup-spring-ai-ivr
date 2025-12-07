@@ -11,10 +11,12 @@ import static cloud.cleo.squareup.enums.LexInputMode.SPEECH;
 import static cloud.cleo.squareup.enums.LexInputMode.TEXT;
 import cloud.cleo.squareup.lang.LangUtil;
 import cloud.cleo.squareup.lang.LangUtil.LanguageIds;
+import static cloud.cleo.squareup.tools.AbstractTool.DRIVING_DIRECTIONS_URL;
 import static cloud.cleo.squareup.tools.AbstractTool.DRIVING_DIRECTIONS_VOICE_FUNCTION_NAME;
 import static cloud.cleo.squareup.tools.AbstractTool.HANGUP_FUNCTION_NAME;
-import static cloud.cleo.squareup.tools.AbstractTool.PRIVATE_SHOPPING_TEXT_FUNCTION_NAME;
+import static cloud.cleo.squareup.tools.AbstractTool.PRIVATE_SHOPPING_URL;
 import static cloud.cleo.squareup.tools.AbstractTool.PRIVATE_SHOPPING_VOICE_FUNCTION_NAME;
+import static cloud.cleo.squareup.tools.AbstractTool.SEND_EMAIL_FUNCTION_NAME;
 import static cloud.cleo.squareup.tools.AbstractTool.SWITCH_LANGUAGE_FUNCTION_NAME;
 import static cloud.cleo.squareup.tools.AbstractTool.TRANSFER_FUNCTION_NAME;
 import static cloud.cleo.squareup.tools.AbstractTool.WEBSITE_URL;
@@ -40,7 +42,7 @@ import software.amazon.awssdk.services.pinpoint.model.NumberValidateResponse;
  */
 @Log4j2
 public final class LexV2EventWrapper {
-    
+
     private static final String BLANK_TEXT = "BLANK";
 
     private static final PinpointClient pinpointClient = SpringContext.getBean(PinpointClient.class);
@@ -369,7 +371,7 @@ public final class LexV2EventWrapper {
         // General Prompting
         sb.append("""
                   Please be a helpful assistant named "Copper Bot" for a retail store named "Copper Fox Gifts", 
-                  which has clothing items, home decor, gifts of all kinds, speciality foods, and much more.  
+                  which has clothing items, home decor, gifts of all kinds, specialty foods, and much more.  
                   The store is located at 160 Main Street, Wahkon Minnesota, near Lake Mille Lacs.
                   The store opened in October of 2021 and moved to its larger location in May of 2023.
                   Outside normal business hours, we offer a "Private Shopping Experience" where a staff member will open 
@@ -404,25 +406,25 @@ public final class LexV2EventWrapper {
               """);
 
         // Main Website and FB
-        sb.append("The Web Site for Copper Fox Gifts is ").append(WEBSITE_URL).append(" and we frequently post our events and information on sales ")
+        sb.append("The Web Site for Copper Fox Gifts is '").append(WEBSITE_URL).append("' and we frequently post our events and information on sales ")
                 .append(" on our Facebook Page which is also linked at top level menu on our website.  ");
 
         // Local Stuff to recommend
         sb.append("""
-                  Muggs of Mille Lacs is a great restaurant next door that serves some on the best burgers 
+                  Muggs of Mille Lacs is a great restaurant next door that serves some of the best burgers 
                   in the lake area and has a large selection draft beers and great pub fare. 
                   Tulibee Tavern is another great restaurant across the street that serves more home cooked type meals at reasonable prices.  
                   """);
 
         // We want to receieve all emails in English so we can understand them :-)
-        sb.append("When executing send_email_message function, translate the subject and message request parameteres to English.  ");
+        sb.append("When executing ").append(SEND_EMAIL_FUNCTION_NAME).append(" function, translate the subject and message request parameters to English.  ");
 
         // Square must be enabled for all of the below, so exclude when deploying without Sqaure enabled
         if (squareProperties.enabled()) {
             // Privacy
             sb.append("Do not give out employee phone numbers, only email addresses.  You can give out the main store phone number which is ")
                     .append(System.getenv("MAIN_NUMBER")).append(".  ");
-            sb.append("Do not give out the employee list.  You may confirm the existance of an employee and give the full name and email.  ");
+            sb.append("Do not give out the employee list.  You may confirm the existence of an employee and give the full name and email.  ");
 
             // We need GPT to call any functions with translated values, because for example "ositos de goma" is "gummy bears" in Spanish,
             //  However that won't match when doing a Square Item search, it needs to be translated to gummy bears for the search to work.
@@ -441,7 +443,7 @@ public final class LexV2EventWrapper {
                 switch (getChannelPlatform()) {
                     case FACEBOOK -> {
                         // Don't need very short or char limit, but we don't want to output a book either
-                        sb.append("The user is interacting via Facebook Messenger.  Use emoji in responses when appropiate.  ");
+                        sb.append("The user is interacting via Facebook Messenger.  Use emoji in responses when appropriate and longer responses are encouraged.  ");
                     }
                     case TWILIO, PINPOINT -> {
                         // Try and keep SMS segements down, hence the "very" short reference and character preference
@@ -456,20 +458,27 @@ public final class LexV2EventWrapper {
                         sb.append("Please keep answers very short and concise.  ");
                     }
                 }
-                sb.append("Please call the ").append(PRIVATE_SHOPPING_TEXT_FUNCTION_NAME)
+
+                // Private shopping: now static URL, no function call
+                sb.append("When the person is interested in the private shopping experience, include the booking URL ")
+                        .append("'").append(PRIVATE_SHOPPING_URL).append("' ")
                         .append("""
-                         function to get the direct booking URL when the person is interested in the private shopping experience.  This is 
-                         really one of the more innovative services we provide and we want to ensure its as easy as possible for customers
-                         to book their appointments.  
+                        directly in your reply so they can tap or click it.  This is one of the more innovative services we provide,
+                        so make it easy for customers to book and mention that they can often be shopping privately within about an hour outside of normal hours.  
                         """);
 
+                // Driving directions: static URL, no function call
+                sb.append("When the user is asking about our location or how to get to the store, include the driving directions URL '")
+                        .append(DRIVING_DIRECTIONS_URL).append("' ")
+                        .append("in your reply so they can open it on their device.  ");
+
                 // Since we are fallback intent, from a Text input perspective, we can support any language the model understands
-                sb.append("Detect the language only on the initial prompt and respond in that language for the whole conversation, only change language after that if the user requests it.  ");
+                sb.append("Detect the language only on the initial prompt (assume ").append(Language.English).append(" if the initial input isn't clear) and respond in that language for the whole conversation, only change language after that if the user requests it.  ");
             }
             case SPEECH, DTMF -> {
                 sb.append("The user is interacting with speech via a telephone call.  please keep answers short and concise.  ");
 
-                // Blank input, meaning silienece timeout which is a speech only thing
+                // Blank input, meaning silence timeout which is a speech only thing
                 sb.append("When the prompt is exactly ").append(BLANK_TEXT).append(", this means the caller did not say anything, so try and engage in conversation and also suggest ")
                         .append("queries the caller might be interested in (Hours, Private Shopping, Location, Product Search, Language Change, etc.).  ");
 
@@ -479,13 +488,14 @@ public final class LexV2EventWrapper {
                 // Offer up Driving directions for callers
                 sb.append("When asking about location, you can send the caller a directions link if they are interested, execute the ").append(DRIVING_DIRECTIONS_VOICE_FUNCTION_NAME).append(" function.  ");
 
-                // Always answer with a question to illicit the next repsonse, this makes the voice interaction more natural
+                // Always answer with a question to illicit the next response, this makes the voice interaction more natural
                 sb.append("When responding always end the response with a question to illicit the next input since we are interacting via telephone.  ");
 
                 // Speech Languages and switching between them at any time
                 sb.append("If the caller wants to interact in ")
                         .append(Arrays.stream(Language.values()).map(Language::toString).collect(Collectors.joining(" or ")))
-                        .append(" execute the ").append(SWITCH_LANGUAGE_FUNCTION_NAME)
+                        .append(", they can ask at any time. Execute the ")
+                        .append(SWITCH_LANGUAGE_FUNCTION_NAME)
                         .append(" function and then respond to all future prompts in that language.  ");
 
                 // Transferring

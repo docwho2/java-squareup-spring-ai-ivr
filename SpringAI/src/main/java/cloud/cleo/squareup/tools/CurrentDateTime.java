@@ -5,6 +5,8 @@
 package cloud.cleo.squareup.tools;
 
 import cloud.cleo.squareup.LexV2EventWrapper;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import lombok.RequiredArgsConstructor;
@@ -25,19 +27,14 @@ public class CurrentDateTime extends AbstractTool {
         var now = ZonedDateTime.now(storeZoneId);
 
         return new CurrentDateTimeResult(
-                now.toString(),
-                now.toLocalDate().toString(),
-                now.toLocalTime().toString(),
-                now.getZone().toString()
+                now,
+                now.toLocalDate(),
+                now.toLocalTime(),
+                storeZoneId
         );
     }
 
-    public record CurrentDateTimeResult(
-            String iso,
-            String date,
-            String time,
-            String zone
-            ) {
+    record CurrentDateTimeResult(ZonedDateTime iso, LocalDate date, LocalTime time, ZoneId zone) {
 
     }
 

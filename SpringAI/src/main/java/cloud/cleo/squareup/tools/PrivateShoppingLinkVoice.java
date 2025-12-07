@@ -27,7 +27,7 @@ public class PrivateShoppingLinkVoice extends AbstractTool {
         LexV2EventWrapper event = getEventWrapper(ctx);
 
         // Reuse the shared SMS helper on AbstractTool
-        return sendSMS(snsClient, event, PRIVATE_SHOPPING_URL);
+        return sendSMS(snsClient, event, PRIVATE_SHOPPING_URL.toString());
     }
 
     @Override

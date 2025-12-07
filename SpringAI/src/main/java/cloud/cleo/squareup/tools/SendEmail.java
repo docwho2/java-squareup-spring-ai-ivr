@@ -30,7 +30,7 @@ public class SendEmail extends AbstractTool {
     private final SquareCustomerService squareCustomerService;
 
     @Tool(
-            name = "send_email_message",
+            name = SEND_EMAIL_FUNCTION_NAME,
             description = """
             Send an email message to an employee. Use this to relay information \
             from the caller to an employee. The assistant must provide a clear \
