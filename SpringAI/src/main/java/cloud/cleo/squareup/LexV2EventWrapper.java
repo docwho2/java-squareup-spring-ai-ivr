@@ -338,17 +338,14 @@ public final class LexV2EventWrapper {
 
     /**
      * Session Id used for Chat Memory. Since some channels like Pinpoint and Twilio send in phone number, append date
-     * to those that use static values. Chime will have unique sessionId per call for example so no need to change that.
+     * to those that use static values. Chime will have unique sessionId per call but we can track via callingNumber if
+     * valid and use that so you can hangup and call back and still have context.
      *
      * @return
      */
     public String getChatMemorySessionId() {
-        return switch (getChannelPlatform()) {
-            case FACEBOOK, TWILIO, PINPOINT ->
-                getSessionId() + LocalDate.now(storeTimezone);
-            default ->
-                getSessionId();
-        };
+        // If phone is good, use that with date, otherwise using incoming lex Session ID
+        return hasValidUSE164Number() ? getPhoneE164() + "-" + LocalDate.now(storeTimezone): getSessionId();
     }
 
     /**
