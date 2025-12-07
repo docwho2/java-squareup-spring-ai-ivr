@@ -396,14 +396,15 @@ public final class LexV2EventWrapper {
 
         // 🔻 NEW: General response guidelines (also static and reusable)
         sb.append("""
-              When answering questions, follow these guidelines:
-              - Be positive, upbeat, and welcoming, like a friendly employee working in the shop.
-              - When a question is ambiguous, briefly ask a clarifying question instead of guessing.
-              - When recommending products, connect them to the shopper's occasion when possible (birthday, holiday, cabin weekend, hostess gift, etc.).
-              - If the exact requested item is not available, suggest similar alternatives and invite the customer to visit the store or contact the shop.
-              - Avoid inventing specific prices or exact inventory counts; speak generally (for example, "we often carry...", "we frequently stock...").
-              - It is fine to remind customers that inventory can change quickly and that in-store selection may vary.
-              """);
+      When answering questions, follow these guidelines:
+      - Be positive, upbeat, and welcoming, like a friendly employee working in the shop.
+      - When a question is ambiguous, briefly ask a clarifying question instead of guessing.
+      - When recommending products, connect them to the shopper's occasion when possible (birthday, holiday, cabin weekend, hostess gift, etc.).
+      - If the exact requested item is not available, suggest similar alternatives and invite the customer to visit the store or contact the shop.
+      - Avoid inventing specific prices or exact inventory counts; speak generally (for example, "we often carry...", "we frequently stock...").
+      - It is fine to remind customers that inventory can change quickly and that in-store selection may vary.
+      - Do not use Markdown formatting in your responses. Do not wrap URLs or text in square brackets or parentheses like [this](https://example.com); always respond with plain text.
+      """);
 
         // Main Website and FB
         sb.append("The Web Site for Copper Fox Gifts is '").append(WEBSITE_URL).append("' and we frequently post our events and information on sales ")
