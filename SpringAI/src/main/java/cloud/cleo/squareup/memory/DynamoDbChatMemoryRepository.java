@@ -38,9 +38,13 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
     private final Duration ttlDuration;
     private final Clock clock;
     private final int maxMessages;
-    
+
     @Autowired
     private ObjectMapper objectMapper;
+
+    // Simple per-JVM cache, keyed by conversationId.
+    // Thread-safe because a single Lambda container can handle concurrent requests.
+    private final Map<String, ConversationState> cache = new java.util.concurrent.ConcurrentHashMap<>();
 
     public DynamoDbChatMemoryRepository(DynamoDbEnhancedClient enhancedClient,
             String tableName,
@@ -54,6 +58,20 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
         this.ttlDuration = ttlDuration;
         this.clock = (clock != null) ? clock : Clock.systemUTC();
         this.maxMessages = maxMessages;
+    }
+
+    private static final class ConversationState {
+        // Full logical history Spring thinks exists for this conversation
+
+        List<Message> messages;
+
+        // Index in Dynamo of the last *persisted* message, or -1 if none.
+        long lastPersistedIndex;
+
+        ConversationState(List<Message> messages, long lastPersistedIndex) {
+            this.messages = messages;
+            this.lastPersistedIndex = lastPersistedIndex;
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -78,131 +96,113 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
 
     @Override
     public List<Message> findByConversationId(String conversationId) {
+        // 1) Cache first
+        var state = cache.get(conversationId);
+        if (state != null) {
+            log.debug("findByConversationId({}) served from cache, {} messages",
+                    conversationId, state.messages.size());
+            return state.messages;
+        }
+
+        // 2) Load from Dynamo
         QueryConditional condition = QueryConditional.keyEqualTo(
                 Key.builder().partitionValue(conversationId).build());
 
-        // Use SK ordering from Dynamo instead of client-side sort
-        final var response = table.query(r -> r
+        List<DynamoChatMemoryItem> items = table.query(r -> r
                 .queryConditional(condition)
                 .scanIndexForward(true) // ascending messageIndex
                 .limit(maxMessages))
                 .items()
                 .stream()
+                .toList();
+
+        List<Message> messages = items.stream()
                 .map(this::toMessage)
                 .toList();
-        log.debug("findByConversationId returning {} items", response.size());
-        return response;
+
+        long lastPersistedIndex = items.isEmpty()
+                ? -1L
+                : items.get(items.size() - 1).getMessageIndex();
+
+        log.debug("findByConversationId({}) loaded {} items from Dynamo, lastPersistedIndex={}",
+                conversationId, messages.size(), lastPersistedIndex);
+
+        // 3) Cache for this Lambda invocation
+        cache.put(conversationId, new ConversationState(new ArrayList<>(messages), lastPersistedIndex));
+
+        return messages;
     }
 
     @Override
     public void saveAll(String conversationId, List<Message> messages) {
-        // Nothing to do if Spring AI passes no messages.
         if (messages == null || messages.isEmpty()) {
             return;
         }
 
         Message last = messages.get(messages.size() - 1);
 
-        // ✅ Only persist when the last message is SYSTEM.
-        //    This means the turn is "complete" in *your* pipeline:
-        //    USER (+ maybe TOOL / TOOL_RESPONSE) → SYSTEM.
-        if (last.getMessageType() != MessageType.SYSTEM) {
-            // This is a pre-call save (USER-only), or an intermediate state.
-            log.debug("saveAll called for {} messages, last type = {}, skipping save operation",
-                    messages.size(), last.getMessageType());
-            // Do NOT write anything to Dynamo yet.
+        // Only skip the pre-call
+        if (last.getMessageType() != MessageType.ASSISTANT) {
+            log.debug("saveAll({}) pre-call USER-only, updating cache but not persisting", conversationId);
+            cache.compute(conversationId, (id, state) -> {
+                if (state == null) {
+                    // No prior findByConversationId in this container; treat as new
+                    return new ConversationState(new ArrayList<>(messages), -1L);
+                }
+                state.messages = new ArrayList<>(messages);
+                return state;
+            });
             return;
         }
 
+        // From here on, we have a "complete" turn (ASSISTANT/SYSTEM/TOOL at tail).
         long ttlEpochSeconds = clock.instant()
                 .plus(ttlDuration)
                 .getEpochSecond();
 
-        // 1) Fast path: try to use ONLY the last stored item
-        Optional<DynamoChatMemoryItem> lastItemOpt = findLastItem(conversationId);
+        ConversationState state = cache.get(conversationId);
 
-        if (lastItemOpt.isEmpty()) {
-            // New conversation – just write everything starting at index 0
-            List<DynamoChatMemoryItem> allItems = new ArrayList<>(messages.size());
-            long idx = 0;
-            for (Message m : messages) {
-                allItems.add(buildItem(conversationId, (int) idx++, m, ttlEpochSeconds));
-            }
-            batchPutItems(allItems);
+        if (state == null) {
+            // Fallback: we didn't have a cached state (e.g., saveAll called without findByConversationId).
+            // Use your existing logic to discover last index from Dynamo once.
+            log.debug("saveAll({}) with no cache state, falling back to Dynamo last-item lookup", conversationId);
+            long lastIdx = findLastItem(conversationId)
+                    .map(DynamoChatMemoryItem::getMessageIndex)
+                    .orElse(-1L);
+            state = new ConversationState(new ArrayList<>(messages), lastIdx);
+            cache.put(conversationId, state);
+        } else {
+            // Update state.messages to the latest list Spring gave us
+            state.messages = new ArrayList<>(messages);
+        }
+
+        // Write only messages AFTER lastPersistedIndex
+        long lastPersisted = state.lastPersistedIndex;
+        int totalMessages = state.messages.size();
+        int startListIndex = (int) (lastPersisted + 1); // relies on messageIndex starting at 0, no gaps
+
+        if (startListIndex >= totalMessages) {
+            log.debug("saveAll({}) nothing new to persist (startListIndex >= totalMessages)", conversationId);
+            cache.remove(conversationId); // clean up
             return;
         }
 
-        DynamoChatMemoryItem lastItem = lastItemOpt.get();
-        long lastIndex = lastItem.getMessageIndex();
-        Message lastPersistedMessage = toMessage(lastItem);
-
-        // 2) Walk incoming messages backwards to find where we left off
-        int pivot = findLastPersistedPosition(messages, lastPersistedMessage);
-
-        if (pivot >= 0) {
-            // We found the last persisted message inside the incoming list.
-            // Everything AFTER pivot is new.
-            int totalMessages = messages.size();
-            if (pivot + 1 >= totalMessages) {
-                // No new messages to write
-                return;
-            }
-
-            List<DynamoChatMemoryItem> newItems
-                    = new ArrayList<>(totalMessages - (pivot + 1));
-
-            long nextIndex = lastIndex;
-            for (int i = pivot + 1; i < totalMessages; i++) {
-                Message msg = messages.get(i);
-                nextIndex++;
-                newItems.add(buildItem(conversationId, (int) nextIndex, msg, ttlEpochSeconds));
-            }
-
-            log.debug("Persisting {} items via batch put operation", newItems.size());
-            batchPutItems(newItems);
-            return;
-        }
-
-        // 3) Slow fallback: we couldn't match the last stored message
-        //    in the incoming list (edge case: advisor trimmed differently,
-        //    message sanitized, etc). Fall back to full-partition approach.
-        QueryConditional condition = QueryConditional.keyEqualTo(
-                Key.builder().partitionValue(conversationId).build());
-
-        List<DynamoChatMemoryItem> existingItems = table
-                .query(r -> r
-                .queryConditional(condition)
-                .scanIndexForward(true)
-                .limit(maxMessages)
-                )
-                .items()
-                .stream()
-                .toList();
-
-        int existingCount = existingItems.size();
-        long maxIndex = existingItems.isEmpty()
-                ? -1L
-                : existingItems.get(existingCount - 1).getMessageIndex();
-
-        int totalMessages = messages.size();
-        int alreadyPersistedCount = Math.min(existingCount, totalMessages);
-
-        if (alreadyPersistedCount >= totalMessages) {
-            return;
-        }
-
-        List<DynamoChatMemoryItem> newItems
-                = new ArrayList<>(totalMessages - alreadyPersistedCount);
-
-        long nextIndex = maxIndex;
-        for (int i = alreadyPersistedCount; i < totalMessages; i++) {
-            Message msg = messages.get(i);
+        List<DynamoChatMemoryItem> newItems = new ArrayList<>(totalMessages - startListIndex);
+        long nextIndex = lastPersisted;
+        for (int i = startListIndex; i < totalMessages; i++) {
+            Message msg = state.messages.get(i);
             nextIndex++;
             newItems.add(buildItem(conversationId, (int) nextIndex, msg, ttlEpochSeconds));
         }
 
-        log.debug("Persisting {} items via batch put operation", newItems.size());
+        log.debug("saveAll({}) persisting {} new items (indexes {}..{}), then evicting cache entry",
+                conversationId, newItems.size(), startListIndex, totalMessages - 1);
+
         batchPutItems(newItems);
+
+        // Update and evict so the next Lambda invocation starts fresh from Dynamo
+        state.lastPersistedIndex = nextIndex;
+        cache.remove(conversationId);
     }
 
     private int findLastPersistedPosition(List<Message> messages,
