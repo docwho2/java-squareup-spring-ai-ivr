@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.*;
+import lombok.extern.log4j.Log4j2;
 
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -17,6 +18,7 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.ToolResponseMessage;
 import org.springframework.ai.chat.messages.ToolResponseMessage.ToolResponse;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import software.amazon.awssdk.enhanced.dynamodb.*;
 import software.amazon.awssdk.enhanced.dynamodb.model.*;
@@ -28,6 +30,7 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
  * Table schema (Dynamo): PK: conversationId (String) SK: messageIndex (Number, 0..N-1) ttl: epoch seconds for TTL
  * (per-message)
  */
+@Log4j2
 public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
 
     private final DynamoDbEnhancedClient enhancedClient;
@@ -35,7 +38,9 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
     private final Duration ttlDuration;
     private final Clock clock;
     private final int maxMessages;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    
+    @Autowired
+    private ObjectMapper objectMapper;
 
     public DynamoDbChatMemoryRepository(DynamoDbEnhancedClient enhancedClient,
             String tableName,
@@ -56,14 +61,19 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
     // -------------------------------------------------------------------------
     @Override
     public List<String> findConversationIds() {
-        PageIterable<DynamoChatMemoryItem> pages
-                = table.scan(ScanEnhancedRequest.builder().build());
+        PageIterable<DynamoChatMemoryItem> pages = table.scan(r -> r
+                .consistentRead(false)
+                .attributesToProject("conversationId")
+        );
 
-        return pages.items()
+        final var response = pages.items()
                 .stream()
                 .map(DynamoChatMemoryItem::getConversationId)
                 .distinct()
                 .toList();
+
+        log.debug("findConversationIds returning {} keys", response.size());
+        return response;
     }
 
     @Override
@@ -72,7 +82,7 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
                 Key.builder().partitionValue(conversationId).build());
 
         // Use SK ordering from Dynamo instead of client-side sort
-        return table.query(r -> r
+        final var response = table.query(r -> r
                 .queryConditional(condition)
                 .scanIndexForward(true) // ascending messageIndex
                 .limit(maxMessages))
@@ -80,12 +90,27 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
                 .stream()
                 .map(this::toMessage)
                 .toList();
+        log.debug("findByConversationId returning {} items", response.size());
+        return response;
     }
 
     @Override
     public void saveAll(String conversationId, List<Message> messages) {
         // Nothing to do if Spring AI passes no messages.
         if (messages == null || messages.isEmpty()) {
+            return;
+        }
+
+        Message last = messages.get(messages.size() - 1);
+
+        // ✅ Only persist when the last message is SYSTEM.
+        //    This means the turn is "complete" in *your* pipeline:
+        //    USER (+ maybe TOOL / TOOL_RESPONSE) → SYSTEM.
+        if (last.getMessageType() != MessageType.SYSTEM) {
+            // This is a pre-call save (USER-only), or an intermediate state.
+            log.debug("saveAll called for {} messages, last type = {}, skipping save operation",
+                    messages.size(), last.getMessageType());
+            // Do NOT write anything to Dynamo yet.
             return;
         }
 
@@ -133,6 +158,7 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
                 newItems.add(buildItem(conversationId, (int) nextIndex, msg, ttlEpochSeconds));
             }
 
+            log.debug("Persisting {} items via batch put operation", newItems.size());
             batchPutItems(newItems);
             return;
         }
@@ -175,6 +201,7 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
             newItems.add(buildItem(conversationId, (int) nextIndex, msg, ttlEpochSeconds));
         }
 
+        log.debug("Persisting {} items via batch put operation", newItems.size());
         batchPutItems(newItems);
     }
 
@@ -230,28 +257,7 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
         table.query(r -> r.queryConditional(condition))
                 .items()
                 .forEach(table::deleteItem);
-    }
-
-    // -------------------------------------------------------------------------
-    // Internal helpers
-    // -------------------------------------------------------------------------
-    /**
-     * Find the highest messageIndex for a conversation using a descending query with limit(1). This is O(1) in terms of
-     * returned items.
-     */
-    private OptionalLong findLastIndex(String conversationId) {
-        QueryConditional condition = QueryConditional.keyEqualTo(
-                Key.builder().partitionValue(conversationId).build());
-
-        return table.query(r -> r
-                .queryConditional(condition)
-                .scanIndexForward(false) // highest SK first
-                .limit(1))
-                .items()
-                .stream()
-                .findFirst()
-                .map(i -> OptionalLong.of(i.getMessageIndex()))
-                .orElse(OptionalLong.empty());
+        log.debug("deleteByConversationId called with conversationId {}", conversationId);
     }
 
     /**
