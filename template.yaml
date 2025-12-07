@@ -1014,7 +1014,7 @@ Resources:
           SQUARE_API_KEY: !Ref SQUAREAPIKEY
           SQUARE_LOCATION_ID: !Ref SQUARELOCATIONID
           SQUARE_ENVIRONMENT: !Ref SQUAREENVIRONMENT
-          CHAT_MEMORY_TABLE: !Ref ChatSessionTable
+          CHAT_MEMORY_DYNAMO_TABLE_NAME: !Ref ChatSessionTable
           MAIN_NUMBER: !Ref TRANSFERNUMBER
           VC_ARN: !Ref VOICECONNECTORARN
           FB_PAGE_ID: !Ref FBPAGEID
@@ -1119,7 +1119,7 @@ Resources:
           SQUARE_API_KEY: !Ref SQUAREAPIKEY
           SQUARE_LOCATION_ID: !Ref SQUARELOCATIONID
           SQUARE_ENVIRONMENT: !Ref SQUAREENVIRONMENT
-          CHAT_MEMORY_TABLE: !Ref ChatSessionTable
+          CHAT_MEMORY_DYNAMO_TABLE_NAME: !Ref ChatSessionTable
           MAIN_NUMBER: !Ref TRANSFERNUMBER
       Policies: 
         - DynamoDBCrudPolicy:

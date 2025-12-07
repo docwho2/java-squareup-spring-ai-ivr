@@ -1,14 +1,12 @@
 package cloud.cleo.squareup.config;
 
 import cloud.cleo.squareup.memory.DynamoDbChatMemoryRepository;
-import java.time.Clock;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
 import org.springframework.ai.bedrock.converse.BedrockChatOptions;
 import org.springframework.ai.bedrock.converse.BedrockProxyChatModel;
-import org.springframework.ai.bedrock.converse.api.BedrockCacheOptions;
-import org.springframework.ai.bedrock.converse.api.BedrockCacheStrategy;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.ChatClientRequest;
 import org.springframework.ai.chat.client.ChatClientResponse;
@@ -29,7 +27,6 @@ import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.ai.openaisdk.OpenAiSdkChatModel;
 import org.springframework.ai.openaisdk.OpenAiSdkChatOptions;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -123,42 +120,20 @@ public class ChatConfig {
     }
 
     @Bean
-    @ConfigurationProperties(prefix = "chat.memory")
-    public ChatMemoryProperties chatMemoryProperties() {
-        return new ChatMemoryProperties();
-    }
-
-    public static class ChatMemoryProperties {
-
-        /**
-         * Max messages to keep in active window per conversation.
-         */
-        private int maxMessages = 30;
-
-        public int getMaxMessages() {
-            return maxMessages;
-        }
-
-        public void setMaxMessages(int maxMessages) {
-            this.maxMessages = maxMessages;
-        }
-    }
-
-    @Bean
-    public ChatMemoryRepository chatMemoryRepository(DynamoDbEnhancedClient enhancedClient, ChatMemoryProperties props) {
-        return new DynamoDbChatMemoryRepository(
-                enhancedClient,
-                System.getenv().getOrDefault("CHAT_MEMORY_TABLE", "chat-memory"),
-                Duration.ofDays(1),
-                Clock.systemUTC(),
-                props.getMaxMessages());
+    public ChatMemoryRepository chatMemoryRepository(DynamoDbEnhancedClient enhancedClient, ObjectMapper objectMapper,
+            @Value("${chat.memory.dynamo.ttl:24h}") Duration ttlDuration,
+            @Value("${chat.memory.dynamo.table-name:spring-ai-chat-memory}") String tableName
+    ) {
+        return new DynamoDbChatMemoryRepository(enhancedClient, objectMapper,
+                ttlDuration,
+                tableName);
     }
 
     @Bean
     public ChatMemory chatMemory(ChatMemoryRepository chatMemoryRepository) {
         return MessageWindowChatMemory.builder()
                 .chatMemoryRepository(chatMemoryRepository)
-                .maxMessages(30)
+                .maxMessages(50)
                 .build();
     }
 

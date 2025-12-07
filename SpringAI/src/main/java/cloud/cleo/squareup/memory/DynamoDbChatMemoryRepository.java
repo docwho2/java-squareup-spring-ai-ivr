@@ -4,8 +4,8 @@ import static cloud.cleo.squareup.cloudfunctions.LexFunction.sanitizeAssistantTe
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import lombok.extern.log4j.Log4j2;
 
@@ -18,7 +18,6 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.ToolResponseMessage;
 import org.springframework.ai.chat.messages.ToolResponseMessage.ToolResponse;
 import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import software.amazon.awssdk.enhanced.dynamodb.*;
 import software.amazon.awssdk.enhanced.dynamodb.model.*;
@@ -35,29 +34,26 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
 
     private final DynamoDbEnhancedClient enhancedClient;
     private final DynamoDbTable<DynamoChatMemoryItem> table;
-    private final Duration ttlDuration;
-    private final Clock clock;
-    private final int maxMessages;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    /**
+     * How long to leave ChatMemoryItems around. Saves calling delete and let Dynamo clean up later with no write unit
+     * impact.
+     */
+    private final Duration ttlDuration;
+
+    private final ObjectMapper objectMapper;
 
     // Simple per-JVM cache, keyed by conversationId.
     // Thread-safe because a single Lambda container can handle concurrent requests.
     private final Map<String, ConversationState> cache = new java.util.concurrent.ConcurrentHashMap<>();
 
-    public DynamoDbChatMemoryRepository(DynamoDbEnhancedClient enhancedClient,
-            String tableName,
-            Duration ttlDuration,
-            Clock clock, int maxMessages) {
-
+    public DynamoDbChatMemoryRepository(DynamoDbEnhancedClient enhancedClient, ObjectMapper objectMapper, Duration ttlDuration, String tableName) {
         this.enhancedClient = enhancedClient;
+        this.objectMapper = objectMapper;
+        this.ttlDuration = ttlDuration;
         this.table = enhancedClient.table(
                 tableName,
                 TableSchema.fromBean(DynamoChatMemoryItem.class));
-        this.ttlDuration = ttlDuration;
-        this.clock = (clock != null) ? clock : Clock.systemUTC();
-        this.maxMessages = maxMessages;
     }
 
     private static final class ConversationState {
@@ -110,8 +106,7 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
 
         List<DynamoChatMemoryItem> items = table.query(r -> r
                 .queryConditional(condition)
-                .scanIndexForward(true) // ascending messageIndex
-                .limit(maxMessages))
+                .scanIndexForward(true)) // ascending messageIndex
                 .items()
                 .stream()
                 .toList();
@@ -141,9 +136,10 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
 
         Message last = messages.get(messages.size() - 1);
 
-        // Only skip the pre-call
+        // Only skip the pre-call, only ASSISTANT messages will trigger a real write
         if (last.getMessageType() != MessageType.ASSISTANT) {
-            log.debug("saveAll({}) pre-call USER-only, updating cache but not persisting", conversationId);
+            log.debug("saveAll({}) called with last message type {}, caching only (no persistence this turn)",
+                    conversationId, last.getMessageType());
             cache.compute(conversationId, (id, state) -> {
                 if (state == null) {
                     // No prior findByConversationId in this container; treat as new
@@ -156,7 +152,7 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
         }
 
         // From here on, we have a "complete" turn (ASSISTANT/SYSTEM/TOOL at tail).
-        long ttlEpochSeconds = clock.instant()
+        long ttlEpochSeconds = Instant.now()
                 .plus(ttlDuration)
                 .getEpochSecond();
 
@@ -203,37 +199,6 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
         // Update and evict so the next Lambda invocation starts fresh from Dynamo
         state.lastPersistedIndex = nextIndex;
         cache.remove(conversationId);
-    }
-
-    private int findLastPersistedPosition(List<Message> messages,
-            Message lastPersisted) {
-
-        for (int i = messages.size() - 1; i >= 0; i--) {
-            Message m = messages.get(i);
-            if (sameMessageForMatch(m, lastPersisted)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    private boolean sameMessageForMatch(Message a, Message b) {
-        if (a.getMessageType() != b.getMessageType()) {
-            return false;
-        }
-
-        // We store only sanitized text for USER / ASSISTANT / SYSTEM.
-        // For TOOL messages, text is usually null; you could extend this to
-        // compare toolCalls/toolResponses if you care.
-        String at = a.getText();
-        String bt = b.getText();
-        if (at == null && bt == null) {
-            return true;
-        }
-        if (at == null || bt == null) {
-            return false;
-        }
-        return at.equals(bt);
     }
 
     private Optional<DynamoChatMemoryItem> findLastItem(String conversationId) {
@@ -427,7 +392,7 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
                 case USER ->
                     UserMessage.builder()
                     .text(text)
-                    //.metadata(metadata)
+                    .metadata(metadata)
                     .build();
 
                 case SYSTEM ->
@@ -439,8 +404,8 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
                 case ASSISTANT -> {
                     List<ToolCall> toolCalls = readToolCalls(item);
                     AssistantMessage.Builder builder = AssistantMessage.builder()
-                            .content(text);
-                    //.properties(metadata);
+                            .content(text)
+                            .properties(metadata);
 
                     if (!toolCalls.isEmpty()) {
                         builder.toolCalls(toolCalls);
