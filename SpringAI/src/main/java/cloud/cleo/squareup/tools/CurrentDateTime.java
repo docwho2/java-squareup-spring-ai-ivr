@@ -34,7 +34,7 @@ public class CurrentDateTime extends AbstractTool {
         );
     }
 
-    record CurrentDateTimeResult(ZonedDateTime iso, LocalDate date, LocalTime time, ZoneId zone) {
+    record CurrentDateTimeResult(ZonedDateTime iso, LocalDate date, LocalTime time, ZoneId timezone) {
 
     }
 

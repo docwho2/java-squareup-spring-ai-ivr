@@ -21,9 +21,8 @@ public class DrivingDirectionsVoice extends AbstractTool {
     @Tool(
         name = DRIVING_DIRECTIONS_VOICE_FUNCTION_NAME,
         description = """
-            Sends the caller an SMS containing a URL with driving directions \
-            to the store. Use this only for voice calls when the caller is \
-            using a valid US mobile number.
+            Sends the caller an SMS containing a URL with driving directions 
+            to the store.
             """
     )
     public StatusMessageResult sendDrivingDirectionsVoice(ToolContext ctx) {
@@ -34,7 +33,7 @@ public class DrivingDirectionsVoice extends AbstractTool {
 
     @Override
     public boolean isValidForRequest(LexV2EventWrapper event) {
-        // Voice only, like original isVoice() = true / isText() = false.
+        // Voice only 
         return event.isVoice();
     }
 

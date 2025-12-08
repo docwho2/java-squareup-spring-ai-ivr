@@ -21,8 +21,6 @@ public class FacebookHandover extends AbstractTool {
      * Tool the model can call when it has decided a human should take over.
      * No request parameters needed.
      *
-     * The caller (your Lex handler / Lambda) can treat this as a terminating action
-     * and perform the actual Facebook handover protocol.
      * @param ctx
      * @return 
      */

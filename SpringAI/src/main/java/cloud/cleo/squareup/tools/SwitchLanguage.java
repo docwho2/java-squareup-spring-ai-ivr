@@ -19,7 +19,7 @@ public class SwitchLanguage extends AbstractTool {
             name = SWITCH_LANGUAGE_FUNCTION_NAME,
             description = """
             Change the language used to interact with the caller. 
-            Use this only when the caller clearly requests to switch languages.
+            Use this only when the caller clearly requests to switch languages or appears to be speaking that language.
             """
     )
     public StatusMessageResult switchLanguage(SwitchLanguageRequest r, ToolContext ctx) {

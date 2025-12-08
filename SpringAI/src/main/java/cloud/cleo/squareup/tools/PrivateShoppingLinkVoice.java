@@ -19,8 +19,7 @@ public class PrivateShoppingLinkVoice extends AbstractTool {
     @Tool(
         name = PRIVATE_SHOPPING_VOICE_FUNCTION_NAME,
         description = """
-            Sends the caller an SMS containing the direct URL to book private shopping. \
-            Use this only for voice calls when the caller is using a valid US mobile number.
+            Sends the caller an SMS containing the direct URL to book private shopping.
             """
     )
     public StatusMessageResult sendPrivateShoppingLinkVoice(ToolContext ctx) {
