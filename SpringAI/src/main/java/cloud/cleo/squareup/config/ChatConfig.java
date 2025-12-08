@@ -108,7 +108,7 @@ public class ChatConfig {
 
         return BedrockChatOptions.builder()
                 .model(resolved)
-                .temperature(.2)
+                .temperature(.1)
                 .topP(0.9)
                 .build();
     }
