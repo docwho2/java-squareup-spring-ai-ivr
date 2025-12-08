@@ -105,7 +105,7 @@
             <groupId>software.amazon.awssdk.crt</groupId>
             <artifactId>aws-crt</artifactId>
             <!-- see https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/http-configuration-crt.html when upgrading -->
-            <version>0.40.2</version>
+            <version>0.40.3</version>
             <classifier>linux-aarch_64</classifier>
         </dependency>
         
