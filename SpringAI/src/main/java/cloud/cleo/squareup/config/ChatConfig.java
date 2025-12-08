@@ -7,6 +7,8 @@ import java.util.Comparator;
 import java.util.List;
 import org.springframework.ai.bedrock.converse.BedrockChatOptions;
 import org.springframework.ai.bedrock.converse.BedrockProxyChatModel;
+import org.springframework.ai.bedrock.converse.api.BedrockCacheOptions;
+import org.springframework.ai.bedrock.converse.api.BedrockCacheStrategy;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.ChatClientRequest;
 import org.springframework.ai.chat.client.ChatClientResponse;
@@ -60,7 +62,7 @@ public class ChatConfig {
         return builder.build();
     }
     
-    @Primary
+    
     @Bean(name = "customOpenAiChatModel")
     public ChatModel chatModel(OpenAiApi api, OpenAiChatOptions options) {
         return OpenAiChatModel.builder()
@@ -101,15 +103,16 @@ public class ChatConfig {
     @Bean
     public BedrockChatOptions bedrockChatOptions(@Value("${spring.ai.bedrock.chat.options.model:}") String model) {
         String resolved = (model == null || model.isBlank())
-                ? "us.amazon.nova-2-lite-v1:0"
+                ? "us.amazon.nova-2-sonic-v1:0"
                 : model;
 
         return BedrockChatOptions.builder()
                 .model(resolved)
-                //.cacheOptions(BedrockCacheOptions.builder().strategy(BedrockCacheStrategy.SYSTEM_AND_TOOLS).build())
+                .temperature(.2)
                 .build();
     }
 
+    @Primary
     @Bean(name = "bedrockChatModel")
     public ChatModel bedrockChatModel(BedrockRuntimeAsyncClient bedrockRuntimeAsyncClient, BedrockRuntimeClient bedrockRuntimeClient, BedrockChatOptions options) {
         return BedrockProxyChatModel.builder()
