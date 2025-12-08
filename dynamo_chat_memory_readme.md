@@ -341,8 +341,8 @@ This pattern holds regardless of how many internal calls Spring AI makes.
 
 To reuse this implementation in your own project, copy:
 
-- `SpringAI/src/main/java/cloud/cleo/squareup/memory/DynamoDbChatMemoryRepository.java`  
-- `SpringAI/src/main/java/cloud/cleo/squareup/memory/DynamoChatMemoryItem.java`  
+- [DynamoDbChatMemoryRepository.java](SpringAI/src/main/java/cloud/cleo/squareup/memory/DynamoDbChatMemoryRepository.java) 
+- [DynamoChatMemoryItem.java](SpringAI/src/main/java/cloud/cleo/squareup/memory/DynamoChatMemoryItem.java)  
 
 Then:
 
@@ -353,24 +353,3 @@ Then:
 
 Spring AI will then use DynamoDB as its backing `ChatMemoryRepository` transparently.
 
----
-
-## 🔗 Linking from Your Main README
-
-In your top-level `README.md`, you can link to this document like so:
-
-```markdown
-For a production-ready, AWS-native chat memory implementation using DynamoDB, see:
-
-➡️ [DynamoDB Chat Memory for Spring AI](./dynamo_chat_memory_readme.md)
-```
-
----
-
-# 📄 Download
-
-This file is intended to live at your repo root as:
-
-```text
-dynamo_chat_memory_readme.md
-```

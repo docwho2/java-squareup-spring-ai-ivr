@@ -6,6 +6,10 @@ This project is a [SIP Media Application](https://docs.aws.amazon.com/chime-sdk/
 [Java Chime SMA Flow Library](https://github.com/docwho2/java-chime-voicesdk-sma) to deliver a [Spring AI](https://docs.spring.io/spring-ai/reference/) voice bot IVR application. The IVR application is integrated with the [Square API](https://developer.squareup.com/us/en) to allow callers to ask questions about products 
 and business hours, transfer to employee cell phones, etc.
 
+For a production-ready, AWS-native chat memory implementation using DynamoDB, see:
+
+➡️ [DynamoDB Chat Memory for Spring AI](./dynamo_chat_memory_readme.md)
+
 ## Use Case
 
 [Copper Fox Gifts](https://www.copperfoxgifts.com) is a retail store located in a small town in MN. The goal is to handle the majority of calls without human intervention. Here's a breakdown of the types of calls they receive:
