@@ -279,8 +279,9 @@ Spring Boot’s relaxed binding maps these directly to the properties.
 
 The core implementation is in:
 
-- `DynamoDbChatMemoryRepository.java`  
-- `DynamoChatMemoryItem.java`  
+- [DynamoDbChatMemoryRepository.java](SpringAI/src/main/java/cloud/cleo/squareup/memory/DynamoDbChatMemoryRepository.java) 
+- [DynamoChatMemoryItem.java](SpringAI/src/main/java/cloud/cleo/squareup/memory/DynamoChatMemoryItem.java)  
+
 
 Spring AI calls `findByConversationId` and `saveAll` multiple times per turn. This repository is optimized to minimize I/O regardless of that pattern.
 
