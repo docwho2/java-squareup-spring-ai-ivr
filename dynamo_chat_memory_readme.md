@@ -1,11 +1,11 @@
 # 🚀 DynamoDB Chat Memory for Spring AI
 **High-Performance · Low-Latency · AWS-Native · Drop-In Replacement for Spring AI `ChatMemoryRepository`**
 
-This project provides a **DynamoDB-backed Chat Memory implementation for Spring AI**, engineered for the fastest possible performance when running on AWS infrastructure (Lambda, ECS, EKS, EC2, Fargate, etc.).
+This sub-project provides a **DynamoDB-backed Chat Memory implementation for Spring AI**, engineered for the fastest possible performance when running on AWS infrastructure (Lambda, ECS, EKS, EC2, Fargate, etc.).
 
 It replaces Spring AI’s default storage patterns—which can produce **multiple reads and writes per turn**—with a fully optimized design that performs:
 
-- ✅ Exactly **1 DynamoDB read + 1 DynamoDB write per full chat turn**  
+- ✅ Exactly **1 DynamoDB read + 1 DynamoDB batch write per full chat turn**  
 - ✅ **Zero redundant I/O calls** (thanks to per-JVM caching)  
 - ✅ **Append-only persistence** (tail-only writes)  
 - ✅ **Built-in TTL cleanup** via DynamoDB Time To Live  
@@ -353,4 +353,35 @@ Then:
 4. Make sure your app uses a stable **conversation id** (user id, session id, phone number + date, etc.).  
 
 Spring AI will then use DynamoDB as its backing `ChatMemoryRepository` transparently.
+
+
+## 🔎 Example: Repository Behavior During a Single Chat Turn
+
+Below is a real Lambda log demonstrating how the DynamoDB ChatMemoryRepository
+handles one complete turn (USER → ASSISTANT) with only **1 read + 1 write**:
+
+```text
+1765186015864 | START RequestId: a2f162b1-d32b-43d7-a2b8-b1187b477ceb Version: 64
+1765186015866 | Received Lex event: {"sessionId":"364253738352486","inputTranscript":"its been great working with you !"}
+
+1765186015904 | [REPO] DEBUG findByConversationId(364253738352486) loaded 4 items from Dynamo, lastPersistedIndex=3
+1765186015904 | [REPO] DEBUG findByConversationId(364253738352486) served from cache, 4 messages
+1765186015904 | [REPO] DEBUG saveAll(364253738352486) called with last message type USER → skipping persistence this turn
+
+-- Spring AI sends ChatCompletionRequest here --
+
+1765186016668 | [REPO] DEBUG findByConversationId(364253738352486) served from cache, 5 messages
+1765186016668 | [REPO] DEBUG saveAll(364253738352486) persisting 2 new items (indexes 4..5), then evicting cache entry
+
+1765186016679 | Raw Bot Text Response: "Thank you so much! It's been a pleasure assisting you..."
+1765186016680 | Lex Response created successfully
+```
+
+### ✔ What this shows
+- Spring AI calls `findByConversationId` **twice** in a row  
+- The repository returns cache on 2nd call → **zero additional DynamoDB reads**  
+- Spring AI also calls `saveAll` twice:
+  - Once for USER message → **skipped write**
+  - Once after ASSISTANT message → **actual write**
+- DynamoDB receives only **one read + one write** for the full turn
 
