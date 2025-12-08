@@ -103,7 +103,7 @@ public class ChatConfig {
     @Bean
     public BedrockChatOptions bedrockChatOptions(@Value("${spring.ai.bedrock.chat.options.model:}") String model) {
         String resolved = (model == null || model.isBlank())
-                ? "us.amazon.nova-2-sonic-v1:0"
+                ? "amazon.nova-2-sonic-v1:0"
                 : model;
 
         return BedrockChatOptions.builder()
