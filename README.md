@@ -213,7 +213,7 @@ The goal is to introduce a "Store Virtual Assistant" powered by [Spring AI](http
   - The Model is instructed to translate request parameters into English so searching items in the Store works in any language.
     - Do you have gummy bears?  in Spanish is "¿Tienes ositos de goma?".
     - Sí, tenemos ositos de goma. Ofrecemos "Big Yummy Gummy Bear - 12 Ct.", "Snack Pack O'Gummy Bears Milk Chocolate", y "Triple-Decker Candy Sour Gummy Bears".
-- You can call into a test SandBox deployment via +1(612)254-0226 to try it out.
+
 
 ## Demonstration Videos
 
