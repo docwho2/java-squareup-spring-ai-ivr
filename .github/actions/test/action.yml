@@ -47,5 +47,5 @@ runs:
         AWS_REGION: ${{ inputs.region }}
         LEX_SESSION_ID: ${{ inputs.session-id }}
       run: |
-        mvn -B test -Dtest=LexE2ETests
+        mvn -B test -Dtest=LexE2ETests --no-transfer-progress --quiet
         
