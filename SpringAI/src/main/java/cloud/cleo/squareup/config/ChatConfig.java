@@ -110,6 +110,7 @@ public class ChatConfig {
                 .model(resolved)
                 .temperature(.1)
                 .topP(0.9)
+                .maxTokens(150)
                 .build();
     }
 
