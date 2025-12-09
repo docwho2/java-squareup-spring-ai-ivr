@@ -20,7 +20,9 @@ import org.springframework.web.client.RestClient;
 public class FaceBookService {
 
     private final ObjectMapper mapper;
-    private final RestClient restClient;
+    private final RestClient restClient = RestClient.builder()
+                .baseUrl("https://graph.facebook.com")
+                .build();
 
     // Inject from env/properties instead of System.getenv
     @Value("${fb.page-id:${FB_PAGE_ID:}}")
@@ -50,7 +52,6 @@ public class FaceBookService {
 
             JsonNode result = restClient.post()
                     .uri(uriBuilder -> uriBuilder
-                            .host("graph.facebook.com")
                             .pathSegment("v18.0", pageId, "pass_thread_control")
                             .queryParam("access_token", pageAccessToken)
                             .build())
@@ -101,7 +102,6 @@ public class FaceBookService {
 
             JsonNode result = restClient.post()
                     .uri(uriBuilder -> uriBuilder
-                            .host("graph.facebook.com")
                             .pathSegment("v18.0", "me", "custom_user_settings")
                             .queryParam("access_token", pageAccessToken)
                             .build())
@@ -150,7 +150,6 @@ public class FaceBookService {
 
             JsonNode result = restClient.post()
                     .uri(uriBuilder -> uriBuilder
-                            .host("graph.facebook.com")
                             .pathSegment("v18.0", "me", "messages")
                             .queryParam("access_token", pageAccessToken)
                             .build())
@@ -183,7 +182,6 @@ public class FaceBookService {
         try {
             JsonNode result = restClient.get()
                     .uri(uriBuilder -> uriBuilder
-                            .host("graph.facebook.com")
                             .pathSegment("v18.0", id)
                             .queryParam("access_token", pageAccessToken)
                             .build())
