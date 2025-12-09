@@ -177,6 +177,37 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
             
+         
+        <!-- JUnit / Spring Boot test support -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Lex V2 Runtime client -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>lexruntimev2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>ssm</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- URLConnection-based HTTP client for AWS SDK v2 -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>url-connection-client</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+            
+            
+            
     </dependencies>
     
     
