@@ -19,7 +19,10 @@ public class StoreWeatherService {
     private static final double WAHKON_LAT = 46.1182899;
     private static final double WAHKON_LON = -93.5210726;
 
-    private final RestClient restClient;
+    private final RestClient restClient = RestClient.builder()
+                .baseUrl("https://api.open-meteo.com")
+                .build();
+    
     private final ZoneId storeTimezone;
 
     public StoreWeatherResponse getStoreWeather() {
@@ -28,8 +31,6 @@ public class StoreWeatherService {
             Map<String, Object> json =
                     restClient.get()
                             .uri(uriBuilder -> uriBuilder
-                                    .scheme("https")
-                                    .host("api.open-meteo.com")
                                     .path("/v1/forecast")
                                     .queryParam("latitude", WAHKON_LAT)
                                     .queryParam("longitude", WAHKON_LON)
