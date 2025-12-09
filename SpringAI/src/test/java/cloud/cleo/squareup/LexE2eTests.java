@@ -65,9 +65,9 @@ class LexE2ETests {
         try {
             credsProvider.resolveCredentials();
             System.out.println("AWS credentials resolved successfully for LexE2ETests");
+            awsReady = true;
         } catch (SdkClientException e) {
             System.out.println("Skipping LexE2ETests: cannot resolve AWS credentials");
-            awsReady = false;
         }
         Assumptions.assumeTrue(awsReady,"Skipping LexE2ETests: cannot resolve AWS credentials");
 
