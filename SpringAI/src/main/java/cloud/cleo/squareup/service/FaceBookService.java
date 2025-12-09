@@ -20,7 +20,7 @@ import org.springframework.web.client.RestClient;
 public class FaceBookService {
 
     private final ObjectMapper mapper;
-    private final RestClient facebookRestClient;
+    private final RestClient restClient;
 
     // Inject from env/properties instead of System.getenv
     @Value("${fb.page-id:${FB_PAGE_ID:}}")
@@ -48,8 +48,9 @@ public class FaceBookService {
 
             log.debug("Post payload for thread control: {}", json::toPrettyString);
 
-            JsonNode result = facebookRestClient.post()
+            JsonNode result = restClient.post()
                     .uri(uriBuilder -> uriBuilder
+                            .host("graph.facebook.com")
                             .pathSegment("v18.0", pageId, "pass_thread_control")
                             .queryParam("access_token", pageAccessToken)
                             .build())
@@ -98,8 +99,9 @@ public class FaceBookService {
 
             log.debug("Post payload for Private Shopping Menu: {}", json::toPrettyString);
 
-            JsonNode result = facebookRestClient.post()
+            JsonNode result = restClient.post()
                     .uri(uriBuilder -> uriBuilder
+                            .host("graph.facebook.com")
                             .pathSegment("v18.0", "me", "custom_user_settings")
                             .queryParam("access_token", pageAccessToken)
                             .build())
@@ -146,8 +148,9 @@ public class FaceBookService {
 
             log.debug("Post payload for URL push: {}", json::toPrettyString);
 
-            JsonNode result = facebookRestClient.post()
+            JsonNode result = restClient.post()
                     .uri(uriBuilder -> uriBuilder
+                            .host("graph.facebook.com")
                             .pathSegment("v18.0", "me", "messages")
                             .queryParam("access_token", pageAccessToken)
                             .build())
@@ -178,8 +181,9 @@ public class FaceBookService {
      */
     public String getFacebookName(String id) {
         try {
-            JsonNode result = facebookRestClient.get()
+            JsonNode result = restClient.get()
                     .uri(uriBuilder -> uriBuilder
+                            .host("graph.facebook.com")
                             .pathSegment("v18.0", id)
                             .queryParam("access_token", pageAccessToken)
                             .build())

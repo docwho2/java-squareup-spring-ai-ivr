@@ -6,7 +6,6 @@ package cloud.cleo.squareup.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.client.RestClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.http.SdkHttpClient;
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient;
@@ -94,14 +93,6 @@ public class AWSConfig {
                 // Also then all texts are sourced from the same phone number for consistancy
                 .region(Region.US_EAST_1)
                 .httpClient(crtHttpClient)
-                .build();
-    }
-
-    
-    @Bean
-    public RestClient facebookRestClient(RestClient.Builder builder) {
-        return builder
-                .baseUrl("https://graph.facebook.com")
                 .build();
     }
 }
