@@ -32,88 +32,20 @@ runs:
         role-to-assume: ${{ inputs.aws-role }}
         mask-aws-account-id: true
     
-    - name: Set Bot ID and Alias ID and Lex session ID in Env
-      shell: bash
-      run: |
-        echo "BOT_ID=$(aws ssm get-parameter --name /${{ inputs.stack-name }}/BOT_ID --query Parameter.Value --output text)" >> "$GITHUB_ENV"
-        echo "BOT_ALIAS_ID=$(aws ssm get-parameter --name /${{ inputs.stack-name }}/BOT_ALIAS_ID --query Parameter.Value --output text)" >> "$GITHUB_ENV"
-    
-    - name: Chuckles Candy Test
-      shell: bash
-      run: |
-        RESULT=$(aws lexv2-runtime recognize-text \
-          --text 'Do you have Chuckles Candy in stock?' \
-          --output text \
-          --query 'messages[0].content' \
-          --bot-id "${BOT_ID}" \
-          --bot-alias-id "${BOT_ALIAS_ID}" \
-          --locale-id en_US \
-          --session-id "${{ inputs.session-id }}")
-        echo "Result is [${RESULT}]"
-
-        # Pass if it contains "Yes" OR "We have" OR "Chuckles"
-        if [[ ! $RESULT =~ (Yes|We\ have|Chuckles) ]]; then
-          echo "Did not pass Chuckles test"
-          exit 1
-        fi
-        echo "Chuckles Test Passed"
-    
-    - name: Muggs Restaurant Test
-      shell: bash
-      run: |
-        RESULT=$(aws lexv2-runtime recognize-text \
-          --text 'Please recommend a restaurant in the area?' \
-          --output text \
-          --query 'messages[0].content' \
-          --bot-id "${BOT_ID}" \
-          --bot-alias-id "${BOT_ALIAS_ID}" \
-          --locale-id en_US \
-          --session-id "${{ inputs.session-id }}")
-        echo "Result is [${RESULT}]"
-
-        # Pass if it contains something like "Mugg" (Mugg's / Muggs / etc)
-        if [[ ! $RESULT =~ Mugg ]]; then
-          echo "Did not pass Mugg's restaurant test"
-          exit 1
-        fi
-        echo "Restaurant Test Passed"
-    
-    - name: Address Test
-      shell: bash
-      run: |
-        RESULT=$(aws lexv2-runtime recognize-text \
-          --text 'What is your address?' \
-          --output text \
-          --query 'messages[0].content' \
-          --bot-id "${BOT_ID}" \
-          --bot-alias-id "${BOT_ALIAS_ID}" \
-          --locale-id en_US \
-          --session-id "${{ inputs.session-id }}")
-        echo "Result is [${RESULT}]"
-
-        # Pass if it contains "160 Main" (allow any whitespace)
-        if [[ ! $RESULT =~ 160[[:space:]]+Main ]]; then
-          echo "Did not pass Address Test"
-          exit 1
-        fi
-        echo "Address Test Passed"
+    - name: Set up JDK 25
+      uses: actions/setup-java@v5
+      with:
+        java-version: '25'
+        distribution: 'corretto'
+        cache: maven
         
-    - name: Staff Test
+    - name: Run tests
+      working-directory: ./SpringAI
       shell: bash
+      env:
+        STACK_NAME: ${{ inputs.stack-name }}
+        AWS_REGION: ${{ inputs.region }}
+        LEX_SESSION_ID: ${{ inputs.session-id }}
       run: |
-        RESULT=$(aws lexv2-runtime recognize-text \
-          --text 'Does Steve work there?  If so, just say Yes' \
-          --output text \
-          --query 'messages[0].content' \
-          --bot-id "${BOT_ID}" \
-          --bot-alias-id "${BOT_ALIAS_ID}" \
-          --locale-id en_US \
-          --session-id "${{ inputs.session-id }}")
-        echo "Result is [${RESULT}]"
-
-        # Pass if it mentions Jensen OR some form of "yes"
-        if [[ ! $RESULT =~ ([Jj]ensen|[Yy]es|copperfoxgifts|[Ii]ndeed|confirm) ]]; then
-          echo "Did not pass Staff Test"
-          exit 1
-        fi
-        echo "Staff Test Passed"
+        mvn -B test -Dtest=LexE2ETests
+        
