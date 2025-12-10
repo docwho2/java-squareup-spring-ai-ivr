@@ -69,6 +69,18 @@ runs:
         else
             echo "No previous Allure history found."
         fi
+        
+    - name: Write Allure environment (region/stack)
+      shell: bash
+      run: |
+        mkdir -p SpringAI/target/allure-results
+        cat <<EOF > SpringAI/target/allure-results/environment.properties
+        Region=${{ inputs.region }}
+        StackName=${{ inputs.stack-name }}
+        SessionId=${{ inputs.session-id }}
+        EOF
+        
+        
     - name: Generate Allure report
       working-directory: ./SpringAI
       shell: bash
