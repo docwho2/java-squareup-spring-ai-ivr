@@ -154,11 +154,11 @@ jobs:
         cache: maven     
       
     - name: Build/Install Top level Project POM
-      run: mvn -N install -DskipTests --no-transfer-progress
+      run: mvn -N install -DskipTests --no-transfer-progress --quiet
       
     - name: Build/Install Needed SMA Library
       working-directory: ./ChimeSMALibrary
-      run: mvn install -DskipTests --no-transfer-progress
+      run: mvn install -DskipTests --no-transfer-progress --quiet
 
     - name: Setup AWS SAM
       uses: aws-actions/setup-sam@v2
@@ -272,6 +272,7 @@ jobs:
   run-tests:
     if: ${{ vars.RUN_TESTS }}
     strategy:
+      max-parallel: 1 
       matrix:
         region: [ us-east-1, us-west-2 ]
     runs-on: ubuntu-latest

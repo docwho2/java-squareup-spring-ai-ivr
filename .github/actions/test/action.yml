@@ -51,7 +51,7 @@ runs:
         LEX_SESSION_ID: ${{ inputs.session-id }}
         RUN_TESTS: true
       run: |
-        mvn test -Dtest=LexE2ETests --no-transfer-progress
+        mvn test -Dtest=LexE2ETests --no-transfer-progress --quiet
         
     - name: Checkout gh-pages (for Allure history)
       uses: actions/checkout@v4
@@ -73,7 +73,7 @@ runs:
       working-directory: ./SpringAI
       shell: bash
       run: |
-        mvn --no-transfer-progress allure:report
+        mvn --no-transfer-progress allure:report --quiet
 
     - name: Publish Allure report to GitHub Pages (/latest)
       uses: peaceiris/actions-gh-pages@v4
