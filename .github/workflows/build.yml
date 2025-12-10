@@ -27,7 +27,7 @@ jobs:
         cache: maven
       
     - name: Build up all the libraries
-      run: mvn -B install -DskipTests --no-transfer-progress
+      run: mvn install -DskipTests --no-transfer-progress
 
     - name: Setup AWS SAM
       uses: aws-actions/setup-sam@v2

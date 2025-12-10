@@ -6,9 +6,10 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.util.List;
 import java.util.UUID;
+import lombok.extern.log4j.Log4j2;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
@@ -31,7 +32,11 @@ import software.amazon.awssdk.services.ssm.model.SsmException;
 
 @ExtendWith(TimingExtension.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Log4j2
 class LexE2ETests {
+
+    private static final boolean RUN_TESTS
+            = Boolean.parseBoolean(System.getenv().getOrDefault("RUN_TESTS", "false"));
 
     private static final String AWS_REGION
             = System.getenv().getOrDefault("AWS_REGION", "us-east-1");
@@ -60,16 +65,20 @@ class LexE2ETests {
     static void initAws() {
         region = Region.of(AWS_REGION);
 
+        // For pipelines, sam build will always try and run tests, so unless RUN_TESTS is true, don't run
+        Assumptions.assumeTrue(RUN_TESTS, "RUN_TESTS env var not true, skipping all tests");
+
         // 1) Check credentials provider
         var credsProvider = DefaultCredentialsProvider.create();
         try {
             credsProvider.resolveCredentials();
-            System.out.println("AWS credentials resolved successfully for LexE2ETests");
+            log.info("AWS credentials resolved successfully for LexE2ETests");
             awsReady = true;
         } catch (SdkClientException e) {
-            System.out.println("Skipping LexE2ETests: cannot resolve AWS credentials");
+            log.warn("Skipping LexE2ETests: cannot resolve AWS credentials: {}", e.getMessage());
+            awsReady = false;
         }
-        Assumptions.assumeTrue(awsReady,"Skipping LexE2ETests: cannot resolve AWS credentials");
+        Assumptions.assumeTrue(awsReady, "Skipping LexE2ETests: cannot resolve AWS credentials");
 
         // 2) Fetch SSM params
         try (var ssm = SsmClient.builder()
@@ -79,17 +88,16 @@ class LexE2ETests {
 
             botId = getParam(ssm, "/" + STACK_NAME + "/BOT_ID");
             botAliasId = getParam(ssm, "/" + STACK_NAME + "/BOT_ALIAS_ID");
-
+            awsReady = true;
         } catch (SsmException e) {
-            System.out.println("Skipping LexE2ETests: failed to fetch SSM params for stack "
-                    + STACK_NAME + " : " + e.awsErrorDetails().errorMessage());
+            log.warn("Skipping LexE2ETests: failed to fetch SSM params for stack {} : {}",
+                    STACK_NAME, e.awsErrorDetails().errorMessage());
             awsReady = false;
-            return;
         } catch (SdkClientException e) {
-            System.out.println("Skipping LexE2ETests: SSM client error: " + e.getMessage());
+            log.warn("Skipping LexE2ETests: SSM client error: {}", e.getMessage());
             awsReady = false;
-            return;
         }
+        Assumptions.assumeTrue(awsReady, "Skipping LexE2ETests: cannot fetch SSM parameters");
 
         // 3) Build Lex client
         try {
@@ -97,15 +105,16 @@ class LexE2ETests {
                     .region(region)
                     .credentialsProvider(credsProvider)
                     .build();
+            awsReady = true;
         } catch (SdkClientException e) {
-            System.out.println("Skipping LexE2ETests: cannot create Lex client: " + e.getMessage());
+            log.warn("Skipping LexE2ETests: cannot create Lex client: {}", e.getMessage());
             awsReady = false;
-            return;
         }
 
-        awsReady = true;
-        System.out.printf(
-                "LexE2ETests initialized for stack '%s' in region '%s' (botId=%s, aliasId=%s)%n",
+        Assumptions.assumeTrue(awsReady, "Skipping LexE2ETests: cannot init LexRuntimeV2 client");
+
+        log.info(
+                "LexE2ETests initialized for stack '{}' in region '{}' (botId={}, aliasId={})",
                 STACK_NAME, AWS_REGION, botId, botAliasId
         );
     }
@@ -117,7 +126,7 @@ class LexE2ETests {
     }
 
     private static String getParam(SsmClient ssm, String name) {
-        System.out.println("Fetching SSM parameter: " + name);
+        log.info("Fetching SSM parameter: {}", name);
         var request = GetParameterRequest.builder()
                 .name(name)
                 .withDecryption(true)
@@ -126,7 +135,7 @@ class LexE2ETests {
     }
 
     private String sendToLex(String label, String text) {
-        System.out.printf(">>> [%s] request: \"%s\"%n", label, text);
+        log.info(">>> [{}] request: \"{}\"", label, text);
 
         var request = RecognizeTextRequest.builder()
                 .botId(botId)
@@ -145,7 +154,7 @@ class LexE2ETests {
                 .reduce("", (a, b) -> a + " " + b)
                 .trim();
 
-        System.out.printf("<<< [%s] response: \"%s\"%n", label, content);
+        log.info("<<< [{}] response: \"{}\"", label, content);
         return content;
     }
 
@@ -162,7 +171,7 @@ class LexE2ETests {
                 "Do you have Chuckles Candy in stock?"
         );
         boolean ok = chuckles.matches("(?s).*?(Yes|We have|Chuckles).*");
-        System.out.println(ok ? "Chuckles Test Passed" : "Chuckles Test FAILED");
+        log.info(ok ? "Chuckles Test Passed" : "Chuckles Test FAILED");
         assertTrue(ok, "Chuckles test failed, response was: " + chuckles);
     }
 
@@ -179,7 +188,7 @@ class LexE2ETests {
                 "Please recommend a restaurant in the area?"
         );
         boolean ok = muggs.toLowerCase().contains("mugg");
-        System.out.println(ok ? "Muggs Restaurant Test Passed" : "Muggs Restaurant Test FAILED");
+        log.info(ok ? "Muggs Restaurant Test Passed" : "Muggs Restaurant Test FAILED");
         assertTrue(ok, "Muggs restaurant test failed, response was: " + muggs);
     }
 
@@ -196,7 +205,7 @@ class LexE2ETests {
                 "What is your address?"
         );
         boolean ok = address.matches("(?s).*160\\s+Main.*");
-        System.out.println(ok ? "Address Test Passed" : "Address Test FAILED");
+        log.info(ok ? "Address Test Passed" : "Address Test FAILED");
         assertTrue(ok, "Address test failed, response was: " + address);
     }
 
@@ -213,8 +222,7 @@ class LexE2ETests {
                 "Does Steve work there?  If so, just say Yes"
         );
         boolean ok = staff.matches("(?is).*?(jensen|yes|copperfoxgifts|indeed|confirm).*");
-        System.out.println(ok ? "Staff Test Passed" : "Staff Test FAILED");
+        log.info(ok ? "Staff Test Passed" : "Staff Test FAILED");
         assertTrue(ok, "Staff test failed, response was: " + staff);
     }
-
 }

@@ -156,7 +156,7 @@ jobs:
     - name: Build/Install Needed Libraries
       # Exclude modules that SAM builds so it can use SAM cache and speed deploys
       run: > 
-        mvn -B install -DskipTests
+        mvn install -DskipTests
         --no-transfer-progress --quiet
         --projects '!ChimeSMA,!SpringAI,!ChimeCDKProvision,!ChimeSMALibrary/PollyPromptCreation'
 

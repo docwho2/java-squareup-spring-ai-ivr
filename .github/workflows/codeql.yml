@@ -96,7 +96,7 @@ jobs:
     - name: Build up all the libraries
       if: matrix.build-mode == 'manual'
       shell: bash
-      run: mvn -B install -DskipTests --no-transfer-progress
+      run: mvn install -DskipTests --no-transfer-progress
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
