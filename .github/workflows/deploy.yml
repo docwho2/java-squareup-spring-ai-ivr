@@ -156,10 +156,9 @@ jobs:
     - name: Build/Install Top level Project POM
       run: mvn -N install -DskipTests --no-transfer-progress
       
-      
-    - name: Build/Install Needed SMA Library parent
+    - name: Build/Install Needed SMA Library
       working-directory: ./ChimeSMALibrary
-      run: mvn -N install -DskipTests --no-transfer-progress
+      run: mvn install -DskipTests --no-transfer-progress
 
     - name: Setup AWS SAM
       uses: aws-actions/setup-sam@v2
