@@ -153,12 +153,13 @@ jobs:
         distribution: 'corretto'
         cache: maven     
       
-    - name: Build/Install Needed Libraries
-      # Exclude modules that SAM builds so it can use SAM cache and speed deploys
-      run: > 
-        mvn install -DskipTests
-        --no-transfer-progress --quiet
-        --projects '!ChimeSMA,!SpringAI,!ChimeCDKProvision,!ChimeSMALibrary'
+    - name: Build/Install Top level Project POM
+      run: mvn -N install -DskipTests --no-transfer-progress
+      
+      
+    - name: Build/Install Needed SMA Library parent
+      working-directory: ./ChimeSMALibrary
+      run: mvn -N install -DskipTests --no-transfer-progress
 
     - name: Setup AWS SAM
       uses: aws-actions/setup-sam@v2
