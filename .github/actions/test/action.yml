@@ -15,6 +15,9 @@ inputs:
   session-id:
     description: 'Lex Session ID'
     required: true
+  github-token:
+    description: 'GitHub token for publishing Allure report'
+    required: true
 
 outputs:
   result:
@@ -75,7 +78,7 @@ runs:
     - name: Publish Allure report to GitHub Pages (/latest)
       uses: peaceiris/actions-gh-pages@v4
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        github_token: ${{ inputs.github-token }} 
         publish_branch: gh-pages
         publish_dir: SpringAI/target/site/allure-maven-plugin
         destination_dir: latest
