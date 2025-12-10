@@ -1,0 +1,5 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"","8539","Chuckles Candy Test","","Wed Dec 10 18:16:48 UTC 2025","passed","Wed Dec 10 18:16:57 UTC 2025","","cloud.cleo.squareup.LexE2ETests","cloud.cleo.squareup.LexE2ETests","chucklesCandyTest"
+"","1556","Restaurant Recommendation Test","","Wed Dec 10 18:16:57 UTC 2025","passed","Wed Dec 10 18:16:58 UTC 2025","","cloud.cleo.squareup.LexE2ETests","cloud.cleo.squareup.LexE2ETests","restaurantTest"
+"","1415","Address Test","","Wed Dec 10 18:16:58 UTC 2025","passed","Wed Dec 10 18:17:00 UTC 2025","","cloud.cleo.squareup.LexE2ETests","cloud.cleo.squareup.LexE2ETests","addressTest"
+"","1767","Staff Test","","Wed Dec 10 18:17:00 UTC 2025","passed","Wed Dec 10 18:17:02 UTC 2025","","cloud.cleo.squareup.LexE2ETests","cloud.cleo.squareup.LexE2ETests","staffTest"
