@@ -12,6 +12,9 @@ permissions:
   id-token: write # This is required for requesting the JWT
   contents: write  # This is required for actions/checkout
 
+concurrency:
+  group: deploy
+  cancel-in-progress: false
   
 
 jobs:
