@@ -1,14 +1,16 @@
 package cloud.cleo.squareup;
 
 import java.util.concurrent.TimeUnit;
+import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
 import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
 
 /**
- * Logs execution time for each test to System.out.
+ * Logs execution time for each test.
  */
+@Log4j2
 public class TimingExtension implements BeforeTestExecutionCallback, AfterTestExecutionCallback {
 
     private static final Namespace NAMESPACE = Namespace.create(TimingExtension.class);
@@ -26,8 +28,7 @@ public class TimingExtension implements BeforeTestExecutionCallback, AfterTestEx
         long durationNanos = System.nanoTime() - start;
         long durationMs = TimeUnit.NANOSECONDS.toMillis(durationNanos);
 
-        System.out.printf(
-                "### TEST %s.%s took %d ms%n",
+        log.info("### TEST {}.{} took {} ms",
                 context.getRequiredTestClass().getSimpleName(),
                 context.getRequiredTestMethod().getName(),
                 durationMs
