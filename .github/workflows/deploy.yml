@@ -158,7 +158,7 @@ jobs:
       run: > 
         mvn install -DskipTests
         --no-transfer-progress --quiet
-        --projects '!ChimeSMA,!SpringAI,!ChimeCDKProvision,!ChimeSMALibrary/PollyPromptCreation'
+        --projects '!ChimeSMA,!SpringAI,!ChimeCDKProvision,!ChimeSMALibrary'
 
     - name: Setup AWS SAM
       uses: aws-actions/setup-sam@v2
