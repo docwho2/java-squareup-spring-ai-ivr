@@ -10,13 +10,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.log4j.Log4j2;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Tag;
@@ -25,7 +24,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
-import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.lexruntimev2.LexRuntimeV2Client;
 import software.amazon.awssdk.services.lexruntimev2.model.Message;
@@ -33,15 +31,11 @@ import software.amazon.awssdk.services.lexruntimev2.model.RecognizeTextRequest;
 import software.amazon.awssdk.services.lexruntimev2.model.RecognizeTextResponse;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
-import software.amazon.awssdk.services.ssm.model.SsmException;
 
 @ExtendWith({AllureJunit5.class, TimingExtension.class})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Log4j2
 abstract class AbstractLexAwsTestSupport {
-
-    // guard so we only init once per JVM
-    private static final AtomicBoolean FULLY_INITTED = new AtomicBoolean(false);
 
     private static final boolean RUN_TESTS
             = Boolean.parseBoolean(System.getenv().getOrDefault("RUN_TESTS", "false"));
@@ -65,94 +59,66 @@ abstract class AbstractLexAwsTestSupport {
     private static LexRuntimeV2Client lexClient;
     private static String botId;
     private static String botAliasId;
-    private static boolean awsReady = false;
+    private static volatile boolean awsReady = false;
     // Model being used
     public static String SPRING_AI_MODEL = System.getenv("SPRING_AI_MODEL");
 
     protected long INTER_TEST_DELAY_MS = 500L;
 
-    @BeforeAll
-    static void initAws() {
-        region = Region.of(AWS_REGION);
+    static {
+        if (RUN_TESTS) {
+            try {
+                var credsProvider = DefaultCredentialsProvider.builder().build();
+                credsProvider.resolveCredentials();
+                log.info("AWS credentials resolved successfully for LexE2ETests");
 
+                try (var ssm = SsmClient.builder()
+                        .region(Region.of(AWS_REGION))
+                        .credentialsProvider(credsProvider)
+                        .build()) {
+
+                    botId = getParam(ssm, "/" + STACK_NAME + "/BOT_ID");
+                    botAliasId = getParam(ssm, "/" + STACK_NAME + "/BOT_ALIAS_ID");
+                }
+
+                lexClient = LexRuntimeV2Client.builder()
+                        .region(Region.of(AWS_REGION))
+                        .credentialsProvider(credsProvider)
+                        .build();
+
+                awsReady = true;
+
+                log.info(
+                        "Lex test support fully initted for stack '{}' in region '{}' (botId={}, aliasId={})",
+                        STACK_NAME, AWS_REGION, botId, botAliasId
+                );
+
+            } catch (Exception e) {
+                log.warn("Lex test support could not init, tests will be skipped: {}", e.toString());
+                awsReady = false;
+            }
+        } else {
+            log.info("RUN_TESTS=false; skipping Lex stack initialization");
+        }
+    }
+
+    @BeforeAll
+    static void init() {
         // For pipelines, sam build will always try and run tests, so unless RUN_TESTS is true, don't run
         Assumptions.assumeTrue(RUN_TESTS, "RUN_TESTS env var not true, skipping all tests");
 
-        // fast path: if we already initted once, just bail out
-        if (FULLY_INITTED.get()) {
-            log.debug("Lex test support already fully initted; skipping init");
-            return;
-        }
-
-        // slow path: only one thread does the real work
-        synchronized (AbstractLexAwsTestSupport.class) {
-            if (FULLY_INITTED.get()) {
-                // someone else finished while we were waiting
-                return;
-            }
-
-            // 1) Check credentials provider
-            var credsProvider = DefaultCredentialsProvider.create();
-            try {
-                credsProvider.resolveCredentials();
-                log.info("AWS credentials resolved successfully for LexE2ETests");
-                awsReady = true;
-            } catch (SdkClientException e) {
-                log.warn("Skipping LexE2ETests: cannot resolve AWS credentials: {}", e.getMessage());
-                awsReady = false;
-            }
-            Assumptions.assumeTrue(awsReady, "Skipping LexE2ETests: cannot resolve AWS credentials");
-
-            // 2) Fetch SSM params
-            try (var ssm = SsmClient.builder()
-                    .region(region)
-                    .credentialsProvider(credsProvider)
-                    .build()) {
-
-                botId = getParam(ssm, "/" + STACK_NAME + "/BOT_ID");
-                botAliasId = getParam(ssm, "/" + STACK_NAME + "/BOT_ALIAS_ID");
-                awsReady = true;
-            } catch (SsmException e) {
-                log.warn("Skipping LexE2ETests: failed to fetch SSM params for stack {} : {}",
-                        STACK_NAME, e.awsErrorDetails().errorMessage());
-                awsReady = false;
-            } catch (SdkClientException e) {
-                log.warn("Skipping LexE2ETests: SSM client error: {}", e.getMessage());
-                awsReady = false;
-            }
-            Assumptions.assumeTrue(awsReady, "Skipping LexE2ETests: cannot fetch SSM parameters");
-
-            // 3) Build Lex client
-            try {
-                lexClient = LexRuntimeV2Client.builder()
-                        .region(region)
-                        .credentialsProvider(credsProvider)
-                        .build();
-                awsReady = true;
-            } catch (SdkClientException e) {
-                log.warn("Skipping LexE2ETests: cannot create Lex client: {}", e.getMessage());
-                awsReady = false;
-            }
-
-            Assumptions.assumeTrue(awsReady, "Skipping LexE2ETests: cannot init LexRuntimeV2 client");
-
-            FULLY_INITTED.set(true);
-            log.info(
-                    "Lex test support fully initted for stack '{}' in region '{}' (botId={}, aliasId={})",
-                    STACK_NAME, AWS_REGION, botId, botAliasId
-            );
-        }
+        Assumptions.assumeTrue(awsReady, "Skipping LexE2ETests: cannot init the runtime stack");
     }
 
     @Test
     @Order(-1000)          // runs before all other @Order'd tests
     @Epic("Warmup")   // keeps all warmup tests in their own Allure group
     @Tag("warmup")      // so the TimingExtension can recognize it
+    @DisplayName("Warm Up the Stack")
     void warmupStack() {
         // Warm up the lex path and lambda so everything is hot and use a distinct session ID
         sendToLex("Warmup", "Hello, what is your name?", UUID.randomUUID().toString());
     }
-
 
     @AfterEach
     void delayBetweenTests() throws InterruptedException {
@@ -176,7 +142,6 @@ abstract class AbstractLexAwsTestSupport {
         Allure.parameter("SessionId", sessionId);
 
         if (SPRING_AI_MODEL != null) {
-            Allure.label("SpringAIModel", SPRING_AI_MODEL);
             Allure.parameter("SpringAIModel", SPRING_AI_MODEL);
         }
 
