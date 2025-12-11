@@ -1,4 +1,4 @@
-name: 'Run Lex ChatGPT Tests'
+name: 'Run Lex Tests'
 description: 'Run tests in the provided region'
 inputs:
   region:
@@ -21,6 +21,10 @@ inputs:
   spring-ai-model:
     description: 'The Spring AI model in use'
     required: true
+  test-filter:
+    description: 'Value for Maven -Dtest (e.g. SmokeTests,MyTest*,OtherTest)'
+    required: false
+    default: 'SmokeTests'
 
 outputs:
   result:
@@ -55,7 +59,7 @@ runs:
         SPRING_AI_MODEL: ${{ inputs.spring-ai-model }}
         RUN_TESTS: true
       run: |
-        mvn test -Dtest=SmokeTests --no-transfer-progress --quiet
+        mvn test -Dtest="${{ inputs.test-filter }}" --no-transfer-progress --quiet
         
     - name: Checkout gh-pages (for Allure history)
       uses: actions/checkout@v4

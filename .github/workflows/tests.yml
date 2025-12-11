@@ -3,6 +3,16 @@ name: Run Tests
 
 on:
   workflow_dispatch:
+    inputs:
+      test-filter:
+        description: 'Which tests to run (Maven -Dtest value)'
+        required: false
+        default: 'SmokeTests'
+        type: choice
+        options:
+           - SmokeTests
+           - RegressionTests
+
   schedule:
     # * is a special character in YAML so you have to quote this string
     - cron:  '30 17 * * *'
@@ -40,5 +50,6 @@ jobs:
           session-id: ${{ github.run_id }}-${{ github.run_attempt }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           spring-ai-model: ${{ vars.SPRING_AI_PROVIDER == 'OPENAI' && vars.OPENAI_MODEL || vars.BEDROCK_MODEL }}
+          test-filter: ${{ github.event_name == 'workflow_dispatch' && inputs.test-filter || 'SmokeTests' }}
     
       
