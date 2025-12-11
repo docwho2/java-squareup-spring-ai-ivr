@@ -40,6 +40,7 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
 
     private final ChatClient chatClient;
     private final List<AbstractTool> tools;
+    private final ChatMemory chatMemory;
 
     @Override
     public LexV2Response apply(LexV2Event lexRequest) {
@@ -73,6 +74,9 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
                 if (eventWrapper.isFacebook()) {
                     return buildResponse(eventWrapper, botResponse, buildTransferCard());
                 } else {
+                    // since we are terminating this session, we should clear chat memory (if they call back and say done, bot is confused because it already called hangup for example)
+                    chatMemory.clear(eventWrapper.getChatMemorySessionId());
+                    
                     // Since not FB, this will be for Voice calls to take action on the call (Hangup, Language Change, Transfer,etc.)
                     eventWrapper.putSessionAttributeBotResponse(botResponse);
                     return buildTerminatingResponse(eventWrapper.getSessionAttributes());

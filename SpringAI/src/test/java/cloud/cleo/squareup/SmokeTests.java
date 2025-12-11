@@ -1,5 +1,6 @@
 package cloud.cleo.squareup;
 
+import cloud.cleo.squareup.enums.ChannelPlatform;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Link;
@@ -92,5 +93,16 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
         boolean ok = staff.matches("(?is).*?(jensen|yes|copperfoxgifts|indeed|confirm).*");
         log.info(ok ? "Staff Test Passed" : "Staff Test FAILED");
         assertTrue(ok, "Staff test failed, response was: " + staff);
+    }
+    
+    
+    /**
+     * Assume voice channel for basic smoke tests, that's our most common use case.
+     * 
+     * @return 
+     */
+    @Override
+     protected ChannelPlatform getChannel() {
+        return ChannelPlatform.CHIME;
     }
 }

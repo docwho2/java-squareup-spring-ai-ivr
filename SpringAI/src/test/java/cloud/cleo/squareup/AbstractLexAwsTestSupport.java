@@ -146,7 +146,8 @@ abstract class AbstractLexAwsTestSupport {
         // If Chime, then we add bogus calling number
         switch (channel) {
             case CHIME ->
-                sessionAttrs.put("callingNumber", "+18004444444");
+                // Send invalid E164 so our session ID will be used and no actual SMS will be sent on tests (because hasValidE164 will be false)
+                sessionAttrs.put("callingNumber", "+10000000000");
         }
         
         

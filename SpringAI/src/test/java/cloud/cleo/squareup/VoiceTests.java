@@ -9,7 +9,6 @@ import lombok.extern.log4j.Log4j2;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -91,7 +90,7 @@ public class VoiceTests extends AbstractLexAwsTestSupport {
     }
 
     /**
-     * Pretend we are coming from Chime Voice Channel
+     * Voice channel testing
      *
      * @return
      */
