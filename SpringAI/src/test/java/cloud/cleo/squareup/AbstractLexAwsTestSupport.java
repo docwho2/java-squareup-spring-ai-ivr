@@ -178,7 +178,6 @@ abstract class AbstractLexAwsTestSupport {
     }
 
     protected final String sendToLex(String label, String text, String sessionId) {
-        // Default channel to Twilio which will be text/SMS
         return sendToLex(label, text, sessionId,null);
     }
 
