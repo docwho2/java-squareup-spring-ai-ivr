@@ -2,6 +2,7 @@ package cloud.cleo.squareup;
 
 import cloud.cleo.squareup.enums.ChannelPlatform;
 import static cloud.cleo.squareup.enums.ChannelPlatform.CHIME;
+import cloud.cleo.squareup.enums.LexInputMode;
 import io.qameta.allure.Allure;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Step;
@@ -155,7 +156,7 @@ abstract class AbstractLexAwsTestSupport {
                 .localeId(LOCALE_ID)
                 .sessionId(sessionId != null ? sessionId : getSessionId())
                 // Always set a channel
-                .requestAttributes(Map.of("x-amz-lex:channels:platform", channel.getChannel(),"testing_input",channel.equals(CHIME) ? "SPEECH" : "TEXT"))
+                .requestAttributes(Map.of("x-amz-lex:channels:platform", channel.getChannel(),"testing_input",channel.equals(CHIME) ? LexInputMode.SPEECH.getMode(): LexInputMode.TEXT.getMode()))
                 .sessionState(b -> b.sessionAttributes(sessionAttrs).build())
                 .text(text)
                 .build();
