@@ -2,6 +2,7 @@ package cloud.cleo.squareup;
 
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
+import io.qameta.allure.Link;
 import lombok.extern.log4j.Log4j2;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.DisplayName;
@@ -26,10 +27,10 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
     @Feature("SquareAPI")
     @Feature("Tool Call")
     @DisplayName("Chuckles Candy Test")
+    @Link("https://github.com/docwho2/java-squareup-spring-ai-ivr/blob/main/SpringAI/src/main/java/cloud/cleo/squareup/tools/SquareItemSearch.java")
     void chucklesCandyTest() {
 
         String chuckles = sendToLex(
-                "Chuckles",
                 "Do you have Chuckles Candy in stock?"
         );
         boolean ok = chuckles.matches("(?s).*?(Yes|We have|Chuckles).*");
@@ -44,7 +45,6 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
     void restaurantTest() {
 
         String muggs = sendToLex(
-                "Restaurant",
                 "Please recommend a restaurant in the area?"
         );
         boolean ok = muggs.toLowerCase().contains("mugg");
@@ -59,7 +59,6 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
     void addressTest() {
 
         String address = sendToLex(
-                "Address",
                 "What is your address?"
         );
         boolean ok = address.matches("(?s).*160\\s+Main.*");
@@ -72,10 +71,10 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
     @Feature("SquareAPI")
     @Feature("Tool Call")
     @DisplayName("Staff Test")
+    @Link("https://github.com/docwho2/java-squareup-spring-ai-ivr/blob/main/SpringAI/src/main/java/cloud/cleo/squareup/tools/SquareTeamMembers.java")
     void staffTest() {
 
         String staff = sendToLex(
-                "Staff",
                 "Does Steve work there?  If so, just say Yes"
         );
         boolean ok = staff.matches("(?is).*?(jensen|yes|copperfoxgifts|indeed|confirm).*");

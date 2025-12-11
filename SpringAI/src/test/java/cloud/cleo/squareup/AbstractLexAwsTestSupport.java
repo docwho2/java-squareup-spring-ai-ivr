@@ -127,7 +127,7 @@ abstract class AbstractLexAwsTestSupport {
     }
 
     @Step("Send to Lex")
-    protected final String sendToLex(String label, String text, String sessionId, ChannelPlatform channel) {
+    protected final String sendToLex(String text, ChannelPlatform channel, String sessionId) {
         // Default to text channel (from Twillio) if not set
         channel = channel != null ? channel : ChannelPlatform.TWILIO;
         Allure.addAttachment("Lex Request", "text/plain", text);
@@ -138,7 +138,7 @@ abstract class AbstractLexAwsTestSupport {
             Allure.label("tag", SPRING_AI_MODEL);
         }
 
-        log.info(">>> [{}] request: \"{}\"", label, text);
+        log.info(">>> request: \"{}\"", text);
 
         var request = RecognizeTextRequest.builder()
                 .botId(botId)
@@ -163,16 +163,20 @@ abstract class AbstractLexAwsTestSupport {
                 .trim();
 
         Allure.addAttachment("Lex Response", "text/plain", content);
-        log.info("<<< [{}] response: \"{}\"", label, content);
+        log.info("<<< response: \"{}\"", content);
         return content;
     }
 
-    protected final String sendToLex(String label, String text, String sessionId) {
-        return sendToLex(label, text, sessionId, null);
+    protected final String sendToLex(String text, String sessionId) {
+        return sendToLex(text, getChannel(), sessionId);
+    }
+    
+    protected final String sendToLex(String text, ChannelPlatform channel) {
+        return sendToLex(text,channel, getSessionId());
     }
 
-    protected final String sendToLex(String label, String text) {
-        return sendToLex(label, text, getSessionId(), null);
+    protected final String sendToLex(String text) {
+        return sendToLex(text, getChannel(), getSessionId());
     }
 
     /**
@@ -185,6 +189,15 @@ abstract class AbstractLexAwsTestSupport {
         return SESSION_ID;
     }
 
+    /**
+     * Override in a Test class to use that channel for all requests.
+     * 
+     * @return 
+     */
+    protected ChannelPlatform getChannel() {
+        return ChannelPlatform.TWILIO;
+    }
+
     @Test
     @Order(Integer.MIN_VALUE)          // runs before all other @Order'd tests
     @Epic("Warmup")   // keeps all warmup tests in their own Allure group
@@ -192,7 +205,7 @@ abstract class AbstractLexAwsTestSupport {
     @DisplayName("Warm Up the Stack")
     void warmupStack() {
         // Warm up the lex path and lambda so everything is hot and use a distinct session ID
-        sendToLex("Warmup", "Hello, what is your name?", UUID.randomUUID().toString());
+        sendToLex("Hello, what is your name?", UUID.randomUUID().toString());
     }
 
     @Test
@@ -250,7 +263,7 @@ abstract class AbstractLexAwsTestSupport {
         }
 
         html.append("</table></body></html>");
-        
+
         if (SPRING_AI_MODEL != null) {
             Allure.label("tag", SPRING_AI_MODEL);
         }
