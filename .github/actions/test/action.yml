@@ -51,7 +51,7 @@ runs:
         LEX_SESSION_ID: ${{ inputs.session-id }}
         RUN_TESTS: true
       run: |
-        mvn test -Dtest=LexE2ETests --no-transfer-progress --quiet
+        mvn test -Dtest=SmokeTests --no-transfer-progress --quiet
         
     - name: Checkout gh-pages (for Allure history)
       uses: actions/checkout@v4
