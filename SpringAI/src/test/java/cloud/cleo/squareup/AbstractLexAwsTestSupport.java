@@ -103,7 +103,7 @@ abstract class AbstractLexAwsTestSupport {
     }
 
     @BeforeAll
-    void init() {
+    static void init() {
         // For pipelines, sam build will always try and run tests, so unless RUN_TESTS is true, don't run
         Assumptions.assumeTrue(RUN_TESTS, "RUN_TESTS env var not true, skipping all tests");
 
