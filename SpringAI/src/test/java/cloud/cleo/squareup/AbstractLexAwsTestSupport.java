@@ -145,28 +145,14 @@ abstract class AbstractLexAwsTestSupport {
     }
 
     @Test
-    @Order(-1)          // runs before all other @Order'd tests
+    @Order(-1000)          // runs before all other @Order'd tests
     @Epic("Warmup")   // keeps all warmup tests in their own Allure group
     @Tag("warmup")      // so the TimingExtension can recognize it
     void warmupStack() {
-        // Warm up the lex path and lambda so everyhign is hot and use a distinct session ID
+        // Warm up the lex path and lambda so everything is hot and use a distinct session ID
         sendToLex("Warmup", "Hello, what is your name?", UUID.randomUUID().toString());
     }
 
-    @BeforeEach
-    void addCommonAllureLabels() {
-        if (SPRING_AI_MODEL != null) {
-            Allure.label("SpringAIModel", SPRING_AI_MODEL);
-            Allure.parameter("SpringAIModel", SPRING_AI_MODEL);
-        }
-
-        // Show up under "Labels" in the test Overview
-        Allure.label("region", AWS_REGION);
-
-        // Show up under "Parameters" in Execution
-        Allure.parameter("Region", AWS_REGION);
-        Allure.parameter("SessionId", SESSION_ID);
-    }
 
     @AfterEach
     void delayBetweenTests() throws InterruptedException {
@@ -187,6 +173,13 @@ abstract class AbstractLexAwsTestSupport {
     @Step("Send to Lex")
     protected final String sendToLex(String label, String text, String sessionId, ChannelPlatform channel) {
         Allure.addAttachment("Lex Request", "text/plain", text);
+        Allure.parameter("SessionId", sessionId);
+
+        if (SPRING_AI_MODEL != null) {
+            Allure.label("SpringAIModel", SPRING_AI_MODEL);
+            Allure.parameter("SpringAIModel", SPRING_AI_MODEL);
+        }
+
         log.info(">>> [{}] request: \"{}\"", label, text);
 
         var request = RecognizeTextRequest.builder()
