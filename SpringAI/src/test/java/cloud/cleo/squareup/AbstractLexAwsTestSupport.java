@@ -5,9 +5,8 @@ import io.qameta.allure.Allure;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Step;
 import io.qameta.allure.junit5.AllureJunit5;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.extern.log4j.Log4j2;
@@ -127,7 +126,7 @@ abstract class AbstractLexAwsTestSupport {
     }
 
     @Step("Send to Lex")
-    protected final String sendToLex(String text, ChannelPlatform channel, String sessionId) {
+    protected final RecognizeTextResponse sendToLex(String text, ChannelPlatform channel, String sessionId) {
         // Default to text channel (from Twillio) if not set
         channel = channel != null ? channel : ChannelPlatform.TWILIO;
         Allure.addAttachment("Lex Request", "text/plain", text);
@@ -154,29 +153,62 @@ abstract class AbstractLexAwsTestSupport {
                 () -> lexClient.recognizeText(request)
         );
 
-        List<Message> messages = response.messages();
-        assertNotNull(messages, "Lex returned null messages list");
-
-        var content = messages.stream()
-                .map(Message::content)
-                .reduce("", (a, b) -> a + " " + b)
-                .trim();
+        final var content = getBotResponse(response);
+        assertNotNull(content);
 
         Allure.addAttachment("Lex Response", "text/plain", content);
         log.info("<<< response: \"{}\"", content);
-        return content;
+        return response;
     }
 
-    protected final String sendToLex(String text, String sessionId) {
+    /**
+     * Given a Lex Response, extract what the BOT response was. In some cases it
+     * will be in the session state for a Close Dialog action.
+     *
+     * @param response
+     * @return
+     */
+    protected String getBotResponse(RecognizeTextResponse response) {
+
+        if (response.hasMessages()) {
+            // Normal response, return the message
+            return response.messages().stream()
+                    .map(Message::content)
+                    .reduce("", (a, b) -> a + " " + b)
+                    .trim();
+        }
+
+        if (response.sessionState().hasSessionAttributes()) {
+            // Our tools put responses in bot_response in the session attributes
+            return response.sessionState().sessionAttributes().get("bot_response");
+        }
+
+        // There was no message or no bot_response in session (shouldn't happen)
+        return null;
+    }
+
+    protected final RecognizeTextResponse sendToLex(String text, String sessionId) {
         return sendToLex(text, getChannel(), sessionId);
     }
-    
-    protected final String sendToLex(String text, ChannelPlatform channel) {
-        return sendToLex(text,channel, getSessionId());
+
+    protected final RecognizeTextResponse sendToLex(String text, ChannelPlatform channel) {
+        return sendToLex(text, channel, getSessionId());
     }
 
-    protected final String sendToLex(String text) {
+    protected final RecognizeTextResponse sendToLex(String text) {
         return sendToLex(text, getChannel(), getSessionId());
+    }
+
+    protected final String getBotAction(RecognizeTextResponse response) {
+        return getSessionAttribute(response, "action");
+    }
+
+    protected final String getSessionAttribute(RecognizeTextResponse response, String attribute) {
+        if (response.sessionState().hasSessionAttributes()) {
+            // Our tools put their name in the action attribute when called
+            return response.sessionState().sessionAttributes().get(attribute);
+        }
+        return null;
     }
 
     /**
@@ -191,8 +223,8 @@ abstract class AbstractLexAwsTestSupport {
 
     /**
      * Override in a Test class to use that channel for all requests.
-     * 
-     * @return 
+     *
+     * @return
      */
     protected ChannelPlatform getChannel() {
         return ChannelPlatform.TWILIO;
@@ -205,7 +237,7 @@ abstract class AbstractLexAwsTestSupport {
     @DisplayName("Warm Up the Stack")
     void warmupStack() {
         // Warm up the lex path and lambda so everything is hot and use a distinct session ID
-        sendToLex("Hello, what is your name?", UUID.randomUUID().toString());
+        assertNotNull( getBotResponse(sendToLex("Hello, what is your name?", UUID.randomUUID().toString())));
     }
 
     @Test

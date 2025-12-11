@@ -30,9 +30,12 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
     @Link("https://github.com/docwho2/java-squareup-spring-ai-ivr/blob/main/SpringAI/src/main/java/cloud/cleo/squareup/tools/SquareItemSearch.java")
     void chucklesCandyTest() {
 
-        String chuckles = sendToLex(
+        final var res = sendToLex(
                 "Do you have Chuckles Candy in stock?"
         );
+        
+        final var chuckles = getBotResponse(res);
+        
         boolean ok = chuckles.matches("(?s).*?(Yes|We have|Chuckles).*");
         log.info(ok ? "Chuckles Test Passed" : "Chuckles Test FAILED");
         assertTrue(ok, "Chuckles test failed, response was: " + chuckles);
@@ -44,9 +47,12 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
     @DisplayName("Restaurant Recommendation Test")
     void restaurantTest() {
 
-        String muggs = sendToLex(
+        final var res = sendToLex(
                 "Please recommend a restaurant in the area?"
         );
+        
+        final var muggs = getBotResponse(res);
+        
         boolean ok = muggs.toLowerCase().contains("mugg");
         log.info(ok ? "Muggs Restaurant Test Passed" : "Muggs Restaurant Test FAILED");
         assertTrue(ok, "Muggs restaurant test failed, response was: " + muggs);
@@ -58,9 +64,12 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
     @DisplayName("Address Test")
     void addressTest() {
 
-        String address = sendToLex(
+        final var res = sendToLex(
                 "What is your address?"
         );
+        
+        final var address = getBotResponse(res);
+        
         boolean ok = address.matches("(?s).*160\\s+Main.*");
         log.info(ok ? "Address Test Passed" : "Address Test FAILED");
         assertTrue(ok, "Address test failed, response was: " + address);
@@ -74,9 +83,12 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
     @Link("https://github.com/docwho2/java-squareup-spring-ai-ivr/blob/main/SpringAI/src/main/java/cloud/cleo/squareup/tools/SquareTeamMembers.java")
     void staffTest() {
 
-        String staff = sendToLex(
+        final var res = sendToLex(
                 "Does Steve work there?  If so, just say Yes"
         );
+        
+        final var staff = getBotResponse(res);
+        
         boolean ok = staff.matches("(?is).*?(jensen|yes|copperfoxgifts|indeed|confirm).*");
         log.info(ok ? "Staff Test Passed" : "Staff Test FAILED");
         assertTrue(ok, "Staff test failed, response was: " + staff);
