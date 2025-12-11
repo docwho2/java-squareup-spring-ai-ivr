@@ -103,7 +103,7 @@ abstract class AbstractLexAwsTestSupport {
     }
 
     @BeforeAll
-    static void init() {
+    void init() {
         // For pipelines, sam build will always try and run tests, so unless RUN_TESTS is true, don't run
         Assumptions.assumeTrue(RUN_TESTS, "RUN_TESTS env var not true, skipping all tests");
 
@@ -139,10 +139,11 @@ abstract class AbstractLexAwsTestSupport {
     @Step("Send to Lex")
     protected final String sendToLex(String label, String text, String sessionId, ChannelPlatform channel) {
         Allure.addAttachment("Lex Request", "text/plain", text);
+        Allure.parameter("Channel", channel.name());
         Allure.parameter("SessionId", sessionId);
 
         if (SPRING_AI_MODEL != null) {
-            Allure.parameter("SpringAIModel", SPRING_AI_MODEL);
+            Allure.label("SpringAIModel", SPRING_AI_MODEL);
         }
 
         log.info(">>> [{}] request: \"{}\"", label, text);
