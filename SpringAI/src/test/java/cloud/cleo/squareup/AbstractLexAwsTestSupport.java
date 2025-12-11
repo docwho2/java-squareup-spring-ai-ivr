@@ -2,6 +2,7 @@ package cloud.cleo.squareup;
 
 import cloud.cleo.squareup.enums.ChannelPlatform;
 import io.qameta.allure.Allure;
+import io.qameta.allure.Epic;
 import io.qameta.allure.Step;
 import io.qameta.allure.junit5.AllureJunit5;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -17,6 +18,9 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -31,12 +35,12 @@ import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
 import software.amazon.awssdk.services.ssm.model.SsmException;
 
-@ExtendWith({TimingExtension.class, AllureJunit5.class})
+@ExtendWith({AllureJunit5.class, TimingExtension.class})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Log4j2
 abstract class AbstractLexAwsTestSupport {
 
-    // guard so we only knit once per JVM
+    // guard so we only init once per JVM
     private static final AtomicBoolean FULLY_INITTED = new AtomicBoolean(false);
 
     private static final boolean RUN_TESTS
@@ -74,7 +78,7 @@ abstract class AbstractLexAwsTestSupport {
         // For pipelines, sam build will always try and run tests, so unless RUN_TESTS is true, don't run
         Assumptions.assumeTrue(RUN_TESTS, "RUN_TESTS env var not true, skipping all tests");
 
-        // fast path: if we already knitted once, just bail out
+        // fast path: if we already initted once, just bail out
         if (FULLY_INITTED.get()) {
             log.debug("Lex test support already fully initted; skipping init");
             return;
@@ -134,10 +138,19 @@ abstract class AbstractLexAwsTestSupport {
 
             FULLY_INITTED.set(true);
             log.info(
-                    "Lex test support fully knitted for stack '{}' in region '{}' (botId={}, aliasId={})",
+                    "Lex test support fully initted for stack '{}' in region '{}' (botId={}, aliasId={})",
                     STACK_NAME, AWS_REGION, botId, botAliasId
             );
         }
+    }
+
+    @Test
+    @Order(-1)          // runs before all other @Order'd tests
+    @Epic("Warmup")   // keeps all warmup tests in their own Allure group
+    @Tag("warmup")      // so the TimingExtension can recognize it
+    void warmupStack() {
+        // Warm up the lex path and lambda so everyhign is hot and use a distinct session ID
+        sendToLex("Warmup", "Hello, what is your name?", UUID.randomUUID().toString());
     }
 
     @BeforeEach
@@ -212,6 +225,12 @@ abstract class AbstractLexAwsTestSupport {
         return sendToLex(label, text, getSessionId(), null);
     }
 
+    /**
+     * Override when you don't want to use the default session ID provided. IE,
+     * to perform at set of tests with your own unique session ID.
+     *
+     * @return
+     */
     protected String getSessionId() {
         return SESSION_ID;
     }
