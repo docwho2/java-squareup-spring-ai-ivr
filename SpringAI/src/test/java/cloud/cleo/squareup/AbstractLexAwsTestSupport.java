@@ -138,12 +138,14 @@ abstract class AbstractLexAwsTestSupport {
 
     @Step("Send to Lex")
     protected final String sendToLex(String label, String text, String sessionId, ChannelPlatform channel) {
+        // Default to text channel (from Twillio) if not set
+        channel = channel != null ? channel : ChannelPlatform.TWILIO;
         Allure.addAttachment("Lex Request", "text/plain", text);
-        Allure.parameter("Channel", channel.name());
+        Allure.parameter("Channel", channel.name() );
         Allure.parameter("SessionId", sessionId);
 
         if (SPRING_AI_MODEL != null) {
-            Allure.label("SpringAIModel", SPRING_AI_MODEL);
+            Allure.label("tag", SPRING_AI_MODEL);
         }
 
         log.info(">>> [{}] request: \"{}\"", label, text);
@@ -153,7 +155,7 @@ abstract class AbstractLexAwsTestSupport {
                 .botAliasId(botAliasId)
                 .localeId(LOCALE_ID)
                 .sessionId(sessionId != null ? sessionId : getSessionId())
-                .requestAttributes(channel != null ? Map.of("x-amz-lex:channels:platform", channel.getChannel()) : Map.of())
+                .requestAttributes( Map.of("x-amz-lex:channels:platform", channel.getChannel()) )
                 .text(text)
                 .build();
 
@@ -177,7 +179,7 @@ abstract class AbstractLexAwsTestSupport {
 
     protected final String sendToLex(String label, String text, String sessionId) {
         // Default channel to Twilio which will be text/SMS
-        return sendToLex(label, text, sessionId, ChannelPlatform.TWILIO);
+        return sendToLex(label, text, sessionId,null);
     }
 
     protected final String sendToLex(String label, String text) {
