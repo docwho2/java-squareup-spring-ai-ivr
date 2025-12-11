@@ -1,7 +1,9 @@
 package cloud.cleo.squareup;
 
 import cloud.cleo.squareup.enums.ChannelPlatform;
+import io.qameta.allure.Allure;
 import io.qameta.allure.Step;
+import io.qameta.allure.junit5.AllureJunit5;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.List;
@@ -28,7 +30,7 @@ import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
 import software.amazon.awssdk.services.ssm.model.SsmException;
 
-@ExtendWith(TimingExtension.class)
+@ExtendWith({TimingExtension.class, AllureJunit5.class})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Log4j2
 abstract class AbstractLexAwsTestSupport {
@@ -139,7 +141,7 @@ abstract class AbstractLexAwsTestSupport {
     void delayBetweenTests() throws InterruptedException {
         // This will run after every test method
         Thread.sleep(INTER_TEST_DELAY_MS);
-        log.debug("Waiting {} ms",INTER_TEST_DELAY_MS);
+        log.debug("Waiting {} ms", INTER_TEST_DELAY_MS);
     }
 
     private static String getParam(SsmClient ssm, String name) {
@@ -151,8 +153,10 @@ abstract class AbstractLexAwsTestSupport {
         return ssm.getParameter(request).parameter().value();
     }
 
-    @Step("Send text '{text}' to Lex")
+   
+    @Step("Send to Lex")
     protected final String sendToLex(String label, String text, String sessionId, ChannelPlatform channel) {
+        Allure.addAttachment("Lex Request", "text/plain", text);
         log.info(">>> [{}] request: \"{}\"", label, text);
 
         var request = RecognizeTextRequest.builder()
@@ -160,11 +164,15 @@ abstract class AbstractLexAwsTestSupport {
                 .botAliasId(botAliasId)
                 .localeId(LOCALE_ID)
                 .sessionId(sessionId != null ? sessionId : getSessionId())
-                .requestAttributes(channel != null ? Map.of("x-amz-lex:channels:platform",channel.getChannel()) : Map.of())
+                .requestAttributes(channel != null ? Map.of("x-amz-lex:channels:platform", channel.getChannel()) : Map.of())
                 .text(text)
                 .build();
 
-        RecognizeTextResponse response = lexClient.recognizeText(request);
+        RecognizeTextResponse response = Allure.step(
+                "lexClient RecognizeText Call",
+                () -> lexClient.recognizeText(request)
+        );
+        
         List<Message> messages = response.messages();
         assertNotNull(messages, "Lex returned null messages list");
 
@@ -173,23 +181,22 @@ abstract class AbstractLexAwsTestSupport {
                 .reduce("", (a, b) -> a + " " + b)
                 .trim();
 
+        Allure.addAttachment("Lex Response", "text/plain", content);
         log.info("<<< [{}] response: \"{}\"", label, content);
         return content;
     }
-    
+
     protected final String sendToLex(String label, String text, String sessionId) {
         // Default channel to Twilio which will be text/SMS
         return sendToLex(label, text, sessionId, ChannelPlatform.TWILIO);
     }
-    
-     protected final String sendToLex(String label, String text) {
-         return sendToLex(label, text, getSessionId(), null);
-     }
-    
+
+    protected final String sendToLex(String label, String text) {
+        return sendToLex(label, text, getSessionId(), null);
+    }
+
     protected String getSessionId() {
         return SESSION_ID;
     }
-    
 
-    
 }
