@@ -71,8 +71,6 @@ public class VoiceTests extends AbstractLexAwsTestSupport {
         final var res = sendToLex(
                 "Thank you for all your help, that's it for today, good bye."
         );
-
-        log.info("res = {}",res);
         
         // Bot should have called hangup action
         assertTrue("hangup_call".equals(getBotAction(res)),"Bot did not execute hangup_call action when told done");
