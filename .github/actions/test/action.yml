@@ -1,5 +1,6 @@
 name: 'Run Lex Tests'
 description: 'Run tests in the provided region'
+
 inputs:
   region:
     description: 'What AWS Region to execute tests in'
@@ -50,6 +51,8 @@ runs:
         cache: maven
         
     - name: Run tests
+      id: run-tests
+      continue-on-error: true          # <-- let the job continue even if tests fail
       working-directory: ./SpringAI
       shell: bash
       env:
@@ -89,7 +92,6 @@ runs:
         SessionId=${{ inputs.session-id }}
         EOF
         
-        
     - name: Generate Allure report
       working-directory: ./SpringAI
       shell: bash
@@ -103,4 +105,11 @@ runs:
         publish_branch: gh-pages
         publish_dir: SpringAI/target/site/allure-maven-plugin
         destination_dir: latest
-    
+
+    - name: Fail workflow if tests failed
+      # Always evaluate this step, but only fail if the test step actually failed
+      if: always() && steps.run-tests.outcome == 'failure'
+      shell: bash
+      run: |
+        echo "Some tests failed, but Allure report has been generated and published."
+        exit 1
