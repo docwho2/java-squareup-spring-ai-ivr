@@ -6,6 +6,11 @@ This project is a [SIP Media Application](https://docs.aws.amazon.com/chime-sdk/
 [Java Chime SMA Flow Library](https://github.com/docwho2/java-chime-voicesdk-sma) to deliver a [Spring AI](https://docs.spring.io/spring-ai/reference/) voice bot IVR application. The IVR application is integrated with the [Square API](https://developer.squareup.com/us/en) to allow callers to ask questions about products 
 and business hours, transfer to employee cell phones, etc.
 
+## Testing Links
+
+[Link to Smoke Tests](https://docwho2.github.io/java-squareup-spring-ai-ivr/latest/) which shows what model is currently being used.
+
+Full model regression testing coming soon...
 
 # 🚀 Why This Project Is Enterprise-Grade (Not a Demo)
 
