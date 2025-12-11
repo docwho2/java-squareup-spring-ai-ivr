@@ -63,7 +63,7 @@ abstract class AbstractLexAwsTestSupport {
     // Model being used
     public static String SPRING_AI_MODEL = System.getenv("SPRING_AI_MODEL");
 
-    protected long INTER_TEST_DELAY_MS = 500L;
+    public static long INTER_TEST_DELAY_MS = 500L;
 
     static {
         if (RUN_TESTS) {
@@ -110,16 +110,6 @@ abstract class AbstractLexAwsTestSupport {
         Assumptions.assumeTrue(awsReady, "Skipping LexE2ETests: cannot init the runtime stack");
     }
 
-    @Test
-    @Order(-1000)          // runs before all other @Order'd tests
-    @Epic("Warmup")   // keeps all warmup tests in their own Allure group
-    @Tag("warmup")      // so the TimingExtension can recognize it
-    @DisplayName("Warm Up the Stack")
-    void warmupStack() {
-        // Warm up the lex path and lambda so everything is hot and use a distinct session ID
-        sendToLex("Warmup", "Hello, what is your name?", UUID.randomUUID().toString());
-    }
-
     @AfterEach
     void delayBetweenTests() throws InterruptedException {
         // This will run after every test method
@@ -141,7 +131,7 @@ abstract class AbstractLexAwsTestSupport {
         // Default to text channel (from Twillio) if not set
         channel = channel != null ? channel : ChannelPlatform.TWILIO;
         Allure.addAttachment("Lex Request", "text/plain", text);
-        Allure.parameter("Channel", channel.name() );
+        Allure.parameter("Channel", channel.name());
         Allure.parameter("SessionId", sessionId);
 
         if (SPRING_AI_MODEL != null) {
@@ -155,7 +145,7 @@ abstract class AbstractLexAwsTestSupport {
                 .botAliasId(botAliasId)
                 .localeId(LOCALE_ID)
                 .sessionId(sessionId != null ? sessionId : getSessionId())
-                .requestAttributes( Map.of("x-amz-lex:channels:platform", channel.getChannel()) )
+                .requestAttributes(Map.of("x-amz-lex:channels:platform", channel.getChannel()))
                 .text(text)
                 .build();
 
@@ -178,7 +168,7 @@ abstract class AbstractLexAwsTestSupport {
     }
 
     protected final String sendToLex(String label, String text, String sessionId) {
-        return sendToLex(label, text, sessionId,null);
+        return sendToLex(label, text, sessionId, null);
     }
 
     protected final String sendToLex(String label, String text) {
@@ -193,6 +183,80 @@ abstract class AbstractLexAwsTestSupport {
      */
     protected String getSessionId() {
         return SESSION_ID;
+    }
+
+    @Test
+    @Order(Integer.MIN_VALUE)          // runs before all other @Order'd tests
+    @Epic("Warmup")   // keeps all warmup tests in their own Allure group
+    @Tag("warmup")      // so the TimingExtension can recognize it
+    @DisplayName("Warm Up the Stack")
+    void warmupStack() {
+        // Warm up the lex path and lambda so everything is hot and use a distinct session ID
+        sendToLex("Warmup", "Hello, what is your name?", UUID.randomUUID().toString());
+    }
+
+    @Test
+    @Order(Integer.MAX_VALUE)  // Always Last
+    @Epic("Summary")
+    @Tag("summary")
+    @DisplayName("Performance Summary")
+    void performanceSummary() {
+        var results = TimingExtension.getResults();
+        String model = System.getenv("SPRING_AI_MODEL");
+        String provider = System.getenv("SPRING_AI_PROVIDER");
+
+        if (results.isEmpty()) {
+            Allure.addAttachment("Performance Summary", "text/plain", "No timing data collected.");
+            return;
+        }
+
+        StringBuilder html = new StringBuilder();
+        html.append("<html><head><style>")
+                .append("body{font-family:Arial, sans-serif;font-size:13px;}")
+                .append("table{border-collapse:collapse;margin-top:8px;}")
+                .append("th,td{border:1px solid #ccc;padding:4px 8px;font-family:monospace;font-size:12px;}")
+                .append("</style></head><body>");
+
+        html.append("<h3>Test Performance Summary</h3>");
+
+        if (provider != null || model != null) {
+            html.append("<p><b>Provider/Model:</b> ");
+            if (provider != null) {
+                html.append(provider);
+            }
+            if (provider != null && model != null) {
+                html.append(" / ");
+            }
+            if (model != null) {
+                html.append(model);
+            }
+            html.append("</p>");
+        }
+
+        html.append("<table>")
+                .append("<tr><th>#</th><th>Test</th><th>Duration (ms)</th><th>Approx RPS</th></tr>");
+
+        int i = 1;
+        for (TimingExtension.TestTiming t : results) {
+            double seconds = t.getDurationMs() / 1000.0;
+            double rps = seconds > 0 ? 1.0 / seconds : 0.0;
+
+            html.append("<tr>")
+                    .append("<td>").append(i++).append("</td>")
+                    .append("<td>").append(t.getTestId()).append("</td>")
+                    .append("<td>").append(t.getDurationMs()).append("</td>")
+                    .append("<td>").append(String.format("%.2f", rps)).append("</td>")
+                    .append("</tr>");
+        }
+
+        html.append("</table></body></html>");
+        
+        if (SPRING_AI_MODEL != null) {
+            Allure.label("tag", SPRING_AI_MODEL);
+        }
+
+        Allure.getLifecycle().updateTestCase(tr -> tr.setDescriptionHtml(html.toString()));
+
     }
 
 }
