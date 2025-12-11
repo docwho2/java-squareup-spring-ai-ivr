@@ -1,10 +1,12 @@
 package cloud.cleo.squareup;
 
 import cloud.cleo.squareup.enums.ChannelPlatform;
+import static cloud.cleo.squareup.enums.ChannelPlatform.CHIME;
 import io.qameta.allure.Allure;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Step;
 import io.qameta.allure.junit5.AllureJunit5;
+import java.util.HashMap;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Map;
@@ -139,15 +141,25 @@ abstract class AbstractLexAwsTestSupport {
 
         log.info(">>> request: \"{}\"", text);
 
+        Map<String, String> sessionAttrs = new HashMap<>(2);
+        // If Chime, then we add bogus calling number
+        switch (channel) {
+            case CHIME ->
+                sessionAttrs.put("callingNumber", "+18004444444");
+        }
+        
+        
         var request = RecognizeTextRequest.builder()
                 .botId(botId)
                 .botAliasId(botAliasId)
                 .localeId(LOCALE_ID)
                 .sessionId(sessionId != null ? sessionId : getSessionId())
-                .requestAttributes(Map.of("x-amz-lex:channels:platform", channel.getChannel()))
+                // Always set a channel
+                .requestAttributes(Map.of("x-amz-lex:channels:platform", channel.getChannel(),"testing_input",channel.equals(CHIME) ? "SPEECH" : "TEXT"))
+                .sessionState(b -> b.sessionAttributes(sessionAttrs).build())
                 .text(text)
                 .build();
-
+        
         RecognizeTextResponse response = Allure.step(
                 "lexClient RecognizeText Call",
                 () -> lexClient.recognizeText(request)
@@ -237,7 +249,7 @@ abstract class AbstractLexAwsTestSupport {
     @DisplayName("Warm Up the Stack")
     void warmupStack() {
         // Warm up the lex path and lambda so everything is hot and use a distinct session ID
-        assertNotNull( getBotResponse(sendToLex("Hello, what is your name?", UUID.randomUUID().toString())));
+        assertNotNull(getBotResponse(sendToLex("Hello, what is your name?", UUID.randomUUID().toString())));
     }
 
     @Test

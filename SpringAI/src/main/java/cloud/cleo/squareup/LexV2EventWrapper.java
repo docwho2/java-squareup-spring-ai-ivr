@@ -149,6 +149,10 @@ public final class LexV2EventWrapper {
      * @return InputMode enumeration
      */
     public LexInputMode getInputMode() {
+        // Because for testing we can only use text operation, test routine will set this request attribute to similute whether SPEECH or TEXT
+        if (event.getRequestAttributes() != null && event.getRequestAttributes().containsKey("testing_input")) {
+            return LexInputMode.fromString(event.getRequestAttributes().get("testing_input"));
+        }
         return LexInputMode.fromString(event.getInputMode());
     }
 
@@ -194,8 +198,8 @@ public final class LexV2EventWrapper {
     }
 
     /**
-     * Get the calling (or SMS originating) number for the session. For Channels like Facebook or CLI testing, this will
-     * not be available and null.
+     * Get the calling (or SMS originating) number for the session. For Channels
+     * like Facebook or CLI testing, this will not be available and null.
      *
      * @return E164 number or null if not applicable to channel.
      */
@@ -229,8 +233,10 @@ public final class LexV2EventWrapper {
     }
 
     /**
-     * Store this in case we try and send SMS twice ever, don't want to pay for the lookup again since it costs money.
-     * AWS usually calls the same Lambda, but anyways no harm to try and cache to save a couple cents here and there.
+     * Store this in case we try and send SMS twice ever, don't want to pay for
+     * the lookup again since it costs money. AWS usually calls the same Lambda,
+     * but anyways no harm to try and cache to save a couple cents here and
+     * there.
      */
     private static final Map<String, NumberValidateResponse> validatePhoneMap = new HashMap<>();
 
@@ -272,7 +278,8 @@ public final class LexV2EventWrapper {
     }
 
     /**
-     * The textual input to process. No input should changed to "blank" so the model will know caller said nothing.
+     * The textual input to process. No input should changed to "blank" so the
+     * model will know caller said nothing.
      *
      * @return
      */
@@ -337,15 +344,17 @@ public final class LexV2EventWrapper {
     }
 
     /**
-     * Session Id used for Chat Memory. Since some channels like Pinpoint and Twilio send in phone number, append date
-     * to those that use static values. Chime will have unique sessionId per call but we can track via callingNumber if
-     * valid and use that so you can hangup and call back and still have context.
+     * Session Id used for Chat Memory. Since some channels like Pinpoint and
+     * Twilio send in phone number, append date to those that use static values.
+     * Chime will have unique sessionId per call but we can track via
+     * callingNumber if valid and use that so you can hangup and call back and
+     * still have context.
      *
      * @return
      */
     public String getChatMemorySessionId() {
         // If phone is good, use that with date, otherwise using incoming lex Session ID
-        return hasValidUSE164Number() ? getPhoneE164() + "-" + LocalDate.now(storeTimezone): getSessionId();
+        return hasValidUSE164Number() ? getPhoneE164() + "-" + LocalDate.now(storeTimezone) : getSessionId();
     }
 
     /**
