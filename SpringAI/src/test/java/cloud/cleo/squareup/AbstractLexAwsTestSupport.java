@@ -15,6 +15,7 @@ import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -61,6 +62,8 @@ abstract class AbstractLexAwsTestSupport {
     private static String botId;
     private static String botAliasId;
     private static boolean awsReady = false;
+    // Model being used
+    public static String SPRING_AI_MODEL = System.getenv("SPRING_AI_MODEL");
 
     protected long INTER_TEST_DELAY_MS = 500L;
 
@@ -137,6 +140,21 @@ abstract class AbstractLexAwsTestSupport {
         }
     }
 
+    @BeforeEach
+    void addCommonAllureLabels() {
+        if (SPRING_AI_MODEL != null) {
+            Allure.label("SpringAIModel", SPRING_AI_MODEL);
+            Allure.parameter("SpringAIModel", SPRING_AI_MODEL);
+        }
+
+        // Show up under "Labels" in the test Overview
+        Allure.label("region", AWS_REGION);
+
+        // Show up under "Parameters" in Execution
+        Allure.parameter("Region", AWS_REGION);
+        Allure.parameter("SessionId", SESSION_ID);
+    }
+
     @AfterEach
     void delayBetweenTests() throws InterruptedException {
         // This will run after every test method
@@ -153,7 +171,6 @@ abstract class AbstractLexAwsTestSupport {
         return ssm.getParameter(request).parameter().value();
     }
 
-   
     @Step("Send to Lex")
     protected final String sendToLex(String label, String text, String sessionId, ChannelPlatform channel) {
         Allure.addAttachment("Lex Request", "text/plain", text);
@@ -172,7 +189,7 @@ abstract class AbstractLexAwsTestSupport {
                 "lexClient RecognizeText Call",
                 () -> lexClient.recognizeText(request)
         );
-        
+
         List<Message> messages = response.messages();
         assertNotNull(messages, "Lex returned null messages list");
 

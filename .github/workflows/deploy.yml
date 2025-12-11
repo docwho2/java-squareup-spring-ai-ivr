@@ -22,9 +22,8 @@ concurrency: deploy
 env:
   # https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository
   # Create secrets in the repository and they will be pushed to Parameter store, these are required
-  # If you don't set an API key for square, you can still use Spring AI by itself
-  SQUARE_API_KEY: ${{ secrets.SQUARE_API_KEY || 'DISABLED' }}
-  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || 'NEED_TO_SET_THIS' }}
+  
+  
   FB_PAGE_ACCESS_TOKEN: ${{ secrets.FB_PAGE_ACCESS_TOKEN || 'DISABLED' }}
   
   FB_PAGE_ID: ${{ vars.FB_PAGE_ID || 'DISABLED' }}
@@ -38,13 +37,22 @@ env:
   # The E164 Number to be used when transferring to main number
   TRANSFER_NUMBER: ${{ vars.TRANSFER_NUMBER || '+18004444444' }}
   
+  # If you don't set an API key for square, you can still use Spring AI by itself
+  SQUARE_API_KEY: ${{ secrets.SQUARE_API_KEY || 'DISABLED' }}
   # Set to PRODUCTION if you have a real Sqaure Buisness or Leave it as SANDBOX if you just have a dev account
   SQUARE_ENVIRONMENT: ${{ vars.SQUARE_ENVIRONMENT || 'SANDBOX' }}
   # You can have many locations in Square, need to set to the location you want to query inventory or employees against (required for functions to work)
   SQUARE_LOCATION_ID: ${{ vars.SQUARE_LOCATION_ID || 'DISABLED' }}
   
+  # Which Spring AI chat provider we are using, either OPENAI or BEDROCK are supported in the chat config
+  SPRING_AI_PROVIDER: ${{ vars.SPRING_AI_PROVIDER || 'BEDROCK' }}
+  
+  # The Bedrock model to use
+  BEDROCK_MODEL: ${{ vars.BEDROCK_MODEL || 'us.amazon.nova-2-lite-v1:0' }}
+  
   # https://platform.openai.com/docs/models/overview (requres model with function calling)
-  OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-5-nano' }}
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || 'set if using OpenAI' }}
+  OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-4.1-nano' }}
   
   # Polly voices to use https://docs.aws.amazon.com/polly/latest/dg/ntts-voices-main.html
   VOICE_ID_EN: ${{ vars.VOICE_ID_EN  || 'Joanna' }}
@@ -254,6 +262,8 @@ jobs:
         VOICEIDEN=${VOICE_ID_EN}
         VOICEIDES=${VOICE_ID_ES}
         VOICEIDDE=${VOICE_ID_DE}
+        SPRINGAIPROVIDER=${SPRING_AI_PROVIDER}
+        BEDROCKMODEL=${BEDROCK_MODEL}
     
     - name: Update SMA Endpoint 
       run: |
@@ -289,5 +299,6 @@ jobs:
           stack-name: ${{ vars.STACK_NAME || 'spring-ai-square-ivr' }}
           aws-role: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           session-id: ${{ github.run_id }}-${{ github.run_attempt }}
-          github-token: ${{ secrets.GITHUB_TOKEN }} 
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          spring-ai-model: ${{ vars.SPRING_AI_PROVIDER == 'OPENAI' && vars.OPENAI_MODEL || vars.BEDROCK_MODEL }}
       

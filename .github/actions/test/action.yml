@@ -18,6 +18,9 @@ inputs:
   github-token:
     description: 'GitHub token for publishing Allure report'
     required: true
+  spring-ai-model:
+    description: 'The Spring AI model in use'
+    required: true
 
 outputs:
   result:
@@ -49,6 +52,7 @@ runs:
         STACK_NAME: ${{ inputs.stack-name }}
         AWS_REGION: ${{ inputs.region }}
         LEX_SESSION_ID: ${{ inputs.session-id }}
+        SPRING_AI_MODEL: ${{ inputs.spring-ai-model }}
         RUN_TESTS: true
       run: |
         mvn test -Dtest=SmokeTests --no-transfer-progress --quiet
@@ -75,6 +79,7 @@ runs:
       run: |
         mkdir -p SpringAI/target/allure-results
         cat <<EOF > SpringAI/target/allure-results/environment.properties
+        SpringAiModel=${{ inputs.spring-ai-model }}
         Region=${{ inputs.region }}
         StackName=${{ inputs.stack-name }}
         SessionId=${{ inputs.session-id }}

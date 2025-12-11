@@ -7,8 +7,6 @@ import java.util.Comparator;
 import java.util.List;
 import org.springframework.ai.bedrock.converse.BedrockChatOptions;
 import org.springframework.ai.bedrock.converse.BedrockProxyChatModel;
-import org.springframework.ai.bedrock.converse.api.BedrockCacheOptions;
-import org.springframework.ai.bedrock.converse.api.BedrockCacheStrategy;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.ChatClientRequest;
 import org.springframework.ai.chat.client.ChatClientResponse;
@@ -28,6 +26,7 @@ import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.ai.openaisdk.OpenAiSdkChatModel;
 import org.springframework.ai.openaisdk.OpenAiSdkChatOptions;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,6 +41,38 @@ import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
  */
 @Configuration
 public class ChatConfig {
+
+    /**
+     * Which provider to use at runtime. Set via env var SPRING_AI_PROVIDER in
+     * GitHub workflow: OPENAI | BEDROCK
+     */
+    public enum Provider {
+        OPENAI, BEDROCK
+    }
+
+    @Bean
+    public Provider springAiProvider(@Value("${SPRING_AI_PROVIDER:BEDROCK}") String provider) {
+        try {
+            return Provider.valueOf(provider.trim().toUpperCase());
+        } catch (Exception ex) {
+            // Default to BEDROCK if unset or invalid
+            return Provider.BEDROCK;
+        }
+    }
+
+    @Primary
+    @Bean
+    public ChatModel activeChatModel(Provider springAiProvider,
+            @Qualifier("bedrockChatModel") ChatModel bedrockModel,
+            @Qualifier("customOpenAiChatModel") ChatModel openAiModel) {
+
+        return switch (springAiProvider) {
+            case OPENAI ->
+                openAiModel;
+            case BEDROCK ->
+                bedrockModel;
+        };
+    }
 
     @Bean
     public OpenAiChatOptions openAiChatOptions(@Value("${spring.ai.openai.chat.options.model:gpt-5-nano}") String model) {
@@ -61,8 +92,7 @@ public class ChatConfig {
         // Just rely on N=1 + tight prompts for consistency.
         return builder.build();
     }
-    
-    
+
     @Bean(name = "customOpenAiChatModel")
     public ChatModel chatModel(OpenAiApi api, OpenAiChatOptions options) {
         return OpenAiChatModel.builder()
@@ -91,14 +121,11 @@ public class ChatConfig {
 
         return builder.build();
     }
-    
-    
-    
+
     @Bean(name = "customOpenAiSdkChatModel")
     public ChatModel chatModelOpenAiSDK(OpenAiSdkChatOptions options) {
         return new OpenAiSdkChatModel(options);
     }
-
 
     @Bean
     public BedrockChatOptions bedrockChatOptions(@Value("${spring.ai.bedrock.chat.options.model:}") String model) {
@@ -114,7 +141,6 @@ public class ChatConfig {
                 .build();
     }
 
-    @Primary
     @Bean(name = "bedrockChatModel")
     public ChatModel bedrockChatModel(BedrockRuntimeAsyncClient bedrockRuntimeAsyncClient, BedrockRuntimeClient bedrockRuntimeClient, BedrockChatOptions options) {
         return BedrockProxyChatModel.builder()
@@ -158,7 +184,8 @@ public class ChatConfig {
     }
 
     /**
-     * Fix until Spring AI fixes ordering such that system prompt is always sent first.
+     * Fix until Spring AI fixes ordering such that system prompt is always sent
+     * first.
      *
      * @see https://github.com/spring-projects/spring-ai/issues/4170
      */

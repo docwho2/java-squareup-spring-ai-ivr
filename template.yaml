@@ -43,13 +43,26 @@ Parameters:
     Type: AWS::SSM::Parameter::Value<String>
     Default: OPENAI_API_KEY
   OPENAIMODEL:
-    Description: OpenAI Model that has function calling enabled
+    Description: OpenAI Model that has function calling enabled when OPENAI selected for Spring AI Provider
     Type: String
     Default: gpt-4o-mini
     AllowedValues: # https://platform.openai.com/docs/models/overview (requres model with function calling)
         - gpt-4o-mini
         - gpt-4.1-nano
         - gpt-5-nano
+  BEDROCKMODEL:
+    Description: Bedrock Model to use when BEDROCK selected for Spring AI Provider
+    Type: String
+    Default: us.amazon.nova-2-lite-v1:0
+  SPRINGAIPROVIDER:
+    Description: Which Spring AI Chat provider to use
+    Type: String
+    Default: BEDROCK
+    AllowedValues:
+        - BEDROCK
+        - OPENAI
+        
+        
   VOICEIDEN:
     Description: The neural voice used for LEX and prompt generation for English
     Type: String
@@ -1007,6 +1020,8 @@ Resources:
         Variables:
           MAIN_CLASS: cloud.cleo.squareup.SpringApp
           SPRING_CLOUD_FUNCTION_DEFINITION: lexFunction
+          SPRING_AI_PROVIDER: !Ref SPRINGAIPROVIDER
+          SPRING_AI_BEDROCK_CHAT_OPTIONS_MODEL: !Ref BEDROCKMODEL
           SPRING_AI_OPENAI_CHAT_OPTIONS_MODEL: !Ref OPENAIMODEL
           SPRING_AI_OPENAI_API_KEY: !Ref OPENAIAPIKEY
           SPRING_AI_OPENAI_SDK_CHAT_OPTIONS_MODEL: !Ref OPENAIMODEL
@@ -1112,6 +1127,8 @@ Resources:
         Variables:
           MAIN_CLASS: cloud.cleo.squareup.SpringApp
           SPRING_CLOUD_FUNCTION_DEFINITION: pinpointFunction
+          SPRING_AI_PROVIDER: !Ref SPRINGAIPROVIDER
+          SPRING_AI_BEDROCK_CHAT_OPTIONS_MODEL: !Ref BEDROCKMODEL
           SPRING_AI_OPENAI_CHAT_OPTIONS_MODEL: !Ref OPENAIMODEL
           SPRING_AI_OPENAI_API_KEY: !Ref OPENAIAPIKEY
           SPRING_AI_OPENAI_SDK_CHAT_OPTIONS_MODEL: !Ref OPENAIMODEL

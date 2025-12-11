@@ -38,6 +38,7 @@ jobs:
           stack-name: ${{ vars.STACK_NAME || 'spring-ai-square-ivr' }}
           aws-role: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           session-id: ${{ github.run_id }}-${{ github.run_attempt }}
-          github-token: ${{ secrets.GITHUB_TOKEN }} 
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          spring-ai-model: ${{ vars.SPRING_AI_PROVIDER == 'OPENAI' && vars.OPENAI_MODEL || vars.BEDROCK_MODEL }}
     
       
