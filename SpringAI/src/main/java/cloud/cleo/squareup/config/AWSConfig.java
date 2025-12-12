@@ -55,7 +55,7 @@ public class AWSConfig {
     }
     
     @Bean(destroyMethod = "close")
-    public BedrockRuntimeClient bedrockRuntimeClient( @Qualifier("apache") SdkHttpClient sdkHttpClient) {
+    public BedrockRuntimeClient bedrockRuntimeClient( @Qualifier("crt") SdkHttpClient sdkHttpClient) {
         return BedrockRuntimeClient.builder()
                 .httpClient(sdkHttpClient)
                 .build();

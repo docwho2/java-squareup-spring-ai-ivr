@@ -30,6 +30,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
+import software.amazon.awssdk.http.SdkHttpClient;
+import software.amazon.awssdk.http.async.SdkAsyncHttpClient;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeAsyncClient;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
 
@@ -115,14 +117,14 @@ public class ChatConfig {
 
     @Bean(name = "bedrockChatModel")
     public ChatModel bedrockChatModel(
-            BedrockRuntimeAsyncClient bedrockRuntimeAsyncClient,
-            BedrockRuntimeClient bedrockRuntimeClient,
+            @Qualifier("crtAsync") SdkAsyncHttpClient sdkAsyncHttpClient,
+            @Qualifier("crt") SdkHttpClient sdkHttpClient,
             BedrockChatOptions options
     ) {
 
         return BedrockProxyChatModel.builder()
-                .bedrockRuntimeClient(bedrockRuntimeClient)
-                .bedrockRuntimeAsyncClient(bedrockRuntimeAsyncClient)
+                .bedrockRuntimeClient(BedrockRuntimeClient.builder().httpClient(sdkHttpClient).build())
+                .bedrockRuntimeAsyncClient(BedrockRuntimeAsyncClient.builder().httpClient(sdkAsyncHttpClient).build())
                 .defaultOptions(options)
                 .build();
     }
