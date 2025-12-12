@@ -37,7 +37,7 @@ public class VoiceTests extends AbstractLexAwsTestSupport {
         final var name = getBotResponse(res);
 
         boolean ok = name.toLowerCase().matches("(?s).*?(copper bot).*");
-        log.info(ok ? "Name Test Passed" : "Chuckles Test FAILED");
+        log.info(ok ? "Name Test Passed" : "Name Test FAILED");
         assertTrue(ok, "Name test failed, response was: " + name);
     }
 
@@ -57,7 +57,7 @@ public class VoiceTests extends AbstractLexAwsTestSupport {
 
         // Store is never open on Monday's
         boolean ok = open.toLowerCase().matches("(?s).*?(no|not|closed).*");
-        log.info(ok ? "Open Test Passed" : "Muggs Restaurant Test FAILED");
+        log.info(ok ? "Open Test Passed" : "Open Test FAILED");
         assertTrue(ok, "Open test failed, response was: " + open);
     }
 

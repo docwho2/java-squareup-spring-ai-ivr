@@ -95,6 +95,25 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
         assertTrue(ok, "Staff test failed, response was: " + staff);
     }
     
+    @Test
+    @Order(5)
+    @Feature("WeatherAPI")
+    @Feature("Tool Call")
+    @DisplayName("Weather Test")
+    @Link("https://github.com/docwho2/java-squareup-spring-ai-ivr/blob/main/SpringAI/src/main/java/cloud/cleo/squareup/tools/StoreWeather.java")
+    void weatherTest() {
+
+        final var res = sendToLex(
+                "What's the weather like at the store today?"
+        );
+        
+        final var weather = getBotResponse(res);
+        
+        boolean ok = weather.toLowerCase().matches("(?is).*?(°f|current temp).*");
+        log.info(ok ? "Weather Test Passed" : "Weather Test FAILED");
+        assertTrue(ok, "Weaather test failed, response was: " + weather);
+    }
+    
     
     /**
      * Assume voice channel for basic smoke tests, that's our most common use case.
