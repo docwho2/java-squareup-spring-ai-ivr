@@ -32,6 +32,7 @@ public abstract class AbstractTool implements InitializingBean {
     public final static String SWITCH_LANGUAGE_FUNCTION_NAME = "switch_language";
     public final static String DRIVING_DIRECTIONS_VOICE_FUNCTION_NAME = "send_driving_directions";
     public final static String SEND_EMAIL_FUNCTION_NAME = "send_email_message";
+    public final static String CITY_SEARCH_FUNCTION_NAME = "local_wahkon_knowledge";
     public final static URI WEBSITE_URL = URI.create("https://CopperFoxGifts.com");
     public final static URI PRIVATE_SHOPPING_URL = WEBSITE_URL.resolve("book");
     public final static String PRIVATE_SHOPPING_VOICE_FUNCTION_NAME = "send_private_shopping_url";

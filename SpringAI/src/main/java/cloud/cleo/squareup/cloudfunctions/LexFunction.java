@@ -13,10 +13,14 @@ import static cloud.cleo.squareup.enums.LexMessageContentType.PlainText;
 import cloud.cleo.squareup.lang.LangUtil;
 import cloud.cleo.squareup.tools.AbstractTool;
 import static cloud.cleo.squareup.tools.AbstractTool.HANGUP_FUNCTION_NAME;
+import org.springframework.ai.document.Document;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,6 +30,8 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.ChatClient.CallResponseSpec;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.vectorstore.SearchRequest;
+import org.springframework.ai.vectorstore.VectorStore;
 
 import org.springframework.stereotype.Component;
 
@@ -41,6 +47,16 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
     private final ChatClient chatClient;
     private final List<AbstractTool> tools;
     private final ChatMemory chatMemory;
+    private final VectorStore vectorStore;
+    private final ExecutorService virtualThreadExecutor;
+
+    private static final Pattern CITY_PREFETCH_PATTERN = Pattern.compile(
+            "\\b(wahkon|city|council|ordinance|agenda|minutes|event|festival|parade|schedule|wahkon\\s+days|newsletter|trail)\\b",
+            Pattern.CASE_INSENSITIVE
+    );
+
+    private static final long CITY_PREFETCH_TIMEOUT_MS = 700;
+    private static final int CITY_TOP_K = 4;
 
     @Override
     public LexV2Response apply(LexV2Event lexRequest) {
@@ -52,13 +68,23 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
             return buildTerminatingResponse(Map.of("action", HANGUP_FUNCTION_NAME, "bot_response", eventWrapper.getLangString(LangUtil.LanguageIds.GOODBYE)));
         }
 
+        // Kick off retrieval *before* the model call, only when likely useful
+        final CompletableFuture<List<Document>> cityPrefetch
+                = startCityPrefetchOrNull(eventWrapper.getInputTranscript());
+
+        final var toolCtx = new java.util.HashMap<String, Object>(4);
+        toolCtx.put("eventWrapper", eventWrapper);
+        if (cityPrefetch != null) {
+            toolCtx.put("cityPrefetch", cityPrefetch);
+        }
+
         try {
             final CallResponseSpec chatCall = chatClient.prompt()
                     .system(eventWrapper.getSystemPrompt())
                     .user(eventWrapper.getInputTranscript())
                     // Use Lex Session ID for the conversation ID for Chat Memory
                     .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, eventWrapper.getChatMemorySessionId()))
-                    .toolContext(Map.of("eventWrapper", eventWrapper))
+                    .toolContext(toolCtx)
                     .tools(tools.stream().filter(t -> t.isValidForRequest(eventWrapper)).toArray())
                     .call();
 
@@ -76,7 +102,7 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
                 } else {
                     // since we are terminating this session, we should clear chat memory (if they call back and say done, bot is confused because it already called hangup for example)
                     chatMemory.clear(eventWrapper.getChatMemorySessionId());
-                    
+
                     // Since not FB, this will be for Voice calls to take action on the call (Hangup, Language Change, Transfer,etc.)
                     eventWrapper.putSessionAttributeBotResponse(botResponse);
                     return buildTerminatingResponse(eventWrapper.getSessionAttributes());
@@ -266,6 +292,44 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
 
         // 4) Last resort – never return completely blank.
         return original.trim();
+    }
+
+    private CompletableFuture<List<Document>> startCityPrefetchOrNull(String input) {
+
+        if (input == null || input.isBlank()) {
+            log.debug("City prefetch skipped: blank input");
+            return null;
+        }
+
+        if (!CITY_PREFETCH_PATTERN.matcher(input).find()) {
+            log.debug("City prefetch skipped: keyword gate did not match");
+            return null;
+        }
+
+        log.debug("City prefetch started");
+
+        return CompletableFuture.<List<Document>>supplyAsync(() -> {
+            try {
+                List<Document> docs = vectorStore.similaritySearch(
+                        SearchRequest.builder()
+                                .query(input)
+                                .topK(CITY_TOP_K)
+                                .build()
+                );
+
+                log.debug("City prefetch completed ({} docs)", docs.size());
+                return docs;
+
+            } catch (Exception e) {
+                log.warn("City prefetch failed", e);
+                return List.<Document>of();
+            }
+        }, virtualThreadExecutor)
+                .orTimeout(CITY_PREFETCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                .exceptionally(ex -> {
+                    log.debug("City prefetch timed out or aborted");
+                    return List.<Document>of();
+                });
     }
 
 }

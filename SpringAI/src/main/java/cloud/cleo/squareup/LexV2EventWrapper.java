@@ -11,6 +11,7 @@ import static cloud.cleo.squareup.enums.LexInputMode.SPEECH;
 import static cloud.cleo.squareup.enums.LexInputMode.TEXT;
 import cloud.cleo.squareup.lang.LangUtil;
 import cloud.cleo.squareup.lang.LangUtil.LanguageIds;
+import static cloud.cleo.squareup.tools.AbstractTool.CITY_SEARCH_FUNCTION_NAME;
 import static cloud.cleo.squareup.tools.AbstractTool.DRIVING_DIRECTIONS_URL;
 import static cloud.cleo.squareup.tools.AbstractTool.DRIVING_DIRECTIONS_VOICE_FUNCTION_NAME;
 import static cloud.cleo.squareup.tools.AbstractTool.HANGUP_FUNCTION_NAME;
@@ -412,8 +413,46 @@ public final class LexV2EventWrapper {
       - Do not use Markdown formatting in your responses. Do not wrap URLs or text in square brackets or parentheses like [this](https://example.com); always respond with plain text.
       """);
 
+        sb.append("""
+                LOCAL CITY KNOWLEDGE (Wahkon / City Website):
+                - You have access to a function named '""")
+                .append(CITY_SEARCH_FUNCTION_NAME)
+                .append(
+                        """
+                    ' that can search official City of Wahkon website content.
+                    - This includes city announcements, community events, Wahkon Days, schedules, council agendas or minutes, ordinances, notices, and downloadable PDFs.
+                    - Call'
+                    """)
+                .append(CITY_SEARCH_FUNCTION_NAME)
+                .append(
+                        """
+                    ' when the user asks about city happenings, dates or times of events, city rules or ordinances, council activity, community announcements, or anything that sounds like "the city posted something".
+                    - Do NOT call this function for normal store-related questions (inventory, products, private shopping, store hours, or services) unless the user explicitly asks about a city posting or city-run event.
+                    - When you use this function, base your answer only on the returned results. If the results do not contain the answer, say you do not know and offer to search again with a different phrase.
+                    """);
+
+        sb.append("""
+                When using information returned from '""")
+                .append(CITY_SEARCH_FUNCTION_NAME)
+                .append("""
+                        ':
+                - Summarize first in one to three sentences.
+                - Cite the source naturally by title and context.
+                Example (voice): "That comes from the city’s Wahkon Days announcement on their website."
+                Example (text): "Source: https://..."
+                - If multiple results disagree, prefer the most recent posting and mention uncertainty when appropriate.
+                """);
+
+        sb.append("""
+                If the user asks about Wahkon Days (schedule, parade route, dates, times, vendors, parking, or announcements),
+                always call '""")
+                .append(CITY_SEARCH_FUNCTION_NAME)
+                .append("' before answering.  ");
+
+
         // Main Website and FB
-        sb.append("The Web Site for Copper Fox Gifts is '").append(WEBSITE_URL).append("' and we frequently post our events and information on sales ")
+        sb.append("The Web Site for Copper Fox Gifts is '").append(WEBSITE_URL).append(
+                "' and we frequently post our events and information on sales ")
                 .append(" on our Facebook Page which is also linked at top level menu on our website.  ");
 
         // Local Stuff to recommend
@@ -479,8 +518,23 @@ public final class LexV2EventWrapper {
                         .append(DRIVING_DIRECTIONS_URL).append("' ")
                         .append("in your reply so they can open it on their device.  ");
 
+                // City results
+                sb.append("""
+                    When answering city-related questions in text channels:
+                    - If the answer is based on results from '""")
+                        .append(CITY_SEARCH_FUNCTION_NAME)
+                        .append(
+                                """
+                    ', include the most relevant source URL directly in the response as plain text.
+                    - Prefer linking directly to a PDF when available; otherwise link to the page that contains the document.
+                    - Keep the explanation concise, then include a short source reference such as:
+                    "Source: <url>"
+                    """);
+
                 // Since we are fallback intent, from a Text input perspective, we can support any language the model understands
-                sb.append("Detect the language only on the initial prompt (assume ").append(Language.English).append(" if the initial input isn't clear) and respond in that language for the whole conversation, only change language after that if the user requests it.  ");
+                sb.append("Detect the language only on the initial prompt (assume ").append(Language.English).append(
+                        " if the initial input isn't clear) and respond in that language for the whole conversation, only change language after that if the user requests it.  "
+                );
             }
             case SPEECH, DTMF -> {
                 sb.append("The user is interacting with speech via a telephone call.  please keep answers short and concise.  ");
@@ -523,6 +577,17 @@ public final class LexV2EventWrapper {
                          really one of the more innovative services we provide and we want to ensure its as easy as possible for customers
                          to book their appointments. The function will tell if you the message was sent to their device or unable to send.  
                         """);
+
+                sb.append("""
+                    When answering city-related questions on a voice call:
+                    - Keep answers short, clear, and conversational.
+                    - If the information comes from city website content found using '""")
+                        .append(CITY_SEARCH_FUNCTION_NAME)
+                        .append("""
+                    ', summarize it instead of reading details verbatim.
+                    - Do not read URLs out loud.
+                    """);
+
             }
         }
 
