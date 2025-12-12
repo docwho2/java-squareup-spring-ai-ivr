@@ -4,6 +4,7 @@
  */
 package cloud.cleo.squareup.config;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
@@ -11,6 +12,7 @@ import software.amazon.awssdk.http.SdkHttpClient;
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient;
 import software.amazon.awssdk.http.crt.AwsCrtAsyncHttpClient;
 import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
+import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeAsyncClient;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
@@ -33,11 +35,6 @@ public class AWSConfig {
      * @return
      */
     @Bean(destroyMethod = "close")
-    public SdkAsyncHttpClient crtAsyncHttpClient() {
-        return AwsCrtAsyncHttpClient.create();
-    }
-
-    @Bean(destroyMethod = "close")
     public SdkHttpClient crtSyncHttpClient() {
         return AwsCrtHttpClient.builder()
                 .build();
@@ -50,20 +47,33 @@ public class AWSConfig {
                 .build();
     }
 
+    /**
+     * Bedrock embeddings require HTTP/2. CRT *sync* doesn't support HTTP/2, so
+     * use Netty async for Bedrock.
+     *
+     * @return
+     */
+    @Bean(name = "bedrockHttp2AsyncClient", destroyMethod = "close")
+    public SdkAsyncHttpClient bedrockHttp2AsyncClient() {
+        return NettyNioAsyncHttpClient.builder().build();
+    }
+
     @Bean(destroyMethod = "close")
-    public BedrockRuntimeAsyncClient bedrockRuntimeAsyncClient(SdkAsyncHttpClient crtAsyncHttpClient) {
+    public BedrockRuntimeAsyncClient bedrockRuntimeAsyncClient(
+            @Qualifier("bedrockHttp2AsyncClient") SdkAsyncHttpClient bedrockHttp2AsyncClient
+    ) {
         return BedrockRuntimeAsyncClient.builder()
-                .httpClient(crtAsyncHttpClient)
+                .httpClient(bedrockHttp2AsyncClient)
                 .build();
     }
-    
+
     @Bean(destroyMethod = "close")
     public DynamoDbClient dynamoDbClient(SdkHttpClient crtHttpClient) {
         return DynamoDbClient.builder()
                 .httpClient(crtHttpClient)
                 .build();
     }
-    
+
     @Bean
     public DynamoDbEnhancedClient dynamoDbEnhancedClient(DynamoDbClient dynamoDbClient) {
         return DynamoDbEnhancedClient.builder()
