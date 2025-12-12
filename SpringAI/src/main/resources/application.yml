@@ -1,5 +1,12 @@
 spring:
   ai:
+    model:
+      embedding: bedrock-titan       # enables Titan embeddings :contentReference[oaicite:2]{index=2}
+    bedrock:
+      titan:
+        embedding:
+          model: amazon.titan-embed-text-v2:0   # text embeddings v2 :contentReference[oaicite:3]{index=3}
+          input-type: TEXT
     # Qdrant vector store config
     vectorstore:
       qdrant:
