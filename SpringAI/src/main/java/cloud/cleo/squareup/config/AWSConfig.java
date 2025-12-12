@@ -7,6 +7,7 @@ package cloud.cleo.squareup.config;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.http.SdkHttpClient;
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient;
@@ -27,7 +28,7 @@ import software.amazon.awssdk.services.sns.SnsClient;
 @Configuration
 public class AWSConfig {
 
-    @Bean(destroyMethod = "close")
+    @Bean(name = "crt", destroyMethod = "close")
     public SdkHttpClient crtSyncHttpClient() {
         return AwsCrtHttpClient.builder().build();
     }
@@ -36,6 +37,7 @@ public class AWSConfig {
      * Bedrock embeddings require HTTP/2. CRT sync doesn't support HTTP/2, so we use Netty async for Bedrock.
      * @return 
      */
+    @Primary
     @Bean(name = "bedrockHttp2AsyncClient", destroyMethod = "close")
     public SdkAsyncHttpClient bedrockHttp2AsyncClient() {
         return NettyNioAsyncHttpClient.builder().build();
@@ -51,7 +53,7 @@ public class AWSConfig {
     }
 
     @Bean(destroyMethod = "close")
-    public DynamoDbClient dynamoDbClient(SdkHttpClient crtSyncHttpClient) {
+    public DynamoDbClient dynamoDbClient(@Qualifier("crt") SdkHttpClient crtSyncHttpClient) {
         return DynamoDbClient.builder()
                 .httpClient(crtSyncHttpClient)
                 .build();
@@ -65,22 +67,23 @@ public class AWSConfig {
     }
 
     @Bean(destroyMethod = "close")
-    public PinpointClient pinpointClient(SdkHttpClient crtSyncHttpClient) {
+    public PinpointClient pinpointClient(@Qualifier("crt") SdkHttpClient crtSyncHttpClient) {
         return PinpointClient.builder()
                 .httpClient(crtSyncHttpClient)
                 .build();
     }
 
     @Bean(destroyMethod = "close")
-    public SesClient sesClient(SdkHttpClient crtSyncHttpClient) {
+    public SesClient sesClient(@Qualifier("crt") SdkHttpClient crtSyncHttpClient) {
         return SesClient.builder()
                 .httpClient(crtSyncHttpClient)
                 .build();
     }
 
     @Bean(destroyMethod = "close")
-    public SnsClient snsClient(SdkHttpClient crtSyncHttpClient) {
+    public SnsClient snsClient(@Qualifier("crt") SdkHttpClient crtSyncHttpClient) {
         return SnsClient.builder()
+                // Pin to East since we only have pinpoint numbers there to send SMS
                 .region(Region.US_EAST_1)
                 .httpClient(crtSyncHttpClient)
                 .build();

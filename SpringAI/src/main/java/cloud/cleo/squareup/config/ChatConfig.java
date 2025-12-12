@@ -24,8 +24,6 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
-import org.springframework.ai.openaisdk.OpenAiSdkChatModel;
-import org.springframework.ai.openaisdk.OpenAiSdkChatOptions;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -102,32 +100,7 @@ public class ChatConfig {
                 .build();
     }
 
-    @Bean
-    public OpenAiSdkChatOptions openAiSdkChatOptions(
-            @Value("${spring.ai.openai-sdk.chat.options.model:gpt-5-nano}") String model,
-            @Value("${spring.ai.openai-sdk.api-key}") String api_key
-    ) {
-
-        var builder = OpenAiSdkChatOptions.builder()
-                .apiKey(api_key)
-                .model(model)
-                .parallelToolCalls(true)
-                .serviceTier("priority")
-                .N(1);
-
-        // IMPORTANT: do NOT set temperature for GPT-5 models, Spring AI will pass it
-        if (model.startsWith("gpt-4")) {
-            builder = builder.temperature(0.2);
-        }
-
-        return builder.build();
-    }
-
-    @Bean(name = "customOpenAiSdkChatModel")
-    public ChatModel chatModelOpenAiSDK(OpenAiSdkChatOptions options) {
-        return new OpenAiSdkChatModel(options);
-    }
-
+  
     @Bean
     public BedrockChatOptions bedrockChatOptions(@Value("${spring.ai.bedrock.chat.options.model:}") String model) {
         String resolved = (model == null || model.isBlank())
@@ -221,4 +194,35 @@ public class ChatConfig {
             return 0; // larger than MessageChatMemoryAdvisor so it runs afterwards
         }
     }
+    
+    
+//      @Bean
+//    public OpenAiSdkChatOptions openAiSdkChatOptions(
+//            @Value("${spring.ai.openai-sdk.chat.options.model:gpt-5-nano}") String model,
+//            @Value("${spring.ai.openai-sdk.api-key}") String api_key
+//    ) {
+//
+//        var builder = OpenAiSdkChatOptions.builder()
+//                .apiKey(api_key)
+//                .model(model)
+//                .parallelToolCalls(true)
+//                .serviceTier("priority")
+//                .N(1);
+//
+//        // IMPORTANT: do NOT set temperature for GPT-5 models, Spring AI will pass it
+//        if (model.startsWith("gpt-4")) {
+//            builder = builder.temperature(0.2);
+//        }
+//
+//        return builder.build();
+//    }
+//
+//    @Bean(name = "customOpenAiSdkChatModel")
+//    public ChatModel chatModelOpenAiSDK(OpenAiSdkChatOptions options) {
+//        return new OpenAiSdkChatModel(options);
+//    }
+
+     
+     
+    
 }
