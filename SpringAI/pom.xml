@@ -56,12 +56,6 @@
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-model-bedrock-converse</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>software.amazon.awssdk</groupId>
-                    <artifactId>netty-nio-client</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         
         <!-- Bring in latest apache client so default rest and web clients will use that tied to Spring BOM version -->
@@ -74,12 +68,6 @@
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-model-bedrock</artifactId>
-            <exclusions>
-              <exclusion>
-                    <groupId>software.amazon.awssdk</groupId>
-                    <artifactId>netty-nio-client</artifactId>
-                </exclusion>  
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework.ai</groupId>

@@ -13,6 +13,7 @@ import software.amazon.awssdk.http.SdkHttpClient;
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient;
 import software.amazon.awssdk.http.crt.AwsCrtAsyncHttpClient;
 import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
+import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeAsyncClient;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
@@ -43,9 +44,14 @@ public class AWSConfig {
      * Bedrock embeddings require HTTP/2. CRT sync doesn't support HTTP/2, 
      * @return 
      */
-    @Bean(destroyMethod = "close")
+    @Bean(name = "crtAsync", destroyMethod = "close")
     public SdkAsyncHttpClient crtAsyncHttpClient() {
         return AwsCrtAsyncHttpClient.create();
+    }
+    
+    @Bean(name = "nettyAsync", destroyMethod = "close")
+    public SdkAsyncHttpClient nettyAsyncHttpClient() {
+        return NettyNioAsyncHttpClient.create();
     }
     
     @Bean(destroyMethod = "close")
@@ -56,7 +62,7 @@ public class AWSConfig {
     }
 
     @Bean(destroyMethod = "close")
-    public BedrockRuntimeAsyncClient bedrockRuntimeAsyncClient( SdkAsyncHttpClient bedrockAsyncClient) {
+    public BedrockRuntimeAsyncClient bedrockRuntimeAsyncClient(@Qualifier("nettyAsync") SdkAsyncHttpClient bedrockAsyncClient) {
         return BedrockRuntimeAsyncClient.builder()
                 .httpClient(bedrockAsyncClient)
                 .build();
