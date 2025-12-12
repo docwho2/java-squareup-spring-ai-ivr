@@ -15,6 +15,10 @@
             <AppenderRef ref="Lambda"/>
         </Root>
         
+        <Logger name="io.netty" level="info" additivity="false">
+            <AppenderRef ref="Lambda"/>
+        </Logger>
+        
         <Logger name="org.apache" level="INFO" additivity="false">
             <AppenderRef ref="Lambda"/>
         </Logger>
