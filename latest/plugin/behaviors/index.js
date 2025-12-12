@@ -84,6 +84,20 @@ allure.api.addTranslation('he', {
     }
 });
 
+allure.api.addTranslation('hu', {
+    tab: {
+        behaviors: {
+            name: 'Viselkedés'
+        }
+    },
+    widget: {
+        behaviors: {
+            name: 'Funkció rendezése sztorinként',
+            showAll: 'összes mutatása'
+        }
+    }
+});
+
 allure.api.addTranslation('br', {
     tab: {
         behaviors: {
@@ -168,6 +182,20 @@ allure.api.addTranslation('pl', {
     }
 });
 
+allure.api.addTranslation('am', {
+    tab: {
+        behaviors: {
+            name: 'Վարքագծեր'
+        }
+    },
+    widget: {
+        behaviors: {
+            name: 'Ֆիչրները ըստ պատմությունների',
+            showAll: 'ցույց տալ բոլորը'
+        }
+    }
+});
+
 allure.api.addTranslation('az', {
     tab: {
         behaviors: {
@@ -210,7 +238,6 @@ allure.api.addTranslation('isv', {
     }
 });
 
-
 allure.api.addTranslation('ka', {
     tab: {
         behaviors: {
@@ -225,6 +252,19 @@ allure.api.addTranslation('ka', {
     }
 });
 
+allure.api.addTranslation('it', {
+    tab: {
+        behaviors: {
+            name: 'Comportamenti'
+        }
+    },
+    widget: {
+        behaviors: {
+            name: 'Funzionalità per storie',
+            showAll: 'Mostra tutto'
+        }
+    }
+});
 
 allure.api.addTab('behaviors', {
     title: 'tab.behaviors.name', icon: 'fa fa-list',
