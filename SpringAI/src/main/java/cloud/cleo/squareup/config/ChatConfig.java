@@ -122,7 +122,7 @@ public class ChatConfig {
 
         return BedrockProxyChatModel.builder()
                 .bedrockRuntimeClient(bedrockRuntimeClient)
-                .bedrockRuntimeAsyncClient(bedrockRuntimeAsyncClient)
+                //.bedrockRuntimeAsyncClient(bedrockRuntimeAsyncClient)
                 .defaultOptions(options)
                 .build();
     }
