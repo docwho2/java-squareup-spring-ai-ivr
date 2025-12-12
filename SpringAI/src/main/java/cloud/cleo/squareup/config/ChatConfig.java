@@ -30,7 +30,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
-import software.amazon.awssdk.http.SdkHttpClient;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeAsyncClient;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
 
@@ -100,7 +99,6 @@ public class ChatConfig {
                 .build();
     }
 
-  
     @Bean
     public BedrockChatOptions bedrockChatOptions(@Value("${spring.ai.bedrock.chat.options.model:}") String model) {
         String resolved = (model == null || model.isBlank())
@@ -118,14 +116,9 @@ public class ChatConfig {
     @Bean(name = "bedrockChatModel")
     public ChatModel bedrockChatModel(
             BedrockRuntimeAsyncClient bedrockRuntimeAsyncClient,
-            SdkHttpClient crtSyncHttpClient,
+            BedrockRuntimeClient bedrockRuntimeClient,
             BedrockChatOptions options
     ) {
-        // Keep CRT sync for Converse/chat, but do NOT publish it as a Spring bean
-        // so Titan embedding auto-config can't pick it up and fail HTTP/2 checks.
-        BedrockRuntimeClient bedrockRuntimeClient = BedrockRuntimeClient.builder()
-                .httpClient(crtSyncHttpClient)
-                .build();
 
         return BedrockProxyChatModel.builder()
                 .bedrockRuntimeClient(bedrockRuntimeClient)
@@ -194,8 +187,7 @@ public class ChatConfig {
             return 0; // larger than MessageChatMemoryAdvisor so it runs afterwards
         }
     }
-    
-    
+
 //      @Bean
 //    public OpenAiSdkChatOptions openAiSdkChatOptions(
 //            @Value("${spring.ai.openai-sdk.chat.options.model:gpt-5-nano}") String model,
@@ -221,8 +213,4 @@ public class ChatConfig {
 //    public ChatModel chatModelOpenAiSDK(OpenAiSdkChatOptions options) {
 //        return new OpenAiSdkChatModel(options);
 //    }
-
-     
-     
-    
 }

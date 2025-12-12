@@ -11,8 +11,8 @@ import org.springframework.context.annotation.Primary;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.http.SdkHttpClient;
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient;
+import software.amazon.awssdk.http.crt.AwsCrtAsyncHttpClient;
 import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
-import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeAsyncClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -32,23 +32,26 @@ public class AWSConfig {
     public SdkHttpClient crtSyncHttpClient() {
         return AwsCrtHttpClient.builder().build();
     }
+    
+    @Primary
+    @Bean(name = "apache", destroyMethod = "close")
+    public SdkHttpClient apacheSyncHttpClient() {
+        return AwsCrtHttpClient.builder().build();
+    }
 
     /**
-     * Bedrock embeddings require HTTP/2. CRT sync doesn't support HTTP/2, so we use Netty async for Bedrock.
+     * Bedrock embeddings require HTTP/2. CRT sync doesn't support HTTP/2, 
      * @return 
      */
-    @Primary
-    @Bean(name = "bedrockHttp2AsyncClient", destroyMethod = "close")
-    public SdkAsyncHttpClient bedrockHttp2AsyncClient() {
-        return NettyNioAsyncHttpClient.builder().build();
+    @Bean(destroyMethod = "close")
+    public SdkAsyncHttpClient crtAsyncHttpClient() {
+        return AwsCrtAsyncHttpClient.create();
     }
 
     @Bean(destroyMethod = "close")
-    public BedrockRuntimeAsyncClient bedrockRuntimeAsyncClient(
-            @Qualifier("bedrockHttp2AsyncClient") SdkAsyncHttpClient bedrockHttp2AsyncClient
-    ) {
+    public BedrockRuntimeAsyncClient bedrockRuntimeAsyncClient( SdkAsyncHttpClient bedrockAsyncClient) {
         return BedrockRuntimeAsyncClient.builder()
-                .httpClient(bedrockHttp2AsyncClient)
+                .httpClient(bedrockAsyncClient)
                 .build();
     }
 

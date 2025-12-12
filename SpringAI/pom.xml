@@ -59,7 +59,7 @@
             <exclusions>
                 <exclusion>
                     <groupId>software.amazon.awssdk</groupId>
-                    <artifactId>apache-client</artifactId>
+                    <artifactId>netty-nio-client</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -75,10 +75,10 @@
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-model-bedrock</artifactId>
             <exclusions>
-                <exclusion>
+              <exclusion>
                     <groupId>software.amazon.awssdk</groupId>
-                    <artifactId>apache-client</artifactId>
-                </exclusion>
+                    <artifactId>netty-nio-client</artifactId>
+                </exclusion>  
             </exclusions>
         </dependency>
         <dependency>
