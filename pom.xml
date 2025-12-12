@@ -38,6 +38,7 @@
         <!-- These are part of the local project -->
         <module>SpringAI</module>
         <module>ChimeSMA</module>
+        <module>Wahkon</module>
     </modules>
 
     <dependencyManagement>
@@ -106,7 +107,7 @@
                 <version>2.8.0</version>
             </dependency>
             
-            <!-- Soring resources we need for the Lambda -->
+            <!-- Spring resources we need for the Lambda -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
@@ -159,6 +160,11 @@
     <build>
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <!-- version comes from spring-boot-dependencies BOM -->
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
