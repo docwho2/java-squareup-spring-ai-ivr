@@ -7,9 +7,9 @@ package cloud.cleo.squareup.config;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.http.SdkHttpClient;
+import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient;
 import software.amazon.awssdk.http.crt.AwsCrtAsyncHttpClient;
 import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
@@ -37,7 +37,7 @@ public class AWSConfig {
     
     @Bean(name = "apache", destroyMethod = "close")
     public SdkHttpClient apacheSyncHttpClient() {
-        return AwsCrtHttpClient.builder().build();
+        return ApacheHttpClient.builder().build();
     }
 
     /**
@@ -55,7 +55,7 @@ public class AWSConfig {
     }
     
     @Bean(destroyMethod = "close")
-    public BedrockRuntimeClient bedrockRuntimeClient( @Qualifier("crt") SdkHttpClient sdkHttpClient) {
+    public BedrockRuntimeClient bedrockRuntimeClient( @Qualifier("apache") SdkHttpClient sdkHttpClient) {
         return BedrockRuntimeClient.builder()
                 .httpClient(sdkHttpClient)
                 .build();
