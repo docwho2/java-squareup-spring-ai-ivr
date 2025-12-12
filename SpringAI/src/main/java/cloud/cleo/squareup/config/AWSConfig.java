@@ -15,6 +15,7 @@ import software.amazon.awssdk.http.crt.AwsCrtAsyncHttpClient;
 import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeAsyncClient;
+import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.pinpoint.PinpointClient;
 import software.amazon.awssdk.services.ses.SesClient;
@@ -33,7 +34,6 @@ public class AWSConfig {
         return AwsCrtHttpClient.builder().build();
     }
     
-    @Primary
     @Bean(name = "apache", destroyMethod = "close")
     public SdkHttpClient apacheSyncHttpClient() {
         return AwsCrtHttpClient.builder().build();
@@ -46,6 +46,13 @@ public class AWSConfig {
     @Bean(destroyMethod = "close")
     public SdkAsyncHttpClient crtAsyncHttpClient() {
         return AwsCrtAsyncHttpClient.create();
+    }
+    
+    @Bean(destroyMethod = "close")
+    public BedrockRuntimeClient bedrockRuntimeClient( @Qualifier("apache") SdkHttpClient sdkHttpClient) {
+        return BedrockRuntimeClient.builder()
+                .httpClient(sdkHttpClient)
+                .build();
     }
 
     @Bean(destroyMethod = "close")
