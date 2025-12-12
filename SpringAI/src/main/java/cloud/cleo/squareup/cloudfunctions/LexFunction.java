@@ -55,7 +55,7 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
             Pattern.CASE_INSENSITIVE
     );
 
-    private static final long CITY_PREFETCH_TIMEOUT_MS = 700;
+    private static final long CITY_PREFETCH_TIMEOUT_MS = 2000;
     private static final int CITY_TOP_K = 4;
 
     @Override
