@@ -10,12 +10,10 @@ import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.http.SdkHttpClient;
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient;
-import software.amazon.awssdk.http.crt.AwsCrtAsyncHttpClient;
 import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeAsyncClient;
-import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.pinpoint.PinpointClient;
 import software.amazon.awssdk.services.ses.SesClient;
@@ -29,29 +27,14 @@ import software.amazon.awssdk.services.sns.SnsClient;
 @Configuration
 public class AWSConfig {
 
-    /**
-     * Use one common CRT client across all AWS Services.
-     *
-     * @return
-     */
     @Bean(destroyMethod = "close")
     public SdkHttpClient crtSyncHttpClient() {
-        return AwsCrtHttpClient.builder()
-                .build();
-    }
-
-    @Bean(destroyMethod = "close")
-    public BedrockRuntimeClient bedrockRuntimeClient(SdkHttpClient crtSyncHttpClient) {
-        return BedrockRuntimeClient.builder()
-                .httpClient(crtSyncHttpClient)
-                .build();
+        return AwsCrtHttpClient.builder().build();
     }
 
     /**
-     * Bedrock embeddings require HTTP/2. CRT *sync* doesn't support HTTP/2, so
-     * use Netty async for Bedrock.
-     *
-     * @return
+     * Bedrock embeddings require HTTP/2. CRT sync doesn't support HTTP/2, so we use Netty async for Bedrock.
+     * @return 
      */
     @Bean(name = "bedrockHttp2AsyncClient", destroyMethod = "close")
     public SdkAsyncHttpClient bedrockHttp2AsyncClient() {
@@ -68,9 +51,9 @@ public class AWSConfig {
     }
 
     @Bean(destroyMethod = "close")
-    public DynamoDbClient dynamoDbClient(SdkHttpClient crtHttpClient) {
+    public DynamoDbClient dynamoDbClient(SdkHttpClient crtSyncHttpClient) {
         return DynamoDbClient.builder()
-                .httpClient(crtHttpClient)
+                .httpClient(crtSyncHttpClient)
                 .build();
     }
 
@@ -82,27 +65,25 @@ public class AWSConfig {
     }
 
     @Bean(destroyMethod = "close")
-    public PinpointClient pinpointClient(SdkHttpClient crtHttpClient) {
+    public PinpointClient pinpointClient(SdkHttpClient crtSyncHttpClient) {
         return PinpointClient.builder()
-                .httpClient(crtHttpClient)
+                .httpClient(crtSyncHttpClient)
                 .build();
     }
 
     @Bean(destroyMethod = "close")
-    public SesClient sesClient(SdkHttpClient crtHttpClient) {
+    public SesClient sesClient(SdkHttpClient crtSyncHttpClient) {
         return SesClient.builder()
-                .httpClient(crtHttpClient)
+                .httpClient(crtSyncHttpClient)
                 .build();
     }
 
     @Bean(destroyMethod = "close")
-    public SnsClient snsClient(SdkHttpClient crtHttpClient) {
+    public SnsClient snsClient(SdkHttpClient crtSyncHttpClient) {
         return SnsClient.builder()
-                // Force SMS sending to east because that's where all the 10DLC and campaign crap setup is done
-                // Otherwise have to pay for registrations and numbers in 2 regions, HUGE HASSLE (and more monthly cost)
-                // Also then all texts are sourced from the same phone number for consistancy
                 .region(Region.US_EAST_1)
-                .httpClient(crtHttpClient)
+                .httpClient(crtSyncHttpClient)
                 .build();
     }
 }
+

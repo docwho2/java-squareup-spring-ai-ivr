@@ -32,6 +32,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
+import software.amazon.awssdk.http.SdkHttpClient;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeAsyncClient;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
 
@@ -142,7 +143,17 @@ public class ChatConfig {
     }
 
     @Bean(name = "bedrockChatModel")
-    public ChatModel bedrockChatModel(BedrockRuntimeAsyncClient bedrockRuntimeAsyncClient, BedrockRuntimeClient bedrockRuntimeClient, BedrockChatOptions options) {
+    public ChatModel bedrockChatModel(
+            BedrockRuntimeAsyncClient bedrockRuntimeAsyncClient,
+            SdkHttpClient crtSyncHttpClient,
+            BedrockChatOptions options
+    ) {
+        // Keep CRT sync for Converse/chat, but do NOT publish it as a Spring bean
+        // so Titan embedding auto-config can't pick it up and fail HTTP/2 checks.
+        BedrockRuntimeClient bedrockRuntimeClient = BedrockRuntimeClient.builder()
+                .httpClient(crtSyncHttpClient)
+                .build();
+
         return BedrockProxyChatModel.builder()
                 .bedrockRuntimeClient(bedrockRuntimeClient)
                 .bedrockRuntimeAsyncClient(bedrockRuntimeAsyncClient)
