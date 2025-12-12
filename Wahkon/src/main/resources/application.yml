@@ -13,11 +13,35 @@ spring:
     # Qdrant vector store config
     vectorstore:
       qdrant:
+        check-compatibility: false
         host: 452c86e9-a167-4275-b6f1-a6cba689581b.us-east-1-1.aws.cloud.qdrant.io
         port: 6334
         api-key: ${QDRANT_API_KEY}
         collection-name: wahkon
         use-tls: true
         initialize-schema: true
+        
+wahkon:
+  crawler:
+    user-agent: "WahkonIndexer/1.0"
+    timeout-ms: 10000
+    max-depth: 4
+    max-pages: 2000
+    concurrency: 16
+    retention-days: 30
+
+    sites:
+      - name: "city"
+        seeds: 
+          - https://www.cityofwahkon.com
+          - https://www.cityofwahkon.com/aroundtown
+        allowed-hosts: 
+          - www.cityofwahkon.com
+          - cityofwahkon.com
+          - download-files.wixmp.com
+        include-url-regex: "^https://.*"
+        exclude-url-regex: ".*/profile/.*/profile$"
+
+
         
 

@@ -25,8 +25,8 @@ env:
   
   
   FB_PAGE_ACCESS_TOKEN: ${{ secrets.FB_PAGE_ACCESS_TOKEN || 'DISABLED' }}
-  
   FB_PAGE_ID: ${{ vars.FB_PAGE_ID || 'DISABLED' }}
+  QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY || 'DISABLED' }}
   
   # https://docs.github.com/en/actions/learn-github-actions/variables#creating-configuration-variables-for-a-repository
   # Create repository variables to override any/all of the below from the defaults
@@ -216,7 +216,10 @@ jobs:
           "${FB_PAGE_ACCESS_TOKEN}" \
           "Facebook Access token used for stack ${STACK_NAME}"
 
-    
+        update_param_if_changed "/${STACK_NAME}/QDRANT_API_KEY" \
+          "${QDRANT_API_KEY}" \
+          "Qdrant API Key for Vector Store used for stack ${STACK_NAME}"
+          
     - name: Cache SAM Build files
       uses: actions/cache@v4
       with:
@@ -251,6 +254,7 @@ jobs:
         --parameter-overrides
         SQUAREAPIKEY=/${STACK_NAME}/SQUARE_API_KEY
         OPENAIAPIKEY=/${STACK_NAME}/OPENAI_API_KEY
+        QDRANTAPIKEY=/${STACK_NAME}/QDRANT_API_KEY
         FBPAGEACCESSTOKEN=/${STACK_NAME}/FB_PAGE_ACCESS_TOKEN
         FBPAGEID=${FB_PAGE_ID}
         SMAID=/${CDK_STACK_NAME}/SMA_ID

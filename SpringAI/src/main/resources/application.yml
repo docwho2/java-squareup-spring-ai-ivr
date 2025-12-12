@@ -1,0 +1,14 @@
+spring:
+  ai:
+    # Qdrant vector store config
+    vectorstore:
+      qdrant:
+        check-compatibility: false
+        host: 452c86e9-a167-4275-b6f1-a6cba689581b.us-east-1-1.aws.cloud.qdrant.io
+        port: 6334
+        collection-name: wahkon
+        use-tls: true
+        initialize-schema: false
+
+        
+

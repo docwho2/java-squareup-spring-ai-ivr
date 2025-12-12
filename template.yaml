@@ -23,6 +23,10 @@ Parameters:
     Description: Facebook Page ID used to make FB API calls when using FB Channel
     Type: String
     Default: DISABLED
+  QDRANTAPIKEY:
+    Description: Qdrant Vector Store API Key stored in parameter store
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: QDRANT_API_KEY
   SQUAREAPIKEY:
     Description: Square API Key stored in parameter store
     Type: AWS::SSM::Parameter::Value<String>
@@ -1020,6 +1024,7 @@ Resources:
         Variables:
           MAIN_CLASS: cloud.cleo.squareup.SpringApp
           SPRING_CLOUD_FUNCTION_DEFINITION: lexFunction
+          SPRING_AI_VECTORSTORE_QDRANT_API_KEY: !Ref QDRANTAPIKEY
           SPRING_AI_PROVIDER: !Ref SPRINGAIPROVIDER
           SPRING_AI_BEDROCK_CHAT_OPTIONS_MODEL: !Ref BEDROCKMODEL
           SPRING_AI_OPENAI_CHAT_OPTIONS_MODEL: !Ref OPENAIMODEL
@@ -1127,6 +1132,7 @@ Resources:
         Variables:
           MAIN_CLASS: cloud.cleo.squareup.SpringApp
           SPRING_CLOUD_FUNCTION_DEFINITION: pinpointFunction
+          SPRING_AI_VECTORSTORE_QDRANT_API_KEY: !Ref QDRANTAPIKEY
           SPRING_AI_PROVIDER: !Ref SPRINGAIPROVIDER
           SPRING_AI_BEDROCK_CHAT_OPTIONS_MODEL: !Ref BEDROCKMODEL
           SPRING_AI_OPENAI_CHAT_OPTIONS_MODEL: !Ref OPENAIMODEL
