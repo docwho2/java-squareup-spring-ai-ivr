@@ -3,11 +3,11 @@ spring:
     web-application-type: none
   ai:
     model:
-      embedding: bedrock-titan       # enables Titan embeddings :contentReference[oaicite:2]{index=2}
+      embedding: bedrock-titan       # enables Titan embeddings
     bedrock:
       titan:
         embedding:
-          model: amazon.titan-embed-text-v2:0   # text embeddings v2 :contentReference[oaicite:3]{index=3}
+          model: amazon.titan-embed-text-v2:0   # text embeddings v2
           input-type: TEXT
 
     # Qdrant vector store config
@@ -16,7 +16,6 @@ spring:
         check-compatibility: false
         host: 452c86e9-a167-4275-b6f1-a6cba689581b.us-east-1-1.aws.cloud.qdrant.io
         port: 6334
-        api-key: ${QDRANT_API_KEY}
         collection-name: wahkon
         use-tls: true
         initialize-schema: true

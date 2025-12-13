@@ -1,4 +1,4 @@
-package cloud.cleo.wahkon.indexer;
+package cloud.cleo.wahkon.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

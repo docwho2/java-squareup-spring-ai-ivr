@@ -1,12 +1,12 @@
-package cloud.cleo.wahkon.indexer;
+package cloud.cleo.wahkon;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class WahkonLocalbrainIndexerApplication {
+public class WahkonApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(WahkonLocalbrainIndexerApplication.class, args);
+        SpringApplication.run(WahkonApplication.class, args);
     }
 }

@@ -1229,6 +1229,44 @@ Resources:
                 - bedrock:ConverseStream
               Resource: '*'
     
-
-      
+  SpringAICrawler:
+    Type: AWS::Serverless::Function
+    DependsOn: SpringAILogGroupCrawler
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-SpringAICrawler
+      Description: Crawler to load Website/Facebook data into Vector Store
+      Handler: org.springframework.cloud.function.adapter.aws.FunctionInvoker::handleRequest
+      # Snap Start not requred for performance here, but validating the context at build/deploy is the goal here
+      SnapStart:
+        ApplyOn: PublishedVersions
+      AutoPublishAlias: SNAPSTART
+      CodeUri: ./Wahkon
+      Architectures:
+        - arm64
+      Timeout: 900
+      Environment: 
+        Variables:
+          MAIN_CLASS: cloud.cleo.wahkon.WahkonApplication
+          SPRING_CLOUD_FUNCTION_DEFINITION: cloudWatchFunction
+          SPRING_AI_VECTORSTORE_QDRANT_API_KEY: !Ref QDRANTAPIKEY
+          # In case we wanted to use OpenAi for embedding models
+          SPRING_AI_OPENAI_API_KEY: !Ref OPENAIAPIKEY
+      Policies: 
+        - !Ref BedrockInvokeManagedPolicy
+      Events:
+        Schedule:
+          Type: ScheduleV2
+          Properties:
+            Description: Launch Wahkon Web/FB Crawlers on a schedule
+            ScheduleExpression: cron(0 7 * * ? *)
+            ScheduleExpressionTimezone: America/Chicago
+  
+  
+  SpringAILogGroupCrawler:
+    Type: AWS::Logs::LogGroup
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-SpringAICrawler'
+      RetentionInDays: 90      
       

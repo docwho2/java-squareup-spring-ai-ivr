@@ -1,42 +1,54 @@
-package cloud.cleo.wahkon.indexer;
+package cloud.cleo.wahkon.service;
 
+import cloud.cleo.wahkon.config.CrawlerProperties;
+import cloud.cleo.wahkon.util.ContentHash;
+import lombok.extern.log4j.Log4j2;
 import org.jsoup.Jsoup;
+import org.springframework.ai.document.Document;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.net.URI;
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import lombok.extern.log4j.Log4j2;
+import lombok.RequiredArgsConstructor;
 
-@Component
+@Service
 @Log4j2
-public class WahkonWebCrawler implements CommandLineRunner {
+@RequiredArgsConstructor
+public class WahkonWebCrawlerService {
 
     private final VectorStore vectorStore;
     private final CrawlerProperties props;
+    private final QdrantLookupService qdrantLookupService;
+    private final QdrantSchemaService qdrantSchemaService;
 
-    public WahkonWebCrawler(VectorStore vectorStore, CrawlerProperties props) {
-        this.vectorStore = vectorStore;
-        this.props = props;
-    }
-
-    @Override
-    public void run(String... args) throws Exception {
+    public void crawlAll() {
         for (var site : props.sites()) {
-            crawlSite(site);
+            try {
+                crawlSite(site);
+            } catch (Exception e) {
+                // Don’t kill the whole run due to one site
+                log.warn("Site crawl failed: {}", site.name(), e);
+            }
         }
-        cleanupOldVectors();
+
+        try {
+            cleanupOldVectors();
+        } catch (Exception e) {
+            log.warn("Vector cleanup failed", e);
+        }
     }
 
-    private void crawlSite(CrawlerProperties.Site site) throws Exception {
+    void crawlSite(CrawlerProperties.Site site) throws Exception {
         var include = site.includeUrlRegex() != null ? Pattern.compile(site.includeUrlRegex()) : null;
         var exclude = site.excludeUrlRegex() != null ? Pattern.compile(site.excludeUrlRegex()) : null;
 
@@ -57,18 +69,21 @@ public class WahkonWebCrawler implements CommandLineRunner {
                     }));
                 }
 
+                // Wait for earliest submitted task
                 var done = inFlight.remove(0);
                 try {
                     done.get();
                 } catch (ExecutionException e) {
-                    /* ignore per-page */ }
+                    // ignore per-page
+                }
             }
 
             for (var f : inFlight) {
                 try {
                     f.get();
                 } catch (ExecutionException e) {
-                    /* ignore */ }
+                    // ignore
+                }
             }
         }
     }
@@ -91,60 +106,69 @@ public class WahkonWebCrawler implements CommandLineRunner {
             return;
         }
 
+        var contentType = page.connection().response().contentType();
+        if (contentType != null && !contentType.startsWith("text/html")) {
+            log.info("Skipping {} due to content type {}", url, contentType);
+            return;
+        }
+
         var extracted = extractReadableText(page);
         if (extracted == null || extracted.isBlank()) {
             return;
         }
 
-        //if (extracted.length() < 200) {
-        //    log.info("Skipping {} due to content length = {}", url, extracted.length());
-        //    return;
-        //}
+        var contentHash = ContentHash.md5Hex(extracted);
+
+        // If unchanged, skip expensive embedding + upsert
+        var existingHash = qdrantLookupService.findExistingContentHash(site.name(), url);
+        if (existingHash.isPresent() && existingHash.get().equals(contentHash)) {
+            log.info("Unchanged, skipping embed/upsert: {}", url);
+
+            // still record freshness
+            qdrantSchemaService.touchCrawled(
+                    site.name(),
+                    url,
+                    fetchedAt,
+                    contentHash,
+                    extracted.length(),
+                    page.title()
+            );
+
+            return;
+        }
 
         log.info("Indexing {} ({} chars)", url, extracted.length());
-
-        var contentType = page.connection()
-                .response()
-                .contentType();
-
-        if (contentType != null && !contentType.startsWith("text/html")) {
-            log.info("Skipping {} due to content type {}", url, contentType);
-            return; // skip PDFs, images, etc
-        }
 
         // Always clear existing chunks for this URL to prevent stale chunk leftovers
         deleteBySourceAndUrl(site.name(), url);
 
-        // Wrap the extracted page text in a Spring AI Document
-        var base = new org.springframework.ai.document.Document(
-                deterministicUuid(site.name() + "|" + url), // base id (optional)
+        var base = new Document(
+                deterministicUuid(site.name() + "|" + url),
                 extracted,
                 Map.of(
                         "source", site.name(),
                         "url", url,
                         "title", page.title(),
+                        "content_hash", contentHash,
+                        "content_len", extracted.length(),
                         "crawled_at", fetchedAt.toString(),
                         "crawled_at_epoch", fetchedAt.toEpochMilli()
                 )
         );
 
-        // Split into Spring AI Documents
-        var splitDocs = splitter.split(base); // ✅ this is the right API usage :contentReference[oaicite:1]{index=1}
+        var splitDocs = splitter.split(base);
 
-        // Rebuild docs with deterministic IDs per chunk (so re-crawls are idempotent)
-        var docs = new ArrayList<org.springframework.ai.document.Document>();
+        var docs = new ArrayList<Document>(splitDocs.size());
         for (int i = 0; i < splitDocs.size(); i++) {
             var d = splitDocs.get(i);
-
             var chunkId = deterministicUuid(site.name() + "|" + url + "|chunk|" + i);
 
             var meta = new HashMap<String, Object>(d.getMetadata());
             meta.put("chunk", i);
 
-            docs.add(new org.springframework.ai.document.Document(chunkId, d.getText(), meta));
+            docs.add(new Document(chunkId, d.getText(), meta));
         }
 
-        // Now upsert into Qdrant via VectorStore
         vectorStore.add(docs);
 
         if (depth < props.maxDepth()) {
@@ -159,12 +183,7 @@ public class WahkonWebCrawler implements CommandLineRunner {
 
     private void deleteBySourceAndUrl(String source, String url) {
         var b = new FilterExpressionBuilder();
-        var exp = b.and(
-                b.eq("source", source),
-                b.eq("url", url)
-        ).build();
-
-        vectorStore.delete(exp);
+        vectorStore.delete(b.and(b.eq("source", source), b.eq("url", url)).build());
     }
 
     private void cleanupOldVectors() {
@@ -181,6 +200,7 @@ public class WahkonWebCrawler implements CommandLineRunner {
                     .followRedirects(true)
                     .get();
         } catch (Exception e) {
+            log.debug("Fetch failed {}", url, e);
             return null;
         }
     }
@@ -231,18 +251,15 @@ public class WahkonWebCrawler implements CommandLineRunner {
         if (include != null && !include.matcher(url).matches()) {
             return false;
         }
-        if (exclude != null && exclude.matcher(url).matches()) {
-            return false;
-        }
 
-        return true;
+        return !(exclude != null && exclude.matcher(url).matches());
     }
 
     private static String deterministicUuid(String name) {
         return UUID.nameUUIDFromBytes(name.getBytes(UTF_8)).toString();
     }
 
-    private static final class UrlFrontier {
+    static final class UrlFrontier {
 
         record Item(String url, int depth) {
 
