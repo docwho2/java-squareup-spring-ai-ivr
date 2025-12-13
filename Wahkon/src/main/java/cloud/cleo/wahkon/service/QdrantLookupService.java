@@ -18,30 +18,32 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class QdrantLookupService {
 
-     @Qualifier("qdrantAdminRestClient") 
+    @Qualifier("qdrantAdminRestClient")
     private final RestClient qdrant;
     private final QdrantProperties props;
     private final ObjectMapper objectMapper;
 
-    
-
     /**
-     * Fetch the previously stored content_hash for (source,url) if any points exist.
-     * Uses Qdrant scroll with filter + limit=1, payload only.
+     * Fetch the previously stored content_hash for (source,url) if any points exist. Uses Qdrant scroll with filter +
+     * limit=1, payload only.
+     *
      * @param source
      * @param url
-     * @return 
+     * @return
      */
     public Optional<String> findExistingContentHash(String source, String url) {
+
+        log.debug("Qdrant hash lookup source={} url={}", source, url);
+
         var body = Map.of(
                 "filter", Map.of(
-                        "must", new Object[] {
-                                match("source", source),
-                                match("url", url)
+                        "must", new Object[]{
+                            match("source", source),
+                            match("url", url)
                         }
                 ),
                 "limit", 1,
-                "with_payload", new String[] { "content_hash" },
+                "with_payload", new String[]{"content_hash"},
                 "with_vector", false
         );
 
@@ -53,16 +55,26 @@ public class QdrantLookupService {
                     .retrieve()
                     .body(String.class);
 
-            if (json == null || json.isBlank()) return Optional.empty();
+            if (json == null || json.isBlank()) {
+                log.debug("Qdrant empty response source={} url={}", source, url);
+                return Optional.empty();
+            }
 
             JsonNode root = objectMapper.readTree(json);
             JsonNode points = root.path("result").path("points");
-            if (!points.isArray() || points.isEmpty()) return Optional.empty();
+            if (!points.isArray() || points.isEmpty()) {
+                log.debug("Qdrant no points source={} url={}", source, url);
+                return Optional.empty();
+            }
 
             JsonNode payload = points.get(0).path("payload");
             JsonNode hash = payload.path("content_hash");
-            if (hash.isMissingNode() || hash.isNull()) return Optional.empty();
+            if (hash.isMissingNode() || hash.isNull()) {
+                log.debug("Qdrant point missing content_hash source={} url={}", source, url);
+                return Optional.empty();
+            }
 
+            log.debug("Qdrant hash hit source={} url={} hash={}", source, url, hash.asText());
             return Optional.of(hash.asText());
 
         } catch (Exception e) {

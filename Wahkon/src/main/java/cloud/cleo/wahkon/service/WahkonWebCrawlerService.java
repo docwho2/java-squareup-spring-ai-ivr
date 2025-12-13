@@ -119,6 +119,11 @@ public class WahkonWebCrawlerService {
 
         var contentHash = ContentHash.md5Hex(extracted);
 
+        log.debug("Incoming URL = [{}]", url);
+        final var canonicalUrl = canonicalUrl(page, url);
+        log.debug("Setting URL to canonical [{}]",canonicalUrl);
+        url = canonicalUrl;
+
         // If unchanged, skip expensive embedding + upsert
         var existingHash = qdrantLookupService.findExistingContentHash(site.name(), url);
         if (existingHash.isPresent() && existingHash.get().equals(contentHash)) {
@@ -292,5 +297,30 @@ public class WahkonWebCrawlerService {
         synchronized Item next() {
             return q.removeFirst();
         }
+    }
+
+    private static String canonicalUrl(org.jsoup.nodes.Document page, String originalUrl) {
+        String u = originalUrl;
+
+        try {
+            var loc = page.location(); // final URL after redirects
+            if (loc != null && !loc.isBlank()) {
+                u = loc;
+            }
+        } catch (Exception ignored) {
+        }
+
+        // strip fragment
+        int hash = u.indexOf('#');
+        if (hash >= 0) {
+            u = u.substring(0, hash);
+        }
+
+        // normalize trailing slash (optional, but prevents /x vs /x/)
+        if (u.endsWith("/") && u.length() > 8) {
+            u = u.substring(0, u.length() - 1);
+        }
+
+        return u;
     }
 }
