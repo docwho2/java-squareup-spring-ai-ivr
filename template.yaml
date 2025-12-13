@@ -111,6 +111,10 @@ Globals:
     Environment:
         Variables:
             JAVA_TOOL_OPTIONS: -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational
+
+Conditions:
+  IsUsEast1: !Equals [ !Ref "AWS::Region", "us-east-1" ]
+
 Resources:
     
   PromptBucket:
@@ -1230,6 +1234,7 @@ Resources:
               Resource: '*'
     
   SpringAICrawler:
+    Condition: IsUsEast1
     Type: AWS::Serverless::Function
     DependsOn: SpringAILogGroupCrawler
     Properties:
@@ -1263,6 +1268,7 @@ Resources:
   
   
   SpringAILogGroupCrawler:
+    Condition: IsUsEast1
     Type: AWS::Logs::LogGroup
     UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
