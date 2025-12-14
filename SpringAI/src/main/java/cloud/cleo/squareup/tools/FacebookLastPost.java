@@ -30,7 +30,7 @@ public class FacebookLastPost extends AbstractTool {
     promotions. The assistant must not summarize older Facebook content or guess.
     
     Use this tool instead of knowledge retrieval when the question is specifically
-    about the most up-to-date Facebook announcement.
+    about the most up-to-date Facebook announcement and postCreatedTime to undertand current relevence.
     """
     )
     public FbPost facebookHandover(ToolContext ctx) {
@@ -40,7 +40,7 @@ public class FacebookLastPost extends AbstractTool {
         if (post.isPresent()) {
             return post.get();
         } else {
-            return new FbPost("", "No Current Post is available", "", "");
+            return new FbPost("No Current Post is available", "", "");
         }
     }
 

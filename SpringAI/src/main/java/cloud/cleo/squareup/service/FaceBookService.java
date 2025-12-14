@@ -80,19 +80,15 @@ public class FaceBookService {
     }
     
     private Optional<FbPost> parsePost(JsonNode node) {
-        var id = node.path("id").asText(null);
-        if (id == null) {
-            return Optional.empty();
-        }
 
         var message = node.path("message").asText("");
-        var createdTime = node.path("created_time").asText(null);
+        var postCreatedTime = node.path("created_time").asText(null);
         var permalink = node.path("permalink_url").asText(null);
 
-        return Optional.of(new FbPost(id, message, createdTime, permalink));
+        return Optional.of(new FbPost(message, postCreatedTime, permalink));
     }
 
-    public record FbPost(String id, String message, String createdTime, String permalinkUrl) {}
+    public record FbPost(String message, String postCreatedTime, String permalinkUrl) {}
 
     /**
      * Transfer control of the Messenger thread session from Bot control to the Inbox.
