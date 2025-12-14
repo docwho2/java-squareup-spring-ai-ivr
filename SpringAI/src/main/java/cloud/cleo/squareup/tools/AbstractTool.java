@@ -29,6 +29,7 @@ public abstract class AbstractTool implements InitializingBean {
     public final static String TRANSFER_FUNCTION_NAME = "transfer_call";
     public final static String HANGUP_FUNCTION_NAME = "hangup_call";
     public final static String FACEBOOK_HANDOVER_FUNCTION_NAME = "send_to_facebook_inbox";
+    public final static String FACEBOOK_MOST_RECENT_POST_FUNCTION_NAME = "facebook_most_recent_post";
     public final static String SWITCH_LANGUAGE_FUNCTION_NAME = "switch_language";
     public final static String DRIVING_DIRECTIONS_VOICE_FUNCTION_NAME = "send_driving_directions";
     public final static String SEND_EMAIL_FUNCTION_NAME = "send_email_message";

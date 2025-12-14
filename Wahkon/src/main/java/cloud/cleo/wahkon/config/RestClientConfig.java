@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.web.client.RestClient;
 
 @Configuration
@@ -38,6 +39,22 @@ public class RestClientConfig {
         return RestClient.builder()
                 .requestFactory(factory)
                 .defaultHeader("User-Agent", "Mozilla/5.0 (compatible; WahkonCrawler/1.0)")
+                .build();
+    }
+    
+    @Bean(name = "facebookRestClient")
+    public RestClient facebookRestClient(FacebookProperties props) {
+
+
+        ClientHttpRequestInterceptor auth = (request, body, execution) -> {
+            // Graph API supports access_token in query param, but header is fine too.
+            request.getHeaders().setBearerAuth(props.accessToken());
+            return execution.execute(request, body);
+        };
+
+        return RestClient.builder()
+                .baseUrl(props.apiBase())
+                .requestInterceptor(auth)
                 .build();
     }
 }

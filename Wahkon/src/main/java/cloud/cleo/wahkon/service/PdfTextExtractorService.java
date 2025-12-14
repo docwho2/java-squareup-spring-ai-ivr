@@ -87,18 +87,18 @@ public class PdfTextExtractorService {
         try {
             PDMetadata meta = doc.getDocumentCatalog() != null ? doc.getDocumentCatalog().getMetadata() : null;
             if (meta == null) {
-                return null;
+                return Optional.empty();
             }
 
             try (InputStream in = meta.exportXMPMetadata()) {
                 if (in == null) {
-                    return null;
+                   return Optional.empty();
                 }
 
                 XMPMetadata xmp = new DomXmpParser().parse(in);
                 DublinCoreSchema dc = xmp.getDublinCoreSchema();
                 if (dc == null) {
-                    return null;
+                    return Optional.empty();
                 }
 
                 // This is the key point: no LangAlt class needed in your code.
@@ -106,8 +106,9 @@ public class PdfTextExtractorService {
                 var title = dc.getTitle();
                 return isNotBlank(title) ? Optional.of(title) : Optional.empty();
             }
-        } catch (Exception ignored) {
-            return null;
+        } catch (Exception e) {
+            //log.debug("XMP title read failed (will fall back): {}", e.toString());
+            return Optional.empty();
         }
     }
 

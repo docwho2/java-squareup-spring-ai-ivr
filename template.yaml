@@ -1256,6 +1256,7 @@ Resources:
           SPRING_AI_VECTORSTORE_QDRANT_API_KEY: !Ref QDRANTAPIKEY
           # In case we wanted to use OpenAi for embedding models
           SPRING_AI_OPENAI_API_KEY: !Ref OPENAIAPIKEY
+          FB_PAGE_ACCESS_TOKEN: !Ref FBPAGEACCESSTOKEN
       Policies: 
         - !Ref BedrockInvokeManagedPolicy
       Events:

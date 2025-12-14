@@ -4,9 +4,11 @@ import static cloud.cleo.squareup.tools.AbstractTool.PRIVATE_SHOPPING_URL;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -35,6 +37,62 @@ public class FaceBookService {
         return pageId != null && !pageId.isBlank()
             && pageAccessToken != null && !pageAccessToken.isBlank();
     }
+    
+    
+    public Optional<FbPost> fetchLatestPost() {
+        if (!isEnabled()) {
+            return Optional.empty();
+        }
+
+        try {
+            // limit=1 => newest only (the one you want)
+            var root = restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .pathSegment("v21.0", pageId,"posts")
+                            .queryParam("access_token", pageAccessToken)
+                            .queryParam("limit", 1)
+                            .queryParam("fields", "id,message,created_time,permalink_url")
+                            .build())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .body(JsonNode.class);
+
+            if (root == null) {
+                return Optional.empty();
+            }
+
+            if (root.has("error")) {
+                log.warn("Facebook Graph error: {}", root.toPrettyString());
+                return Optional.empty();
+            }
+
+            var data = root.path("data");
+            if (!data.isArray() || data.size() == 0) {
+                return Optional.empty();
+            }
+
+            return parsePost(data.get(0));
+
+        } catch (Exception e) {
+            log.warn("Facebook latest post fetch failed", e);
+            return Optional.empty();
+        }
+    }
+    
+    private Optional<FbPost> parsePost(JsonNode node) {
+        var id = node.path("id").asText(null);
+        if (id == null) {
+            return Optional.empty();
+        }
+
+        var message = node.path("message").asText("");
+        var createdTime = node.path("created_time").asText(null);
+        var permalink = node.path("permalink_url").asText(null);
+
+        return Optional.of(new FbPost(id, message, createdTime, permalink));
+    }
+
+    public record FbPost(String id, String message, String createdTime, String permalinkUrl) {}
 
     /**
      * Transfer control of the Messenger thread session from Bot control to the Inbox.

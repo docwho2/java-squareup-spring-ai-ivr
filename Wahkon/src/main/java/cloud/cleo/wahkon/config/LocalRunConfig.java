@@ -1,5 +1,6 @@
 package cloud.cleo.wahkon.config;
 
+import cloud.cleo.wahkon.service.FacebookPipelineService;
 import cloud.cleo.wahkon.service.WahkonWebCrawlerService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -11,7 +12,7 @@ public class LocalRunConfig {
 
     @Bean
     @Profile("local")
-    CommandLineRunner runOnceLocal(WahkonWebCrawlerService crawler) {
-        return args -> crawler.crawlAll();
+    CommandLineRunner runOnceLocal(WahkonWebCrawlerService crawler, FacebookPipelineService fb) {
+        return args -> fb.ingestAllConfiguredPages();
     }
 }
