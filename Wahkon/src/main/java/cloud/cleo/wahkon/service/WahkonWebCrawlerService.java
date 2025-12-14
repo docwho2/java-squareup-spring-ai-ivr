@@ -14,12 +14,15 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
+import org.jsoup.UnsupportedMimeTypeException;
 
 @Service
 @Log4j2
@@ -28,8 +31,10 @@ public class WahkonWebCrawlerService {
 
     private final VectorStore vectorStore;
     private final CrawlerProperties props;
+    private final ExecutorService virtualThreadExecutor;
     private final QdrantLookupService qdrantLookupService;
     private final QdrantSchemaService qdrantSchemaService;
+    private final PdfTextExtractorService pdfTextExtractorService;
 
     public void crawlAll() {
         for (var site : props.sites()) {
@@ -57,33 +62,40 @@ public class WahkonWebCrawlerService {
 
         var splitter = new TokenTextSplitter();
 
-        try (var exec = Executors.newVirtualThreadPerTaskExecutor()) {
-            var inFlight = new ArrayList<Future<Void>>();
+        var inFlight = new ArrayList<Future<Void>>();
 
-            while (frontier.hasNext()) {
-                while (inFlight.size() < props.concurrency() && frontier.hasNext()) {
-                    var item = frontier.next();
-                    inFlight.add(exec.submit(() -> {
-                        crawlOne(site, item.url(), item.depth(), include, exclude, frontier, splitter);
+        while (frontier.hasNext()) {
+            while (inFlight.size() < props.concurrency() && frontier.hasNext()) {
+                var item = frontier.next();
+                inFlight.add(virtualThreadExecutor.submit(() -> {
+                    // Random jitter between 250ms and 10secs
+                    int delayMs = ThreadLocalRandom.current().nextInt(250, 10001);
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(delayMs);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
                         return null;
-                    }));
-                }
+                    }
 
-                // Wait for earliest submitted task
-                var done = inFlight.remove(0);
-                try {
-                    done.get();
-                } catch (ExecutionException e) {
-                    // ignore per-page
-                }
+                    crawlOne(site, item.url(), item.depth(), include, exclude, frontier, splitter);
+                    return null;
+                }));
             }
 
-            for (var f : inFlight) {
-                try {
-                    f.get();
-                } catch (ExecutionException e) {
-                    // ignore
-                }
+            // Wait for earliest submitted task
+            var done = inFlight.remove(0);
+            try {
+                done.get();
+            } catch (ExecutionException e) {
+                // ignore per-page
+            }
+        }
+
+        for (var f : inFlight) {
+            try {
+                f.get();
+            } catch (ExecutionException e) {
+                // ignore
             }
         }
     }
@@ -100,33 +112,60 @@ public class WahkonWebCrawlerService {
             return;
         }
 
-        var fetchedAt = Instant.now();
-        var page = fetch(url);
-        if (page == null) {
-            return;
+        log.debug("CrawlOne() Incoming URL = [{}]", url);
+
+        final var fetchedAt = Instant.now();
+        org.jsoup.nodes.Document page = null;
+        String extracted;
+        String title;
+        try {
+            page = fetch(url);  // throws if not text document
+
+            if (page == null) {
+                log.debug("Skipping {} because we jsoup could not fetch document", url);
+                return;
+            }
+            title = page.title();
+
+            // At this point we are guranteed to have text page
+            extracted = extractReadableText(page);
+            if (extracted == null || extracted.isBlank()) {
+                log.debug("Skipping {} because we could not extract any readable text", url);
+                return;
+            }
+        } catch (UnsupportedMimeTypeException umt) {
+            // We will try and process PDF's which Jsoup will not fetch
+            if (looksLikePdf(url)) {
+                var pdfOpt = pdfTextExtractorService.fetchAndExtract(url);
+                if (pdfOpt.isEmpty()) {
+                    return;  // service logs errors on this
+                }
+
+                var pdf = pdfOpt.get();
+                if (pdf.text().isBlank()) {
+                    log.info("PDF has no extractable text (likely scanned), skipping: {}", url);
+                    return;
+                }
+
+                // All good, have some text to process
+                extracted = pdf.text();
+                title = pdf.title();
+            } else {
+                // Not a non-text file format we can deal with
+                log.debug("Skipping {} because we cannot support this file format", url);
+                return;
+            }
         }
 
-        var contentType = page.connection().response().contentType();
-        if (contentType != null && !contentType.startsWith("text/html")) {
-            log.info("Skipping {} due to content type {}", url, contentType);
-            return;
-        }
+        final var contentHash = ContentHash.md5Hex(extracted);
 
-        var extracted = extractReadableText(page);
-        if (extracted == null || extracted.isBlank()) {
-            return;
-        }
-
-        var contentHash = ContentHash.md5Hex(extracted);
-
-        log.debug("Incoming URL = [{}]", url);
-        final var canonicalUrl = canonicalUrl(page, url);
-        log.debug("Setting URL to canonical [{}]",canonicalUrl);
-        url = canonicalUrl;
+        // ---- decide if we need to embed
+        boolean unchanged = qdrantLookupService.findExistingContentHash(site.name(), url)
+                .map(existing -> existing.equals(contentHash))
+                .orElse(false);
 
         // If unchanged, skip expensive embedding + upsert
-        var existingHash = qdrantLookupService.findExistingContentHash(site.name(), url);
-        if (existingHash.isPresent() && existingHash.get().equals(contentHash)) {
+        if (unchanged) {
             log.info("Unchanged, skipping embed/upsert: {}", url);
 
             // still record freshness
@@ -136,47 +175,48 @@ public class WahkonWebCrawlerService {
                     fetchedAt,
                     contentHash,
                     extracted.length(),
-                    page.title()
+                    title
             );
 
-            return;
+        } else {
+            // New content to to store
+            log.info("Indexing {} ({} chars)", url, extracted.length());
+
+            // Always clear existing chunks for this URL to prevent stale chunk leftovers
+            deleteBySourceAndUrl(site.name(), url);
+
+            var base = new Document(
+                    deterministicUuid(site.name() + "|" + url),
+                    extracted,
+                    Map.of(
+                            "source", site.name(),
+                            "url", url,
+                            "title", title,
+                            "content_hash", contentHash,
+                            "content_len", extracted.length(),
+                            "crawled_at", fetchedAt.toString(),
+                            "crawled_at_epoch", fetchedAt.toEpochMilli()
+                    )
+            );
+
+            var splitDocs = splitter.split(base);
+
+            var docs = new ArrayList<Document>(splitDocs.size());
+            for (int i = 0; i < splitDocs.size(); i++) {
+                var d = splitDocs.get(i);
+                var chunkId = deterministicUuid(site.name() + "|" + url + "|chunk|" + i);
+
+                var meta = new HashMap<String, Object>(d.getMetadata());
+                meta.put("chunk", i);
+
+                docs.add(new Document(chunkId, d.getText(), meta));
+            }
+
+            vectorStore.add(docs);
         }
 
-        log.info("Indexing {} ({} chars)", url, extracted.length());
-
-        // Always clear existing chunks for this URL to prevent stale chunk leftovers
-        deleteBySourceAndUrl(site.name(), url);
-
-        var base = new Document(
-                deterministicUuid(site.name() + "|" + url),
-                extracted,
-                Map.of(
-                        "source", site.name(),
-                        "url", url,
-                        "title", page.title(),
-                        "content_hash", contentHash,
-                        "content_len", extracted.length(),
-                        "crawled_at", fetchedAt.toString(),
-                        "crawled_at_epoch", fetchedAt.toEpochMilli()
-                )
-        );
-
-        var splitDocs = splitter.split(base);
-
-        var docs = new ArrayList<Document>(splitDocs.size());
-        for (int i = 0; i < splitDocs.size(); i++) {
-            var d = splitDocs.get(i);
-            var chunkId = deterministicUuid(site.name() + "|" + url + "|chunk|" + i);
-
-            var meta = new HashMap<String, Object>(d.getMetadata());
-            meta.put("chunk", i);
-
-            docs.add(new Document(chunkId, d.getText(), meta));
-        }
-
-        vectorStore.add(docs);
-
-        if (depth < props.maxDepth()) {
+        // ---- ALWAYS continue traversal
+        if (page != null && depth < props.maxDepth()) {
             page.select("a[href]")
                     .eachAttr("abs:href")
                     .stream()
@@ -197,13 +237,16 @@ public class WahkonWebCrawlerService {
         vectorStore.delete(b.lt("crawled_at_epoch", cutoff).build());
     }
 
-    private org.jsoup.nodes.Document fetch(String url) {
+    private org.jsoup.nodes.Document fetch(String url) throws UnsupportedMimeTypeException {
         try {
             return Jsoup.connect(url)
                     .userAgent(props.userAgent())
                     .timeout(props.timeoutMs())
                     .followRedirects(true)
                     .get();
+        } catch (UnsupportedMimeTypeException umt) {
+            // Catch up higher so we can check for PDF's or other mime types we will process
+            throw umt;
         } catch (Exception e) {
             log.debug("Fetch failed {}", url, e);
             return null;
@@ -299,28 +342,9 @@ public class WahkonWebCrawlerService {
         }
     }
 
-    private static String canonicalUrl(org.jsoup.nodes.Document page, String originalUrl) {
-        String u = originalUrl;
-
-        try {
-            var loc = page.location(); // final URL after redirects
-            if (loc != null && !loc.isBlank()) {
-                u = loc;
-            }
-        } catch (Exception ignored) {
-        }
-
-        // strip fragment
-        int hash = u.indexOf('#');
-        if (hash >= 0) {
-            u = u.substring(0, hash);
-        }
-
-        // normalize trailing slash (optional, but prevents /x vs /x/)
-        if (u.endsWith("/") && u.length() > 8) {
-            u = u.substring(0, u.length() - 1);
-        }
-
-        return u;
+    private static boolean looksLikePdf(String url) {
+        var u = url.toLowerCase(Locale.ROOT);
+        // handles .pdf, .pdf?download=1, .pdf#page=2, etc.
+        return u.contains(".pdf");
     }
 }

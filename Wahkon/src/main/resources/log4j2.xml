@@ -1,27 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
+    
+    
+     <Properties>
+        <Property name="log.pattern">%d{yyyy-MM-dd HH:mm:ss} &lt;%X{AWSRequestId}&gt; %-5level %c{1}:%L - %msg%n</Property>
+        <Property name="thread.pattern">%d{yyyy-MM-dd HH:mm:ss} &lt;%t&gt; %-5level %c{1}:%L - %msg%n</Property>
+        <Property name="env.appender">${env:LOG_APPENDER:-Lambda}</Property>
+    </Properties> 
+    
+    
     <Appenders>
-        <Lambda name="Lambda">
-            <PatternLayout>
-                <pattern>%X{AWSRequestId} %-5p %c{1}:%L - %m%n</pattern>
-            </PatternLayout>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${log.pattern}" />
+        </Console>
+        
+        <Console name="ConsoleThread" target="SYSTEM_OUT">
+            <PatternLayout pattern="${thread.pattern}" />
+        </Console>
+
+        <Lambda name="Lambda" format="TEXT">
+            <PatternLayout pattern="${log.pattern}" />
+        </Lambda>
+        
+        <Lambda name="LambdaThread" format="TEXT">
+            <PatternLayout pattern="${thread.pattern}" />
         </Lambda>
     </Appenders>
+    
     <Loggers>
-        <Logger name="Lambda" level="DEBUG" additivity="false">
-            <AppenderRef ref="Lambda"/>
-        </Logger>
-        <Root level="debug">
-            <AppenderRef ref="Lambda"/>
+         <!-- Root Logger -->
+        <Root level="INFO" includeLocation="true">
+            <AppenderRef ref="${env.appender}" />
         </Root>
         
-        <Logger name="io.netty" level="info" additivity="false">
-            <AppenderRef ref="Lambda"/>
-        </Logger>
+        <Logger name="cloud.cleo" level="DEBUG"/>
+        <Logger name="org.jsoup" level="DEBUG"/>
+        <Logger name="org.springframework.ai" level="DEBUG"/>
         
-        <Logger name="org.apache" level="INFO" additivity="false">
-            <AppenderRef ref="Lambda"/>
-        </Logger>
+        <Logger name="io.netty" level="INFO"/>
+         
+        
+        <Logger name="org.apache" level="INFO" />
         
         <Logger name="software.amazon.lambda.powertools" level="DEBUG"/>
 

@@ -2,7 +2,6 @@ package cloud.cleo.wahkon.service;
 
 import cloud.cleo.wahkon.config.QdrantProperties;
 import java.time.Instant;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -11,16 +10,19 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 @Service
-@RequiredArgsConstructor
 @Log4j2
 public class QdrantSchemaService {
 
+    @Autowired
     @Qualifier("qdrantAdminRestClient")
-    private final RestClient qdrantRestClient;
-    private final QdrantProperties props;
+    private RestClient qdrantRestClient;
+    
+    @Autowired
+    private QdrantProperties props;
 
     public void ensurePayloadIndexes() {
         // Fields you use in filters/deletes:

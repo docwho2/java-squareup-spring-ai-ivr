@@ -122,6 +122,13 @@
                 <version>1.21.2</version>
             </dependency>
             
+            <!-- used for web crawling to process Text extraction on PDF -->
+            <dependency>
+                <groupId>org.apache.pdfbox</groupId>
+                <artifactId>pdfbox</artifactId>
+                <version>3.0.6</version>
+            </dependency>
+            
             <dependency>
                 <groupId>org.reflections</groupId>
                 <artifactId>reflections</artifactId>

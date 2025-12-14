@@ -10,13 +10,8 @@ public record QdrantProperties(
         String apiKey,
         String collectionName
 ) {
-    public String baseUrl() {
+    public String baseAdminUrl() {
         var scheme = useTls ? "https" : "http";
-
-        // If port is null, omit it (lets you use managed endpoints on 443 without specifying port)
-        if (port == null) {
-            return "%s://%s".formatted(scheme, host);
-        }
-        return "%s://%s:%d".formatted(scheme, host, port);
+        return "%s://%s".formatted(scheme, host);
     }
 }

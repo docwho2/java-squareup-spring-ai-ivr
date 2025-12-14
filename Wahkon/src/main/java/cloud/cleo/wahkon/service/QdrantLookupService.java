@@ -11,18 +11,25 @@ import org.springframework.web.client.RestClient;
 
 import java.util.Map;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 
 @Service
 @Log4j2
-@RequiredArgsConstructor
 public class QdrantLookupService {
 
+    @Autowired
     @Qualifier("qdrantAdminRestClient")
-    private final RestClient qdrant;
-    private final QdrantProperties props;
-    private final ObjectMapper objectMapper;
+    private RestClient qdrant;
+    
+    @Autowired
+    private QdrantProperties props;
+    
+    @Autowired
+    private ObjectMapper objectMapper;
 
+    
+    
     /**
      * Fetch the previously stored content_hash for (source,url) if any points exist. Uses Qdrant scroll with filter +
      * limit=1, payload only.
@@ -33,7 +40,7 @@ public class QdrantLookupService {
      */
     public Optional<String> findExistingContentHash(String source, String url) {
 
-        log.debug("Qdrant hash lookup source={} url={}", source, url);
+        //log.debug("Qdrant hash lookup source={} url={}", source, url);
 
         var body = Map.of(
                 "filter", Map.of(
@@ -48,13 +55,14 @@ public class QdrantLookupService {
         );
 
         try {
-            String json = qdrant.post()
+            ResponseEntity<String> resp = qdrant.post()
                     .uri("/collections/{collection}/points/scroll", props.collectionName())
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(body)
                     .retrieve()
-                    .body(String.class);
-
+                    .toEntity(String.class);
+            
+            String json = resp.getBody();
             if (json == null || json.isBlank()) {
                 log.debug("Qdrant empty response source={} url={}", source, url);
                 return Optional.empty();
