@@ -27,6 +27,7 @@
         <maven.compiler.release>25</maven.compiler.release>
         <lombok.version>1.18.42</lombok.version>
         <spring.boot.version>3.5.8</spring.boot.version>
+        <pdfbox.version>3.0.3</pdfbox.version>
     </properties>
     
     
@@ -126,7 +127,12 @@
             <dependency>
                 <groupId>org.apache.pdfbox</groupId>
                 <artifactId>pdfbox</artifactId>
-                <version>3.0.6</version>
+                <version>${pdfbox.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.pdfbox</groupId>
+                <artifactId>xmpbox</artifactId>
+                <version>${pdfbox.version}</version>
             </dependency>
             
             <dependency>

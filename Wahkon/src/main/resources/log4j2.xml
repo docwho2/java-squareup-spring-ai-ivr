@@ -41,6 +41,8 @@
          
         
         <Logger name="org.apache" level="INFO" />
+        <Logger name="org.apache.pdfbox" level="ERROR" />
+        <Logger name="org.apache.fontbox" level="ERROR" />
         
         <Logger name="software.amazon.lambda.powertools" level="DEBUG"/>
 

@@ -1,5 +1,6 @@
 package cloud.cleo.wahkon.service;
 
+import java.io.InputStream;
 import lombok.extern.log4j.Log4j2;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -10,6 +11,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.util.Optional;
+import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+import org.apache.pdfbox.pdmodel.common.PDMetadata;
+import org.apache.xmpbox.XMPMetadata;
+import org.apache.xmpbox.schema.DublinCoreSchema;
+import org.apache.xmpbox.xml.DomXmpParser;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
@@ -39,7 +45,7 @@ public class PdfTextExtractorService {
                 log.info("Skipping PDF too large ({} bytes): {}", bytes.length, url);
                 return Optional.empty();
             }
-
+            
             return Optional.of(extract(bytes));
 
         } catch (Exception e) {
@@ -52,20 +58,85 @@ public class PdfTextExtractorService {
         try (PDDocument doc = Loader.loadPDF(pdfBytes)) {
             var stripper = new PDFTextStripper();
             stripper.setSortByPosition(true);
-            
-            doc.getDocumentInformation().getTitle();
-            
-            String text = normalize(stripper.getText(doc));
-            return new PdfText(text, doc.getDocumentInformation().getTitle(), doc.getNumberOfPages(), pdfBytes.length);
+
+            return new PdfText(
+                    normalize(stripper.getText(doc)), 
+                    resolveTitle(doc)
+            );
         }
     }
 
-    private static String normalize(String s) {
-        if (s == null) return "";
-        return s.replace('\u00A0', ' ')
+    private String resolveTitle(PDDocument doc) {
+        // 1) Prefer XMP dc:title (metadata stream)
+        var xmpTitle = readXmpDcTitle(doc).orElse(null);
+        if (isNotBlank(xmpTitle)) {
+            return xmpTitle;
+        }
+
+        // 2) Fallback to PDF Info dictionary Title
+        PDDocumentInformation info = doc.getDocumentInformation();
+        if (info != null && isNotBlank(info.getTitle())) {
+            return info.getTitle();
+        }
+
+        
+        return null;
+    }
+
+    private Optional<String> readXmpDcTitle(PDDocument doc) {
+        try {
+            PDMetadata meta = doc.getDocumentCatalog() != null ? doc.getDocumentCatalog().getMetadata() : null;
+            if (meta == null) {
+                return null;
+            }
+
+            try (InputStream in = meta.exportXMPMetadata()) {
+                if (in == null) {
+                    return null;
+                }
+
+                XMPMetadata xmp = new DomXmpParser().parse(in);
+                DublinCoreSchema dc = xmp.getDublinCoreSchema();
+                if (dc == null) {
+                    return null;
+                }
+
+                // This is the key point: no LangAlt class needed in your code.
+                // dc.getTitle() already resolves the lang-alt title value.
+                var title = dc.getTitle();
+                return isNotBlank(title) ? Optional.of(title) : Optional.empty();
+            }
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private String normalizeTitle(String s) {
+        if (s == null) return null;
+        return s.replace('\u0000', ' ')
+                .replace('\u00A0', ' ')
                 .replaceAll("\\s+", " ")
                 .trim();
     }
 
-    public record PdfText(String text, String title, int pages, int bytes) {}
+    private static String normalize(String s) {
+        if (s == null) {
+            return "";
+        }
+        return s.replace('\u00A0', ' ')
+                .replaceAll("\\s+", " ")
+                .trim();
+    }
+    
+    private static boolean isNotBlank(String s) {
+        return s != null && !s.trim().isEmpty();
+    }
+
+    private static boolean notBlank(String s) {
+        return s != null && !s.isBlank();
+    }
+
+    public record PdfText(String text, String title) {
+
+    }
 }
