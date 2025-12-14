@@ -1,8 +1,6 @@
 package cloud.cleo.wahkon.config;
 
 import cloud.cleo.wahkon.cloudfunctions.CloudWatchFunction;
-import cloud.cleo.wahkon.service.FacebookPipelineService;
-import cloud.cleo.wahkon.service.WahkonWebCrawlerService;
 import com.amazonaws.services.lambda.runtime.events.ScheduledEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -18,7 +16,7 @@ public class LocalRunConfig {
     
     @Bean
     @Profile("local")
-    CommandLineRunner runOnceLocal(WahkonWebCrawlerService crawler, FacebookPipelineService fb) {
+    CommandLineRunner runOnceLocal() {
         return args -> cloudWatchFunction.apply(new ScheduledEvent());
     }
 }

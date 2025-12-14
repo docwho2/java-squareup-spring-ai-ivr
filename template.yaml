@@ -1283,6 +1283,6 @@ Resources:
     Condition: IsUsEast1
     Type: AWS::Scheduler::ScheduleGroup
     Properties:
-      Name: SpringAISchedules
+      Name: !Sub "${AWS::StackName}-SpringAISchedules"
         
       
