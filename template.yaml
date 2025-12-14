@@ -1264,7 +1264,8 @@ Resources:
           Type: ScheduleV2
           Properties:
             Description: Launch Wahkon Web/FB Crawlers on a schedule
-            ScheduleExpression: cron(0 7 * * ? *)
+            GroupName: !Ref SpringAIScheduleGroup
+            ScheduleExpression: cron(0 7 * * ? *)  # 7am every day
             ScheduleExpressionTimezone: America/Chicago
   
   
@@ -1275,5 +1276,13 @@ Resources:
     DeletionPolicy: Retain
     Properties:
       LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-SpringAICrawler'
-      RetentionInDays: 90      
+      RetentionInDays: 90
+      
+  
+  SpringAIScheduleGroup:
+    Condition: IsUsEast1
+    Type: AWS::Scheduler::ScheduleGroup
+    Properties:
+      Name: SpringAISchedules
+        
       
