@@ -1,0 +1,10 @@
+It's currently **cloudy** in Wahkon with a temperature of **0°F** and wind speeds around **10 mph**. 
+
+The forecast shows:
+- **Today**: Cloudy, high of 6.5°F
+- **Tomorrow**: Foggy, high of 18.7°F
+- **Tuesday**: Drizzle, high of 37.9°F
+- **Wednesday**: Snow, high of 33.2°F
+- **Thursday**: Snow, high of 34.2°F
+
+Would you like me to check current store hours so you can stop by despite the chilly weather?
