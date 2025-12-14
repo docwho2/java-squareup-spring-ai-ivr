@@ -34,10 +34,6 @@ public class FacebookLastPost extends AbstractTool {
     """
     )
     public FbPost facebookHandover(ToolContext ctx) {
-        final var event = getEventWrapper(ctx);
-
-        // Set the action so we short circut and send back card with response
-        event.putSessionAttributeAction(FACEBOOK_HANDOVER_FUNCTION_NAME);
 
         // Anything the user types now will go to general inbox and staff will see
         var post = faceBookOperations.fetchLatestPost();
