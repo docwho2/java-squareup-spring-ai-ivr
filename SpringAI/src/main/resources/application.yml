@@ -1,4 +1,7 @@
 spring:
+  threads:
+    virtual:
+      enabled: true
   ai:
     model:
       embedding: bedrock-titan       # enables Titan embeddings :contentReference[oaicite:2]{index=2}

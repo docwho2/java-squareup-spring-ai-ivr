@@ -21,6 +21,37 @@ import software.amazon.awssdk.services.sns.SnsClient;
 /**
  * Base for all Tools.
  *
+ *
+ * TODO – Tool Parameter Validation Refactor (Post–Spring AI 2.x Maturity)
+ *
+ * Current state: - Tool inputs are a mix of: - DTO-based request objects (Theo-era pattern) - Flattened method
+ * parameters using @ToolParam - Required-field validation is centralized in AbstractTool using
+ *
+ * @JsonProperty(required = true) + reflection + caching. - This works well for DTO-based tools but is not compatible
+ * with flattened tool parameters.
+ *
+ * Planned refactor: 1. Introduce a custom annotation for required tool parameters:
+ * @RequiredParam(name = "...")
+ *
+ * 2. Add an AOP interceptor (@Aspect) around methods annotated with @Tool that: - Inspects method parameters for
+ * @RequiredParam - Validates null / blank values - Returns StatusMessageResult(FAILED, "...") when required params are
+ * missing - Caches per-method metadata (similar to REQUIRED_FIELDS_CACHE today)
+ *
+ * 3. Migrate tools incrementally: - Flatten simple tools (1–3 params) to method parameters - Use @ToolParam for
+ * model-visible schema metadata - Use @RequiredParam for runtime validation - Keep ToolContext (and other framework
+ * context) as the last parameter
+ *
+ * 4. Retain DTO-based tools temporarily where: - Many parameters exist - Nested structures are required - Centralized
+ * DTO validation is still valuable
+ *
+ * 5. When Spring AI provides: - Native per-parameter validation hooks, OR - A tool-specific @Param/@Required annotation
+ * reassess whether the custom @RequiredParam + Aspect is still needed.
+ *
+ * Rationale: - Models frequently omit required fields despite schema hints - Validation must remain centralized and
+ * cheap (cached reflection) - Flattened tools produce cleaner schemas and better tool-call accuracy - This decouples
+ * validation from Jackson annotations and JSON DTOs - Future-proofs the tool layer for Jackson 2 → 3 and Spring AI
+ * evolution
+ *
  * @author sjensen
  */
 @Log4j2(access = AccessLevel.PROTECTED)

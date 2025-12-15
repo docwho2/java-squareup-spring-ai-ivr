@@ -21,7 +21,6 @@ import static cloud.cleo.squareup.tools.AbstractTool.SEND_EMAIL_FUNCTION_NAME;
 import static cloud.cleo.squareup.tools.AbstractTool.SWITCH_LANGUAGE_FUNCTION_NAME;
 import static cloud.cleo.squareup.tools.AbstractTool.TRANSFER_FUNCTION_NAME;
 import static cloud.cleo.squareup.tools.AbstractTool.WEBSITE_URL;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Arrays;
@@ -35,6 +34,7 @@ import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import software.amazon.awssdk.services.pinpoint.PinpointClient;
 import software.amazon.awssdk.services.pinpoint.model.NumberValidateResponse;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Wrapper for Lex Input Event to add utility functions.
@@ -48,7 +48,7 @@ public final class LexV2EventWrapper {
 
     private static final PinpointClient pinpointClient = SpringContext.getBean(PinpointClient.class);
 
-    private static final ObjectMapper mapper = SpringContext.getBean(ObjectMapper.class);
+    private static final JsonMapper mapper = SpringContext.getBean(JsonMapper.class);
 
     private static final FaceBookService faceBookService = SpringContext.getBean(FaceBookService.class);
 
@@ -113,11 +113,11 @@ public final class LexV2EventWrapper {
         this(LexV2Event.builder()
                 .withInputMode(LexInputMode.TEXT.getMode())
                 // Exclude + from the E164 to be consistant with Twilio (shouldn't use + in sessionID)
-                .withSessionId(ppe.getOriginationNumber().substring(1))
+                .withSessionId(ppe.originationNumber().substring(1))
                 // Mimic Platform input type of Pinpoint
                 .withRequestAttributes(Map.of("x-amz-lex:channels:platform", ChannelPlatform.PINPOINT.getChannel()))
                 // The incoming SMS body will be in the input Transcript
-                .withInputTranscript(ppe.getMessageBody())
+                .withInputTranscript(ppe.messageBody())
                 // SMS has no locale target, just use en_US
                 .withBot(Bot.builder().withLocaleId("en_US").build())
                 // Need Blank Session attributes

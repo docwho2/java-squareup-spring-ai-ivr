@@ -1,6 +1,9 @@
 spring:
   main:
     web-application-type: none
+  threads:
+    virtual:
+      enabled: true
   ai:
     model:
       embedding: bedrock-titan       # enables Titan embeddings

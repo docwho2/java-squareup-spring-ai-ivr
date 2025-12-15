@@ -2,8 +2,6 @@ package cloud.cleo.squareup.memory;
 
 import static cloud.cleo.squareup.cloudfunctions.LexFunction.sanitizeAssistantText;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -22,6 +20,8 @@ import org.springframework.ai.chat.messages.UserMessage;
 import software.amazon.awssdk.enhanced.dynamodb.*;
 import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Spring AI ChatMemoryRepository backed by DynamoDB Enhanced Client.
@@ -41,13 +41,13 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
      */
     private final Duration ttlDuration;
 
-    private final ObjectMapper objectMapper;
+    private final JsonMapper objectMapper;
 
     // Simple per-JVM cache, keyed by conversationId.
     // Thread-safe because a single Lambda container can handle concurrent requests.
     private final Map<String, ConversationState> cache = new java.util.concurrent.ConcurrentHashMap<>();
 
-    public DynamoDbChatMemoryRepository(DynamoDbEnhancedClient enhancedClient, ObjectMapper objectMapper, Duration ttlDuration, String tableName) {
+    public DynamoDbChatMemoryRepository(DynamoDbEnhancedClient enhancedClient, JsonMapper objectMapper, Duration ttlDuration, String tableName) {
         this.enhancedClient = enhancedClient;
         this.objectMapper = objectMapper;
         this.ttlDuration = ttlDuration;

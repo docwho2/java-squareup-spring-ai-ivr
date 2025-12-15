@@ -1,8 +1,6 @@
 package cloud.cleo.wahkon.service;
 
 import cloud.cleo.wahkon.config.FacebookProperties;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -12,6 +10,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 @Service
 @Log4j2
@@ -27,7 +27,7 @@ public class FacebookIngestService {
     private FacebookProperties props;
 
     @Autowired
-    private ObjectMapper objectMapper;
+    private JsonMapper objectMapper;
 
     public List<FbPost> fetchRecentPosts(FacebookProperties.Page page, int maxPosts) {
         var results = new ArrayList<FbPost>(maxPosts);

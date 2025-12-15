@@ -14,7 +14,11 @@ public class ExecutorConfig {
     @Bean(destroyMethod = "shutdown")
     public ExecutorService virtualThreadExecutor() {
         // one shared virtual-thread-per-task executor for the whole app
-        return Executors.newVirtualThreadPerTaskExecutor();
+        return Executors.newThreadPerTaskExecutor(
+                Thread.ofVirtual()
+                        .name("spring-ai-", 0)
+                        .factory()
+        );
     }
 
     @Bean(name = "applicationTaskExecutor")

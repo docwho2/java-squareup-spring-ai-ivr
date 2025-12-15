@@ -1,7 +1,6 @@
 package cloud.cleo.squareup.config;
 
 import cloud.cleo.squareup.memory.DynamoDbChatMemoryRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
@@ -34,6 +33,7 @@ import software.amazon.awssdk.http.SdkHttpClient;
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeAsyncClient;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  *
@@ -130,7 +130,7 @@ public class ChatConfig {
     }
 
     @Bean
-    public ChatMemoryRepository chatMemoryRepository(DynamoDbEnhancedClient enhancedClient, ObjectMapper objectMapper,
+    public ChatMemoryRepository chatMemoryRepository(DynamoDbEnhancedClient enhancedClient, JsonMapper objectMapper,
             @Value("${chat.memory.dynamo.ttl:24h}") Duration ttlDuration,
             @Value("${chat.memory.dynamo.table-name:spring-ai-chat-memory}") String tableName
     ) {

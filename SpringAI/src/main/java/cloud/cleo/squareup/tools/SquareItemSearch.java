@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
 
 /**
@@ -94,6 +95,7 @@ public class SquareItemSearch extends AbstractTool {
             @JsonProperty("status")
             Status status,
             @JsonProperty("message")
+            @ToolParam(description = "City or state name", required = true)
             String message
             ) {
 

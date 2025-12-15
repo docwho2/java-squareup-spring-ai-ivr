@@ -3,11 +3,8 @@ package cloud.cleo.squareup.tools;
 import cloud.cleo.squareup.service.FaceBookService;
 import cloud.cleo.squareup.LexV2EventWrapper;
 import cloud.cleo.squareup.service.SquareCustomerService;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.squareup.square.types.Customer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ToolContext;
@@ -15,6 +12,8 @@ import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.ses.model.SendEmailRequest;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * Send an email message to an employee, optionally enriching it with Square customer data based on the caller's phone
@@ -25,7 +24,7 @@ import software.amazon.awssdk.services.ses.model.SendEmailRequest;
 public class SendEmail extends AbstractTool {
 
     private final SesClient sesClient;
-    private final ObjectMapper mapper;
+    private final JsonMapper mapper;
     private final FaceBookService faceBookService;
     private final SquareCustomerService squareCustomerService;
 
@@ -80,9 +79,7 @@ public class SendEmail extends AbstractTool {
 
             if (customer != null) {
                 // Append Square customer record to email for reference, stripping cards.
-                final var myMapper = mapper.copy()
-                        .setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
-                ObjectNode custJson = myMapper.valueToTree(customer);
+                ObjectNode custJson = mapper.valueToTree(customer);
                 custJson.remove("cards");
 
                 composedMessage = composedMessage

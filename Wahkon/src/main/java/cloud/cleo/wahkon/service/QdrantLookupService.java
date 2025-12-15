@@ -1,8 +1,7 @@
 package cloud.cleo.wahkon.service;
 
 import cloud.cleo.wahkon.config.QdrantProperties;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.time.Instant;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -14,6 +13,8 @@ import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 @Service
 @Log4j2
@@ -27,7 +28,7 @@ public class QdrantLookupService {
     private QdrantProperties props;
     
     @Autowired
-    private ObjectMapper objectMapper;
+    private JsonMapper objectMapper;
 
     
     

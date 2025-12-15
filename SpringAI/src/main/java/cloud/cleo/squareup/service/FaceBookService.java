@@ -2,8 +2,6 @@ package cloud.cleo.squareup.service;
 
 import static cloud.cleo.squareup.tools.AbstractTool.PRIVATE_SHOPPING_URL;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -11,6 +9,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Perform various Facebook operations. Used when Channel is FB.
@@ -21,7 +21,7 @@ import org.springframework.web.client.RestClient;
 @RequiredArgsConstructor
 public class FaceBookService {
 
-    private final ObjectMapper mapper;
+    private final JsonMapper mapper;
     private final RestClient restClient = RestClient.builder()
                 .baseUrl("https://graph.facebook.com")
                 .build();
