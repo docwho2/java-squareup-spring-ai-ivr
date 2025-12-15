@@ -177,6 +177,13 @@
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>lexruntimev2</artifactId>
+            <exclusions>
+                <exclusion>
+                    <!-- Exclude since Spring Boot takes care of this -->
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
             <scope>test</scope>
         </dependency>
         
