@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
@@ -33,9 +34,7 @@ public record CrawlerProperties(
         @Max(64)
         int concurrency,
 
-        @Min(1)
-        @Max(365)
-        int retentionDays,
+        Duration retentionDuration,
 
         @NotEmpty
         @Valid

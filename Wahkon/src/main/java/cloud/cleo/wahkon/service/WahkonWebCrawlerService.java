@@ -32,8 +32,7 @@ public class WahkonWebCrawlerService {
     private final VectorStore vectorStore;
     private final CrawlerProperties props;
     private final ExecutorService virtualThreadExecutor;
-    private final QdrantLookupService qdrantLookupService;
-    private final QdrantSchemaService qdrantSchemaService;
+    private final QdrantLookupService qdrant;
     private final PdfTextExtractorService pdfTextExtractorService;
 
     public void crawlAll() {
@@ -44,12 +43,6 @@ public class WahkonWebCrawlerService {
                 // Don’t kill the whole run due to one site
                 log.warn("Site crawl failed: {}", site.name(), e);
             }
-        }
-
-        try {
-            cleanupOldVectors();
-        } catch (Exception e) {
-            log.warn("Vector cleanup failed", e);
         }
     }
 
@@ -160,7 +153,7 @@ public class WahkonWebCrawlerService {
         final var contentHash = ContentHash.md5Hex(extracted);
 
         // ---- decide if we need to embed
-        boolean unchanged = qdrantLookupService.findExistingContentHash(site.name(), url)
+        boolean unchanged = qdrant.findExistingContentHash(site.name(), url)
                 .map(existing -> existing.equals(contentHash))
                 .orElse(false);
 
@@ -169,13 +162,10 @@ public class WahkonWebCrawlerService {
             log.info("Unchanged, skipping embed/upsert: {}", url);
 
             // still record freshness
-            qdrantSchemaService.touchCrawled(
+            qdrant.touchCrawled(
                     site.name(),
                     url,
-                    fetchedAt,
-                    contentHash,
-                    extracted.length(),
-                    title
+                    fetchedAt
             );
 
         } else {
@@ -231,11 +221,7 @@ public class WahkonWebCrawlerService {
         vectorStore.delete(b.and(b.eq("source", source), b.eq("url", url)).build());
     }
 
-    private void cleanupOldVectors() {
-        var cutoff = Instant.now().minusSeconds(props.retentionDays() * 86400L).toEpochMilli();
-        var b = new FilterExpressionBuilder();
-        vectorStore.delete(b.lt("crawled_at_epoch", cutoff).build());
-    }
+   
 
     private org.jsoup.nodes.Document fetch(String url) throws UnsupportedMimeTypeException {
         try {

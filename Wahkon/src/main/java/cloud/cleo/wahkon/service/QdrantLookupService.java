@@ -3,6 +3,7 @@ package cloud.cleo.wahkon.service;
 import cloud.cleo.wahkon.config.QdrantProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
@@ -90,6 +91,40 @@ public class QdrantLookupService {
             return Optional.empty();
         }
     }
+    
+    /**
+     * Just updated the crawled timestamps.
+     * 
+     * @param source
+     * @param url
+     * @param crawledAt 
+     */
+    public void touchCrawled(String source, String url, Instant crawledAt) {
+        var payload = Map.of(
+                "crawled_at", crawledAt.toString(),
+                "crawled_at_epoch", crawledAt.toEpochMilli()
+        );
+
+        var body = Map.of(
+                "payload", payload,
+                "filter", Map.of(
+                        "must", new Object[]{
+                                match("source", source),
+                                match("url", url)
+                        }
+                )
+        );
+
+        qdrant.post()
+                .uri("/collections/{collection}/points/payload", props.collectionName())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body)
+                .retrieve()
+                .toBodilessEntity();
+
+        log.info("Touched payload for {} {}", source, url);
+    }
+
 
     private static Map<String, Object> match(String key, String value) {
         return Map.of(

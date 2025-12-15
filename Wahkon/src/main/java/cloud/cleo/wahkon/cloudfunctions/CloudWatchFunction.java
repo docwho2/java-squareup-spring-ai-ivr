@@ -2,6 +2,7 @@ package cloud.cleo.wahkon.cloudfunctions;
 
 import cloud.cleo.wahkon.service.FacebookPipelineService;
 import cloud.cleo.wahkon.service.QdrantSchemaService;
+import cloud.cleo.wahkon.service.VectorStoreCleanupService;
 import cloud.cleo.wahkon.service.WahkonWebCrawlerService;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
@@ -24,6 +25,7 @@ public class CloudWatchFunction implements Function<byte[], Void> {
     private final WahkonWebCrawlerService crawler;
     private final FacebookPipelineService facebookPipelineService;
     private final QdrantSchemaService qDrant;
+    private final VectorStoreCleanupService vectorStoreCleanupService;
     private final Executor executor; 
     
     @Override
@@ -33,7 +35,7 @@ public class CloudWatchFunction implements Function<byte[], Void> {
         // Ensure indexes are always created (in case store is reset)
         qDrant.ensurePayloadIndexes();
         
-        var tasks = new ArrayList<CompletableFuture<Void>>(2);
+        var tasks = new ArrayList<CompletableFuture<Void>>(3);
 
         tasks.add(CompletableFuture.runAsync(() -> {
             log.info("Starting Facebook ingest pipeline");
@@ -47,6 +49,13 @@ public class CloudWatchFunction implements Function<byte[], Void> {
             log.info("Finished Web crawl pipeline");
         }, executor));
 
+        tasks.add(CompletableFuture.runAsync(() -> {
+            log.info("Starting Vector Store Cleanup");
+            vectorStoreCleanupService.cleanupOldVectors();
+            log.info("Finished Vector Store Cleanup");
+        }, executor));
+
+        
         // Wait for both; if either fails, surface a useful error (so Lambda reports failure).
         try {
             CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new)).join();

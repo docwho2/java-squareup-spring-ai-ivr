@@ -22,8 +22,8 @@ public class FacebookPipelineService {
     private final FacebookProperties props;
 
     private final VectorStore vectorStore;
-    private final QdrantLookupService qdrantLookupService;
-    private final QdrantSchemaService qdrantSchemaService;
+    private final QdrantLookupService qdrant;
+
 
     public void ingestAllConfiguredPages() {
         var splitter = new TokenTextSplitter();
@@ -68,15 +68,6 @@ public class FacebookPipelineService {
         var text = normalize(post.message());
         if (text == null || text.isBlank()) {
             log.debug("Skipping FB post with empty message page={} id={}", page.name(), post.id());
-            // Still touch so you know you saw it (optional)
-            qdrantSchemaService.touchCrawled(
-                    "facebook:" + page.name(),
-                    post.permalinkUrl() != null ? post.permalinkUrl() : post.id(),
-                    Instant.now(),
-                    "empty",
-                    0,
-                    "Facebook Post"
-            );
             return;
         }
 
@@ -84,20 +75,17 @@ public class FacebookPipelineService {
         final var url = post.permalinkUrl() != null ? post.permalinkUrl() : "fb://" + post.id();
         final var contentHash = ContentHash.md5Hex(text);
 
-        boolean unchanged = qdrantLookupService.findExistingContentHash("facebook:" + page.name(), url)
+        boolean unchanged = qdrant.findExistingContentHash("facebook:" + page.name(), url)
                 .map(existing -> existing.equals(contentHash))
                 .orElse(false);
 
         if (unchanged) {
             log.info("FB unchanged, skipping embed/upsert: {}", url);
 
-            qdrantSchemaService.touchCrawled(
+            qdrant.touchCrawled(
                     "facebook:" + page.name(),
                     url,
-                    fetchedAt,
-                    contentHash,
-                    text.length(),
-                    "Facebook Post"
+                    fetchedAt
             );
             return;
         }
