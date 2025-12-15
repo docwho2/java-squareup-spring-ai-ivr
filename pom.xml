@@ -26,8 +26,11 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>25</maven.compiler.release>
         <lombok.version>1.18.42</lombok.version>
-        <spring.boot.version>3.5.8</spring.boot.version>
         <pdfbox.version>3.0.6</pdfbox.version>
+        <!-- The below three all need to be aligned -->
+        <spring.boot.version>3.5.8</spring.boot.version>
+        <spring.cloud.version>4.3.0</spring.cloud.version>
+        <spring.ai.version>1.1.2</spring.ai.version>
     </properties>
     
     
@@ -95,7 +98,7 @@
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-function-dependencies</artifactId>
-                <version>4.3.0</version>
+                <version>${spring.cloud.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -103,7 +106,7 @@
             <dependency>
                 <groupId>org.springframework.ai</groupId>
                 <artifactId>spring-ai-bom</artifactId>
-                <version>1.1.2</version>
+                <version>${spring.ai.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -128,11 +131,25 @@
                 <groupId>org.apache.pdfbox</groupId>
                 <artifactId>pdfbox</artifactId>
                 <version>${pdfbox.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <!-- Exclude since Spring Boot takes care of this -->
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.pdfbox</groupId>
                 <artifactId>xmpbox</artifactId>
                 <version>${pdfbox.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <!-- Exclude since Spring Boot takes care of this -->
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             
             <dependency>
@@ -157,9 +174,9 @@
     
     <dependencies>
         <dependency>
+            <!-- Use across all sub modules -->
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
     
