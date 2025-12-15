@@ -3,7 +3,6 @@ package cloud.cleo.wahkon.cloudfunctions;
 import cloud.cleo.wahkon.service.FacebookPipelineService;
 import cloud.cleo.wahkon.service.QdrantSchemaService;
 import cloud.cleo.wahkon.service.WahkonWebCrawlerService;
-import com.amazonaws.services.lambda.runtime.events.ScheduledEvent;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -20,7 +19,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Log4j2
-public class CloudWatchFunction implements Function<ScheduledEvent, Void> {
+public class CloudWatchFunction implements Function<byte[], Void> {
 
     private final WahkonWebCrawlerService crawler;
     private final FacebookPipelineService facebookPipelineService;
@@ -28,8 +27,8 @@ public class CloudWatchFunction implements Function<ScheduledEvent, Void> {
     private final Executor executor; 
     
     @Override
-    public Void apply(ScheduledEvent event) {
-        log.info("Crawler triggered by EventBridge at {}", event.getTime());
+    public Void apply(byte[] ignored) {
+        log.info("Crawler triggered by EventBridge");
         
         // Ensure indexes are always created (in case store is reset)
         qDrant.ensurePayloadIndexes();

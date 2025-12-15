@@ -17,12 +17,6 @@
 
 
     <dependencies>
-
-        <!-- Need for incoming CloudWatch events -->
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-lambda-java-events</artifactId>
-        </dependency>
         
         <!-- Lambda Logging -->
         <dependency>
