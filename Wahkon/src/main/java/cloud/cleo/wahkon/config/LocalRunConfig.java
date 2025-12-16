@@ -1,6 +1,6 @@
 package cloud.cleo.wahkon.config;
 
-import cloud.cleo.wahkon.cloudfunctions.CloudWatchFunction;
+import cloud.cleo.wahkon.cloudfunctions.ScheduledFunction;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -11,11 +11,11 @@ import org.springframework.context.annotation.Profile;
 @RequiredArgsConstructor
 public class LocalRunConfig {
 
-    private final CloudWatchFunction cloudWatchFunction;
+    private final ScheduledFunction cloudWatchFunction;
     
     @Bean
     @Profile("local")
     CommandLineRunner runOnceLocal() {
-        return args -> cloudWatchFunction.apply("Local Trigger".getBytes());
+        return args -> cloudWatchFunction.apply(new ScheduledFunction.ScheduleInput("ALL"));
     }
 }

@@ -1252,21 +1252,31 @@ Resources:
       Environment: 
         Variables:
           MAIN_CLASS: cloud.cleo.wahkon.WahkonApplication
-          SPRING_CLOUD_FUNCTION_DEFINITION: cloudWatchFunction
+          SPRING_CLOUD_FUNCTION_DEFINITION: scheduledFunction
           SPRING_AI_VECTORSTORE_QDRANT_API_KEY: !Ref QDRANTAPIKEY
           # In case we wanted to use OpenAi for embedding models
           SPRING_AI_OPENAI_API_KEY: !Ref OPENAIAPIKEY
+          # Needed for calling FB API for recent posts
           FB_PAGE_ACCESS_TOKEN: !Ref FBPAGEACCESSTOKEN
       Policies: 
         - !Ref BedrockInvokeManagedPolicy
       Events:
-        Schedule:
+        ScheduleDaily:
           Type: ScheduleV2
           Properties:
-            Description: Launch Wahkon Web/FB Crawlers on a schedule
+            Description: Launch Wahkon Web Crawlers Daily
             GroupName: !Ref SpringAIScheduleGroup
             ScheduleExpression: cron(0 7 * * ? *)  # 7am every day
             ScheduleExpressionTimezone: America/Chicago
+            Input: '{ "period" : "daily" }'
+        ScheduleHourly:
+          Type: ScheduleV2
+          Properties:
+            Description: Launch Wahkon Facebook Crawl Hourly
+            GroupName: !Ref SpringAIScheduleGroup
+            ScheduleExpression: rate(1 hours)
+            ScheduleExpressionTimezone: America/Chicago
+            Input: '{ "period" : "hourly" }'
   
   
   SpringAILogGroupCrawler:
