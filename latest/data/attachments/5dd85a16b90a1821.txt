@@ -1,0 +1,10 @@
+It's currently **35.3°F** and cloudy in Wahkon, with winds at **18.9 mph**. 
+
+The forecast shows:
+- **Today**: Cloudy, high of 40.6°F
+- **Tomorrow**: Drizzle, high of 36.4°F
+- **Thursday**: Snow, high of 34.3°F
+- **Friday**: Snow, high of 18.5°F
+- **Saturday**: Drizzle, high of 24.0°F
+
+Would you like me to send you driving directions to the store, or would you prefer to schedule a private shopping experience to browse our full selection of gifts, home decor, and more?
