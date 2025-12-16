@@ -24,9 +24,6 @@ public class FacebookIngestService {
     private RestClient fb;
 
     @Autowired
-    private FacebookProperties props;
-
-    @Autowired
     private JsonMapper objectMapper;
 
     public List<FbPost> fetchRecentPosts(FacebookProperties.Page page, int maxPosts) {

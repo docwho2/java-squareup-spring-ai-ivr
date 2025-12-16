@@ -25,6 +25,8 @@ public class FaceBookService {
     private final RestClient restClient = RestClient.builder()
                 .baseUrl("https://graph.facebook.com")
                 .build();
+    
+    private final static String FB_API_VERSION = "v24.0";
 
     // Inject from env/properties instead of System.getenv
     @Value("${fb.page-id:${FB_PAGE_ID:}}")
@@ -48,7 +50,7 @@ public class FaceBookService {
             // limit=1 => newest only (the one you want)
             var root = restClient.get()
                     .uri(uriBuilder -> uriBuilder
-                            .pathSegment("v21.0", pageId,"posts")
+                            .pathSegment(FB_API_VERSION, pageId,"posts")
                             .queryParam("access_token", pageAccessToken)
                             .queryParam("limit", 1)
                             .queryParam("fields", "id,message,created_time,permalink_url")
@@ -106,7 +108,7 @@ public class FaceBookService {
 
             JsonNode result = restClient.post()
                     .uri(uriBuilder -> uriBuilder
-                            .pathSegment("v18.0", pageId, "pass_thread_control")
+                            .pathSegment(FB_API_VERSION, pageId, "pass_thread_control")
                             .queryParam("access_token", pageAccessToken)
                             .build())
                     .body(json)
@@ -156,7 +158,7 @@ public class FaceBookService {
 
             JsonNode result = restClient.post()
                     .uri(uriBuilder -> uriBuilder
-                            .pathSegment("v18.0", "me", "custom_user_settings")
+                            .pathSegment(FB_API_VERSION, "me", "custom_user_settings")
                             .queryParam("access_token", pageAccessToken)
                             .build())
                     .body(json)
@@ -204,7 +206,7 @@ public class FaceBookService {
 
             JsonNode result = restClient.post()
                     .uri(uriBuilder -> uriBuilder
-                            .pathSegment("v18.0", "me", "messages")
+                            .pathSegment(FB_API_VERSION, "me", "messages")
                             .queryParam("access_token", pageAccessToken)
                             .build())
                     .body(json)
@@ -236,7 +238,7 @@ public class FaceBookService {
         try {
             JsonNode result = restClient.get()
                     .uri(uriBuilder -> uriBuilder
-                            .pathSegment("v18.0", id)
+                            .pathSegment(FB_API_VERSION, id)
                             .queryParam("access_token", pageAccessToken)
                             .build())
                     .retrieve()

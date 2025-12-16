@@ -15,7 +15,7 @@ public record FacebookProperties(
         @NotBlank
         String baseUrl, // https://graph.facebook.com
         @NotBlank
-        String apiVersion, // v21.0 (or whatever you pin)
+        String apiVersion, // v24.0 (or whatever you pin)
         @NotBlank
         String accessToken, // long-lived token
         Duration timeout,

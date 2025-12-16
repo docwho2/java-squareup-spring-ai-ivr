@@ -47,7 +47,7 @@ wahkon:
         
   facebook:
     base-url: https://graph.facebook.com
-    api-version: v21.0
+    api-version: v24.0
     access-token: ${FB_PAGE_ACCESS_TOKEN}
     timeout: 10s
     max-api-pages: 25
