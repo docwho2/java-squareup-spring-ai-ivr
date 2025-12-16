@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,13 +49,8 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
     private final VectorStore vectorStore;
     private final ExecutorService virtualThreadExecutor;
 
-    private static final Pattern CITY_PREFETCH_PATTERN = Pattern.compile(
-            "\\b(wahkon|city|council|ordinance|agenda|minutes|event|festival|parade|schedule|wahkon\\s+days|newsletter|trail)\\b",
-            Pattern.CASE_INSENSITIVE
-    );
+   
 
-    private static final long CITY_PREFETCH_TIMEOUT_MS = 2000;
-    private static final int CITY_TOP_K = 4;
 
     @Override
     public LexV2Response apply(LexV2Event lexRequest) {
@@ -293,6 +287,12 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
         // 4) Last resort – never return completely blank.
         return original.trim();
     }
+    
+    
+     private static final Pattern CITY_PREFETCH_PATTERN = Pattern.compile(
+            "\\b(wahkon|city|council|ordinance|agenda|minutes|event|festival|parade|schedule|wahkon\\s+days|newsletter|trail)\\b",
+            Pattern.CASE_INSENSITIVE
+    );
 
     private CompletableFuture<List<Document>> startCityPrefetchOrNull(String input) {
 
@@ -313,7 +313,7 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
                 List<Document> docs = vectorStore.similaritySearch(
                         SearchRequest.builder()
                                 .query(input)
-                                .topK(CITY_TOP_K)
+                                .topK(4)
                                 .build()
                 );
 
@@ -324,12 +324,7 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
                 log.warn("City prefetch failed", e);
                 return List.<Document>of();
             }
-        }, virtualThreadExecutor)
-                .orTimeout(CITY_PREFETCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-                .exceptionally(ex -> {
-                    log.debug("City prefetch timed out or aborted");
-                    return List.<Document>of();
-                });
+        }, virtualThreadExecutor);
     }
 
 }

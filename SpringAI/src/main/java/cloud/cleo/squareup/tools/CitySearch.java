@@ -3,6 +3,9 @@ package cloud.cleo.squareup.tools;
 import cloud.cleo.squareup.LexV2EventWrapper;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.ai.chat.model.ToolContext;
@@ -18,6 +21,8 @@ import org.springframework.stereotype.Component;
 public class CitySearch extends AbstractTool {
 
     private final VectorStore vectorStore;
+    
+    private final static long SEARCH_TIMEOUT_MS = 2500;
 
     @Tool(
             name = CITY_SEARCH_FUNCTION_NAME,
@@ -42,9 +47,18 @@ public class CitySearch extends AbstractTool {
         if (fut != null) {
             // Prefetch path: should be hot
             try {
-                docs = fut.join();
-            } catch (Exception e) {
-                log.warn("city_search join failed: {}", e.toString());
+                // This should be close to done, but don't wait too long for a result
+                docs = fut.get(SEARCH_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            } catch (TimeoutException te) {
+                log.warn("City prefetch get timed out after {} ms",SEARCH_TIMEOUT_MS );
+                fut.cancel(true);
+                docs = List.of();
+            } catch (ExecutionException ee) {
+                log.error("City prefetch get thew Exception", ee.getCause());
+                docs = List.of();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.error("City prefetch get interrupted", e);
                 docs = List.of();
             }
         } else {
