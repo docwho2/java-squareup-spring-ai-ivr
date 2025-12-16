@@ -4,8 +4,6 @@ import cloud.cleo.squareup.LexV2EventWrapper;
 import cloud.cleo.squareup.service.SquareTeamMemberService;
 import cloud.cleo.squareup.tools.AbstractTool.StatusMessageResult.Status;
 import static cloud.cleo.squareup.tools.AbstractTool.StatusMessageResult.Status.SUCCESS;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.squareup.square.types.TeamMember;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -24,10 +22,11 @@ public class SquareTeamMembers extends AbstractTool {
     @Tool(
             name = "team_members",
             description = """
-            Return the employee names, phone numbers, and email addresses for \
-            this store location. The assistant MUST NOT reveal employee phone \
-            numbers to callers or read the entire list aloud; phone numbers are \
-            only for internal use (e.g., call transfers).
+            Return the employee names, phone numbers, and email addresses for 
+            this store location. The assistant MUST NOT reveal employee phone 
+            numbers to callers or read the entire list aloud; phone numbers are 
+            only for internal use (e.g., call transfers).  Email address may be used 
+            to send emails to employees and are safe to give out.
             """
     )
     public SquareTeamMembersResult getTeamMembers() {
@@ -72,33 +71,20 @@ public class SquareTeamMembers extends AbstractTool {
     /**
      * Single employee entry.
      */
-    public static class Employee {
-
-        @JsonPropertyDescription("Employee first name.")
-        @JsonProperty("first_name")
-        public String firstName;
-
-        @JsonPropertyDescription("Employee last name.")
-        @JsonProperty("last_name")
-        public String lastName;
-
-        @JsonPropertyDescription("""
-            Employee phone number in E.164 format. \
-            This is for internal use (e.g., call transfers) and MUST NOT be \
-            revealed directly to the caller.
-            """)
-        @JsonProperty("phone_number")
-        public String phoneNumber;
-
-        @JsonPropertyDescription("Employee email address, to be used to send internal messages.")
-        @JsonProperty("email")
-        public String email;
+    public record Employee(
+            String firstName,
+            String lastName,
+            String phoneNumber,
+            String email
+            ) {
 
         public Employee(TeamMember tm) {
-            this.firstName = tm.getGivenName().orElse(null);
-            this.lastName = tm.getFamilyName().orElse(null);
-            this.phoneNumber = tm.getPhoneNumber().orElse(null);
-            this.email = tm.getEmailAddress().orElse(null);
+            this(
+                    tm.getGivenName().orElse(null),
+                    tm.getFamilyName().orElse(null),
+                    tm.getPhoneNumber().orElse(null),
+                    tm.getEmailAddress().orElse(null)
+            );
         }
     }
 
@@ -106,11 +92,8 @@ public class SquareTeamMembers extends AbstractTool {
      * Result returned from the tool.
      */
     public record SquareTeamMembersResult(
-            @JsonProperty("employees")
             List<Employee> employees,
-            @JsonProperty("status")
             Status status,
-            @JsonProperty("message")
             String message
             ) {
 

@@ -2,10 +2,9 @@ package cloud.cleo.squareup.tools;
 
 import cloud.cleo.squareup.LexV2EventWrapper;
 import cloud.cleo.squareup.enums.Language;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
 
 /**
@@ -22,20 +21,20 @@ public class SwitchLanguage extends AbstractTool {
             Use this only when the caller clearly requests to switch languages or appears to be speaking that language.
             """
     )
-    public StatusMessageResult switchLanguage(SwitchLanguageRequest r, ToolContext ctx) {
+    public StatusMessageResult switchLanguage(
+            @ToolParam(description = "The language to switch to.", required = true) Language language,
+            ToolContext ctx) {
 
-        // Centralized validation of required fields
-        StatusMessageResult validationError = validateRequiredFields(r);
-        if (validationError != null) {
-            return validationError;
+        if (language == null) {
+            return logAndReturnError("language is must be provided");
         }
 
         final var wrapper = getEventWrapper(ctx);
         wrapper.putSessionAttributeAction(SWITCH_LANGUAGE_FUNCTION_NAME);
-        wrapper.putSessionAttribute("language", r.language.toString());
+        wrapper.putSessionAttribute("language", language.toString());
 
         return logAndReturnSuccess(
-                "The caller is now ready to interact in " + r.language()
+                "The caller is now ready to interact in " + language
         );
     }
 
@@ -45,21 +44,5 @@ public class SwitchLanguage extends AbstractTool {
     @Override
     public boolean isValidForRequest(LexV2EventWrapper event) {
         return event.isVoice();
-    }
-
-    /**
-     * Request payload the model must provide for this tool.
-     */
-    public record SwitchLanguageRequest(
-            @JsonPropertyDescription("The language to switch to.")
-            @JsonProperty(value = "language", required = true)
-            Language language
-            ) {
-
-    }
-
-    @Override
-    protected Class<?> requestPayloadType() {
-        return SwitchLanguageRequest.class;
     }
 }

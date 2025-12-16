@@ -5,7 +5,6 @@ import cloud.cleo.squareup.service.FaceBookService;
 import cloud.cleo.squareup.LexV2EventWrapper;
 import cloud.cleo.squareup.service.FaceBookService.FbPost;
 import lombok.RequiredArgsConstructor;
-import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Component;
 
@@ -33,7 +32,7 @@ public class FacebookLastPost extends AbstractTool {
     about the most up-to-date Facebook announcement and postCreatedTime to undertand current relevence.
     """
     )
-    public FbPost facebookHandover(ToolContext ctx) {
+    public FbPost facebookHandover() {
 
         // Anything the user types now will go to general inbox and staff will see
         var post = faceBookOperations.fetchLatestPost();

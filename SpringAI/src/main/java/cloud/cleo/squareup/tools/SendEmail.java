@@ -3,12 +3,12 @@ package cloud.cleo.squareup.tools;
 import cloud.cleo.squareup.service.FaceBookService;
 import cloud.cleo.squareup.LexV2EventWrapper;
 import cloud.cleo.squareup.service.SquareCustomerService;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.squareup.square.types.Customer;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.ses.model.SendEmailRequest;
@@ -36,12 +36,19 @@ public class SendEmail extends AbstractTool {
             subject and message body in English.
             """
     )
-    public StatusMessageResult sendEmail(SendEmailRequestPayload r, ToolContext ctx) {
+    public StatusMessageResult sendEmail(
+            @ToolParam(description = "The employee email address that should receive the message.", required = true) String employeeEmail,
+            @ToolParam(description = "Subject for the email message in English language.", required = true) String subject,
+            @ToolParam(description = "The message body to relay to the employee in English language.", required = true) String message,
+            ToolContext ctx) {
 
-        // Centralized validation of required fields
-        StatusMessageResult validationError = validateRequiredFields(r);
-        if (validationError != null) {
-            return validationError;
+        final var incomingParams = List.of(employeeEmail, subject, message);
+        for (final var param : incomingParams) {
+            if (param == null || param.isBlank()) {
+                return logAndReturnError(
+                        "All parameters are required and cannot be blank"
+                );
+            }
         }
 
         LexV2EventWrapper event = getEventWrapper(ctx);
@@ -72,10 +79,10 @@ public class SendEmail extends AbstractTool {
                     "[From " + event.getChannelPlatform() + "/" + event.getSessionId() + "] ";
             };
 
-            final String subject = subjectPrefix + r.subject;
+            final String emailSubject = subjectPrefix + subject;
 
             // Start with the original message.
-            String composedMessage = r.message;
+            String composedMessage = message;
 
             if (customer != null) {
                 // Append Square customer record to email for reference, stripping cards.
@@ -92,10 +99,10 @@ public class SendEmail extends AbstractTool {
 
             // Build SES email request.
             final var requestBuilder = SendEmailRequest.builder()
-                    .destination(dest -> dest.toAddresses(r.employeeEmail))
+                    .destination(dest -> dest.toAddresses(employeeEmail))
                     .message(mesg -> mesg
                     .body(body -> body.text(cont -> cont.data(finalMessage)))
-                    .subject(cont -> cont.data(subject)))
+                    .subject(cont -> cont.data(emailSubject)))
                     .source("CopperBot@CopperFoxGifts.com");
 
             // If we know the customer's email, set it as reply-to.
@@ -105,8 +112,8 @@ public class SendEmail extends AbstractTool {
 
             final var response = sesClient.sendEmail(requestBuilder.build());
 
-            log.info("Sent email to {} with SES id {}", r.employeeEmail, response.messageId());
-            log.info("Subject: {}", subject);
+            log.info("Sent email to {} with SES id {}", employeeEmail, response.messageId());
+            log.info("Subject: {}", emailSubject);
             log.info("Message: {}", composedMessage);
 
             return logAndReturnSuccess(
@@ -132,26 +139,4 @@ public class SendEmail extends AbstractTool {
         return true;
     }
 
-    /**
-     * Request payload the model must provide for this tool.
-     */
-    public static class SendEmailRequestPayload {
-
-        @JsonPropertyDescription("The employee email address that should receive the message.")
-        @JsonProperty(value = "employee_email", required = true)
-        public String employeeEmail;
-
-        @JsonPropertyDescription("Subject for the email message in English language.")
-        @JsonProperty(value = "subject", required = true)
-        public String subject;
-
-        @JsonPropertyDescription("The message body to relay to the employee in English language.")
-        @JsonProperty(value = "message", required = true)
-        public String message;
-    }
-    
-    @Override
-    protected Class<?> requestPayloadType() {
-        return SendEmailRequest.class;
-    }
 }

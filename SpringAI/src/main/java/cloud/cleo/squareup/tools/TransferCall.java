@@ -1,10 +1,9 @@
 package cloud.cleo.squareup.tools;
 
 import cloud.cleo.squareup.LexV2EventWrapper;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
 
 /**
@@ -19,23 +18,24 @@ public class TransferCall extends AbstractTool {
         description = """
             Transfer the caller to an employee or the main store number. 
             The assistant MUST NOT transfer to arbitrary numbers. 
-            Only valid internal/store numbers are permitted.
+            Only valid internal/employee/store numbers are permitted.
             """
     )
-    public StatusMessageResult transfer(TransferCallRequest r, ToolContext ctx) {
+    public StatusMessageResult transfer(
+            @ToolParam(description = "The internal or store phone number in E164 format to transfer the caller to.", required = true) String transferNumber, 
+            ToolContext ctx) {
         
-        // Centralized validation of required fields
-        StatusMessageResult validationError = validateRequiredFields(r);
-        if (validationError != null) {
-            return validationError;
+       
+        if ( transferNumber == null || transferNumber.isBlank() ) {
+            return logAndReturnError("transferNumber must be provided");
         }
         
         final var wrapper = getEventWrapper(ctx);
         wrapper.putSessionAttributeAction(TRANSFER_FUNCTION_NAME);
-        wrapper.putSessionAttribute("transfer_number", r.transferNumber);
+        wrapper.putSessionAttribute("transfer_number", transferNumber);
         
         return logAndReturnSuccess(
-                "The caller is now ready to be transferred to " + r.transferNumber() + ".  Do not ask further questions, just say you will now be transferred."
+                "The caller is now ready to be transferred to " + transferNumber + ".  Do not ask further questions, just say you will now be transferred."
         );
     }
 
@@ -45,20 +45,5 @@ public class TransferCall extends AbstractTool {
     @Override
     public boolean isValidForRequest(LexV2EventWrapper event) {
         return event.isVoice();
-    }
-
-
-    /**
-     * The request payload the model must provide.
-     */
-    public record TransferCallRequest(
-            @JsonPropertyDescription("The internal or store phone number in E164 format to transfer the caller to.")
-            @JsonProperty(value = "transfer_number", required = true)
-            String transferNumber
-    ) {}
-    
-    @Override
-    protected Class<?> requestPayloadType() {
-        return TransferCallRequest.class;
     }
 }

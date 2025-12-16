@@ -1,14 +1,13 @@
 package cloud.cleo.squareup.tools;
 
 import cloud.cleo.squareup.LexV2EventWrapper;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
@@ -26,16 +25,17 @@ public class CitySearch extends AbstractTool {
             Search the City of Wahkon local website knowledge for events, schedules, ordinances, agendas, announcements, and PDFs.
             """
     )
-    public CitySearchResult citySearch(CitySearchRequest r, ToolContext ctx) {
+    public CitySearchResult citySearch(
+            @ToolParam(description = "The query to search the city knowledge base for.", required = true) String query,
+            ToolContext ctx) {
 
-        StatusMessageResult validationError = validateRequiredFields(r);
-        if (validationError != null) {
-            return new CitySearchResult(List.of(), validationError.message(), false);
+        if (query == null || query.isBlank()) {
+            return new CitySearchResult(List.of(), "query is required and cannot be blank", false);
         }
 
         @SuppressWarnings("unchecked")
-        CompletableFuture<List<org.springframework.ai.document.Document>> fut =
-                (CompletableFuture<List<org.springframework.ai.document.Document>>) ctx.getContext().get("cityPrefetch");
+        CompletableFuture<List<org.springframework.ai.document.Document>> fut
+                = (CompletableFuture<List<org.springframework.ai.document.Document>>) ctx.getContext().get("cityPrefetch");
 
         List<org.springframework.ai.document.Document> docs;
 
@@ -49,7 +49,7 @@ public class CitySearch extends AbstractTool {
             }
         } else {
             // No prefetch happened (keyword miss, etc.) → do the real search now
-            docs = runCitySearch(r.query());
+            docs = runCitySearch(query);
         }
 
         var hits = docs.stream().limit(4).map(d -> new CitySearchHit(
@@ -80,37 +80,20 @@ public class CitySearch extends AbstractTool {
         return true;
     }
 
-    public record CitySearchRequest(
-            @JsonPropertyDescription("The query to search the city knowledge base for.")
-            @JsonProperty(value = "query", required = true)
-            String query
-    ) {}
-
     public record CitySearchResult(
-            @JsonProperty("results")
             List<CitySearchHit> results,
-
-            @JsonProperty("status")
             String status,
-
-            @JsonProperty("success")
             boolean success
-    ) {}
+            ) {
+
+    }
 
     public record CitySearchHit(
-            @JsonProperty("title")
             String title,
-
-            @JsonProperty("url")
             String url,
-
-            @JsonProperty("snippet")
             String snippet
-    ) {}
+            ) {
 
-    @Override
-    protected Class<?> requestPayloadType() {
-        return CitySearchRequest.class;
     }
 
     private static String safeString(Object o) {
@@ -118,7 +101,9 @@ public class CitySearch extends AbstractTool {
     }
 
     private static String safeSnippet(String s, int max) {
-        if (s == null) return "";
+        if (s == null) {
+            return "";
+        }
         s = s.replaceAll("\\s+", " ").trim();
         return s.length() <= max ? s : s.substring(0, max) + "…";
     }
