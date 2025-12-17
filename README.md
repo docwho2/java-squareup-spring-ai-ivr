@@ -8,7 +8,7 @@ and business hours, transfer to employee cell phones, etc.
 
 ## Testing Links
 
-[Link to Smoke Tests](https://docwho2.github.io/java-squareup-spring-ai-ivr/latest/) which shows what model is currently being used.
+[Nova 2 Lite Smoke Tests](https://docwho2.github.io/java-squareup-spring-ai-ivr/us.amazon.nova-2-lite-v1_0/SmokeTests).
 
 Full model regression testing coming soon...
 
