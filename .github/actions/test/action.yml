@@ -65,20 +65,35 @@ runs:
         mvn test -Dtest="${{ inputs.test-filter }}" --no-transfer-progress --quiet
         
     - name: Checkout gh-pages (for Allure history)
+      id: ghpages
       uses: actions/checkout@v4
+      continue-on-error: true
       with:
         ref: gh-pages
         path: gh-pages
 
+    - name: Compute destination directory
+      id: dest
+      shell: bash
+      run: |
+        model="${{ inputs.spring-ai-model }}"
+        filter="${{ inputs.test-filter }}"
+        # make filter safe for paths/urls
+        safe_filter="$(echo "$filter" | tr ' /,:' '____' | tr -cd '[:alnum:]_-.')"
+        echo "dest_dir=${model}/${safe_filter}" >> "$GITHUB_OUTPUT"
+        
+        
     - name: Restore Allure history
       shell: bash
       run: |
-        if [ -d gh-pages/latest/history ]; then
-            echo "Restoring Allure history from previous report..."
-            mkdir -p SpringAI/target/allure-results/history
-            cp -R gh-pages/latest/history/* SpringAI/target/allure-results/history/
-        else
-            echo "No previous Allure history found."
+        DEST_DIR="${{ steps.dest.outputs.dest_dir }}"
+        if [ "${{ steps.ghpages.outcome }}" != "success" ]; then
+          echo "gh-pages branch not found yet; skipping history restore."
+          exit 0
+        fi
+        if [ -d "gh-pages/${DEST_DIR}/history" ]; then
+          mkdir -p SpringAI/target/allure-results/history
+          cp -R "gh-pages/${DEST_DIR}/history/"* SpringAI/target/allure-results/history/ || true
         fi
         
     - name: Write Allure environment (region/stack)
@@ -98,13 +113,13 @@ runs:
       run: |
         mvn --no-transfer-progress allure:report --quiet
 
-    - name: Publish Allure report to GitHub Pages (/latest)
+    - name: Publish Allure report
       uses: peaceiris/actions-gh-pages@v4
       with:
-        github_token: ${{ inputs.github-token }} 
+        github_token: ${{ inputs.github-token }}
         publish_branch: gh-pages
         publish_dir: SpringAI/target/site/allure-maven-plugin
-        destination_dir: latest
+        destination_dir: ${{ steps.dest.outputs.dest_dir }}
 
     - name: Fail workflow if tests failed
       # Always evaluate this step, but only fail if the test step actually failed

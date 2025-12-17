@@ -37,7 +37,7 @@ import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
 @ExtendWith({AllureJunit5.class, TimingExtension.class})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Log4j2
-abstract class AbstractLexAwsTestSupport {
+public abstract class AbstractLexAwsTestSupport {
 
     private static final boolean RUN_TESTS
             = Boolean.parseBoolean(System.getenv().getOrDefault("RUN_TESTS", "false"));
