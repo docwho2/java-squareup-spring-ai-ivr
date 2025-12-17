@@ -80,8 +80,8 @@ runs:
         filter="${{ inputs.test-filter }}"
 
         # sanitize model and filter independently
-        safe_model="$(echo "$model"  | tr ' /,:' '____' | tr -cd '[:alnum:]_-.')"
-        safe_filter="$(echo "$filter" | tr ' /,:' '____' | tr -cd '[:alnum:]_-.')"
+        safe_model="$(echo "$model"  | tr ' /,:' '____' | tr -cd '[:alnum:]_.-')"
+        safe_filter="$(echo "$filter" | tr ' /,:' '____' | tr -cd '[:alnum:]_.-')"
 
         echo "dest_dir=${safe_model}/${safe_filter}" >> "$GITHUB_OUTPUT"
         
