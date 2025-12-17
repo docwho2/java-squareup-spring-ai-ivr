@@ -78,9 +78,12 @@ runs:
       run: |
         model="${{ inputs.spring-ai-model }}"
         filter="${{ inputs.test-filter }}"
-        # make filter safe for paths/urls
+
+        # sanitize model and filter independently
+        safe_model="$(echo "$model"  | tr ' /,:' '____' | tr -cd '[:alnum:]_-.')"
         safe_filter="$(echo "$filter" | tr ' /,:' '____' | tr -cd '[:alnum:]_-.')"
-        echo "dest_dir=${model}/${safe_filter}" >> "$GITHUB_OUTPUT"
+
+        echo "dest_dir=${safe_model}/${safe_filter}" >> "$GITHUB_OUTPUT"
         
         
     - name: Restore Allure history
