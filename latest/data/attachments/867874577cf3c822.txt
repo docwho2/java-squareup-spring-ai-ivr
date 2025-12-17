@@ -1,0 +1,10 @@
+Right now in Wahkon, it's a clear sky with a temperature of **13.4°F** and a gentle wind of **8.3 mph**.
+
+Looking ahead:
+- **Today**: Rain expected, with temperatures ranging from 9.8°F to 36.1°F
+- **Tomorrow**: Snow, temperatures 1.6°F to 36.5°F
+- **Friday**: Snow, temperatures -0.9°F to 13.5°F
+- **Saturday**: Snow, temperatures 13.6°F to 23.0°F
+- **Sunday**: Mostly clear, temperatures 2.9°F to 14.1°F
+
+Would you like me to check our current store hours to see if we're open
