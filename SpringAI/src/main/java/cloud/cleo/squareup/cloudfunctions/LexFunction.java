@@ -11,15 +11,15 @@ import static cloud.cleo.squareup.enums.LexDialogAction.ElicitIntent;
 import static cloud.cleo.squareup.enums.LexMessageContentType.ImageResponseCard;
 import static cloud.cleo.squareup.enums.LexMessageContentType.PlainText;
 import cloud.cleo.squareup.lang.LangUtil;
+import cloud.cleo.squareup.service.CityRagService;
 import cloud.cleo.squareup.tools.AbstractTool;
+import static cloud.cleo.squareup.tools.AbstractTool.CTX_EVENT_WRAPPER;
 import static cloud.cleo.squareup.tools.AbstractTool.HANGUP_FUNCTION_NAME;
-import org.springframework.ai.document.Document;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,8 +29,6 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.ChatClient.CallResponseSpec;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.vectorstore.SearchRequest;
-import org.springframework.ai.vectorstore.VectorStore;
 
 import org.springframework.stereotype.Component;
 
@@ -46,11 +44,7 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
     private final ChatClient chatClient;
     private final List<AbstractTool> tools;
     private final ChatMemory chatMemory;
-    private final VectorStore vectorStore;
-    private final ExecutorService virtualThreadExecutor;
-
-   
-
+    private final CityRagService cityRag;
 
     @Override
     public LexV2Response apply(LexV2Event lexRequest) {
@@ -62,14 +56,15 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
             return buildTerminatingResponse(Map.of("action", HANGUP_FUNCTION_NAME, "bot_response", eventWrapper.getLangString(LangUtil.LanguageIds.GOODBYE)));
         }
 
-        // Kick off retrieval *before* the model call, only when likely useful
-        final CompletableFuture<List<Document>> cityPrefetch
-                = startCityPrefetchOrNull(eventWrapper.getInputTranscript());
+        // Kick off retrieval *before* the model call, only when likely useful (service does keyword check)
+        final var cityPrefetchFuture = cityRag.startPrefetchOrNull(eventWrapper.getInputTranscript());
 
-        final var toolCtx = new java.util.HashMap<String, Object>(4);
-        toolCtx.put("eventWrapper", eventWrapper);
-        if (cityPrefetch != null) {
-            toolCtx.put("cityPrefetch", cityPrefetch);
+        final var toolCtx = new HashMap<String, Object>(2);
+        // Always place the event Wrapper in the context for tooling
+        toolCtx.put(CTX_EVENT_WRAPPER, eventWrapper);
+        if (cityPrefetchFuture != null) {
+            // Only place non-null values into the context (IE, only if query is running)
+            toolCtx.put(CityRagService.CTX_CITY_PREFETCH_FUTURE, cityPrefetchFuture);
         }
 
         try {
@@ -79,6 +74,7 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
                     // Use Lex Session ID for the conversation ID for Chat Memory
                     .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, eventWrapper.getChatMemorySessionId()))
                     .toolContext(toolCtx)
+                    // Select only tools relevant for the request
                     .tools(tools.stream().filter(t -> t.isValidForRequest(eventWrapper)).toArray())
                     .call();
 
@@ -118,8 +114,8 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
     }
 
     /**
-     * Tell Lex we are done so Chime can process terminating the Bot and hanging
-     * up or switching language or transferring the call for example.
+     * Tell Lex we are done so Chime can process terminating the Bot and hanging up or switching language or
+     * transferring the call for example.
      *
      * @param attrs
      * @return
@@ -144,9 +140,8 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
     }
 
     /**
-     * General Response used to send back a message and Elicit Intent again at
-     * LEX. IE, we are sending back GPT response, and then waiting for Lex to
-     * collect speech and once again call us so we can send to GPT, effectively
+     * General Response used to send back a message and Elicit Intent again at LEX. IE, we are sending back GPT
+     * response, and then waiting for Lex to collect speech and once again call us so we can send to GPT, effectively
      * looping until we call a terminating event like Quit or Transfer.
      *
      * @param lexRequest
@@ -287,44 +282,4 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
         // 4) Last resort – never return completely blank.
         return original.trim();
     }
-    
-    
-     private static final Pattern CITY_PREFETCH_PATTERN = Pattern.compile(
-            "\\b(wahkon|city|council|ordinance|agenda|minutes|event|festival|parade|schedule|wahkon\\s+days|newsletter|trail)\\b",
-            Pattern.CASE_INSENSITIVE
-    );
-
-    private CompletableFuture<List<Document>> startCityPrefetchOrNull(String input) {
-
-        if (input == null || input.isBlank()) {
-            log.debug("City prefetch skipped: blank input");
-            return null;
-        }
-
-        if (!CITY_PREFETCH_PATTERN.matcher(input).find()) {
-            log.debug("City prefetch skipped: keyword gate did not match");
-            return null;
-        }
-
-        log.debug("City prefetch started");
-
-        return CompletableFuture.<List<Document>>supplyAsync(() -> {
-            try {
-                List<Document> docs = vectorStore.similaritySearch(
-                        SearchRequest.builder()
-                                .query(input)
-                                .topK(4)
-                                .build()
-                );
-
-                log.debug("City prefetch completed ({} docs)", docs.size());
-                return docs;
-
-            } catch (Exception e) {
-                log.warn("City prefetch failed", e);
-                return List.<Document>of();
-            }
-        }, virtualThreadExecutor);
-    }
-
 }

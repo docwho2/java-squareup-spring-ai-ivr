@@ -1,6 +1,7 @@
 package cloud.cleo.squareup.tools;
 
 import cloud.cleo.squareup.LexV2EventWrapper;
+import cloud.cleo.squareup.service.CityRagService;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -9,10 +10,9 @@ import java.util.concurrent.TimeoutException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.ai.chat.model.ToolContext;
+import org.springframework.ai.document.Document;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
-import org.springframework.ai.vectorstore.SearchRequest;
-import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -20,8 +20,8 @@ import org.springframework.stereotype.Component;
 @Log4j2
 public class CitySearch extends AbstractTool {
 
-    private final VectorStore vectorStore;
-    
+    private final CityRagService cityRagService;
+
     private final static long SEARCH_TIMEOUT_MS = 2500;
 
     @Tool(
@@ -35,58 +35,42 @@ public class CitySearch extends AbstractTool {
             ToolContext ctx) {
 
         if (query == null || query.isBlank()) {
-            return new CitySearchResult(List.of(), "query is required and cannot be blank", false);
+            return new CitySearchResult(List.of(), StatusMessageResult.Status.FAILED, "query is required and cannot be blank");
         }
 
         @SuppressWarnings("unchecked")
-        CompletableFuture<List<org.springframework.ai.document.Document>> fut
-                = (CompletableFuture<List<org.springframework.ai.document.Document>>) ctx.getContext().get("cityPrefetch");
+        CompletableFuture<List<Document>> future
+                = (CompletableFuture<List<Document>>) ctx.getContext().get(CityRagService.CTX_CITY_PREFETCH_FUTURE);
 
-        List<org.springframework.ai.document.Document> docs;
+        List<Document> docs;
 
-        if (fut != null) {
+        if (future != null) {
             // Prefetch path: should be hot
             try {
                 // This should be close to done, but don't wait too long for a result
-                docs = fut.get(SEARCH_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                docs = future.get(SEARCH_TIMEOUT_MS, TimeUnit.MILLISECONDS);
             } catch (TimeoutException te) {
-                log.warn("City prefetch get timed out after {} ms",SEARCH_TIMEOUT_MS );
-                fut.cancel(true);
-                docs = List.of();
+                log.warn("City prefetch get timed out after {} ms, requerying", SEARCH_TIMEOUT_MS);
+                docs = cityRagService.similaritySearch(query);
             } catch (ExecutionException ee) {
-                log.error("City prefetch get thew Exception", ee.getCause());
+                log.error("City prefetch get() threw Exception", ee.getCause());
                 docs = List.of();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                log.error("City prefetch get interrupted", e);
+                log.error("City prefetch get() interrupted", e);
                 docs = List.of();
             }
         } else {
-            // No prefetch happened (keyword miss, etc.) → do the real search now
-            docs = runCitySearch(query);
+            // No prefetch happened (keyword miss, etc.) → do a real search now
+            docs = cityRagService.similaritySearch(query);
         }
 
-        var hits = docs.stream().limit(4).map(d -> new CitySearchHit(
-                safeString(d.getMetadata().get("title")),
-                safeString(d.getMetadata().get("url")),
-                safeSnippet(d.getText(), 450)
-        )).toList();
+        // Turn into Hits 
+        var hits = docs.stream()
+                .map(CitySearchHit::new)
+                .toList();
 
-        return new CitySearchResult(hits, "ok", true);
-    }
-
-    private List<org.springframework.ai.document.Document> runCitySearch(String q) {
-        try {
-            return vectorStore.similaritySearch(
-                    SearchRequest.builder()
-                            .query(q)
-                            .topK(4)
-                            .build()
-            );
-        } catch (Exception e) {
-            log.warn("city_search live query failed: {}", e.toString());
-            return List.of();
-        }
+        return new CitySearchResult(hits, StatusMessageResult.Status.SUCCESS,"Results Returned");
     }
 
     @Override
@@ -96,8 +80,8 @@ public class CitySearch extends AbstractTool {
 
     public record CitySearchResult(
             List<CitySearchHit> results,
-            String status,
-            boolean success
+            StatusMessageResult.Status status,
+            String message
             ) {
 
     }
@@ -108,6 +92,12 @@ public class CitySearch extends AbstractTool {
             String snippet
             ) {
 
+        public CitySearchHit(Document d) {
+            this(safeString(d.getMetadata().get("title")),
+                    safeString(d.getMetadata().get("url")),
+                    safeSnippet(d.getText(), 450)
+            );
+        }
     }
 
     private static String safeString(Object o) {
