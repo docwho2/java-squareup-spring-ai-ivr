@@ -1,16 +1,15 @@
 package cloud.cleo.squareup.voice;
 
-
 import cloud.cleo.squareup.AbstractLexAwsTestSupport;
 import cloud.cleo.squareup.enums.ChannelPlatform;
-import io.qameta.allure.Epic;
-import io.qameta.allure.Feature;
+import io.qameta.allure.Allure;
 import java.util.UUID;
 import lombok.extern.log4j.Log4j2;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 /**
  * Simple voice flow where we ask a couple questions.
@@ -18,34 +17,33 @@ import org.junit.jupiter.api.Test;
  * @author sjensen
  */
 @Log4j2
-@Epic("Voice Tests")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractVoiceTest extends AbstractLexAwsTestSupport {
 
-    // Use one random sessiond for this voice session
-    private static final String SESSION_ID = UUID.randomUUID().toString();
+    // Use one random session ID for this voice session
+    private final String SESSION_ID = UUID.randomUUID().toString();
 
     @Test
     @Order(-100)
-    @Feature("Store Knowledge")
-    @DisplayName("Name Test")
-    void nameTest() {
-
+    @DisplayName("Bot Name Test")
+    public void botNameTest() {
+        Allure.feature("Store Knowledge");
+        
         final var res = sendToLex(
                 "Hello what is your name?"
         );
 
         final var name = getBotResponse(res);
 
-        boolean ok = name.toLowerCase().matches("(?s).*?(copper bot).*");
-        log.info(ok ? "Name Test Passed" : "Name Test FAILED");
-        assertTrue(ok, "Name test failed, response was: " + name);
+        assertTrue(name.toLowerCase().matches("(?s).*?(copper bot).*"),
+                "Name test failed, response was: " + name);
     }
 
     @Test
     @Order(-50)
-    @Feature("Store Knowledge")
-    @DisplayName("Open Year Test")
-    void openTest() {
+    @DisplayName("Store Open Year Test")
+    public void storeOpenYearTest() {
+        Allure.feature("Store Knowledge");
 
         final var res = sendToLex(
                 "when did the store first open?"
@@ -53,10 +51,8 @@ public abstract class AbstractVoiceTest extends AbstractLexAwsTestSupport {
 
         final var open = getBotResponse(res);
 
-        // Store is never open on Monday's
-        boolean ok = open.toLowerCase().matches("(?s).*?(2021|october).*");
-        log.info(ok ? "Open Year Test Passed" : "Open Test FAILED");
-        assertTrue(ok, "Open Yeara test failed, response was: " + open);
+        assertTrue( open.toLowerCase().matches("(?s).*?(2021|october).*"),
+                "Open Year test failed, response was: " + open);
     }
 
     @Override
