@@ -133,7 +133,7 @@ runs:
 
         # Generate root index.html listing all {model}/{suite} that contain an index.html
         cd gh-pages
-        mapfile -t dirs < <(find . -mindepth 2 -maxdepth 2 -type f -name index.html \
+        mapfile -t dirs < <(find . -mindepth 3 -maxdepth 3 -type f -name index.html \
           | sed -E 's|^\./||' \
           | sed -E 's|/index\.html$||' \
           | sort -u)
