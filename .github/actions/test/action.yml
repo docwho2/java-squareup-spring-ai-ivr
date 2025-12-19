@@ -166,7 +166,7 @@ runs:
         {
         "name": "Maven",
         "type": "jenkins",
-        "buildName": "Spring AI Square Chime Lex Lambda",
+        "buildName": "Spring AI Square Chime Lex Lambda"
         },
         {
         "name": "GitHub Actions Run",
