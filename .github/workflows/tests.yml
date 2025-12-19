@@ -29,17 +29,25 @@ concurrency:
 
 jobs:
   run-tests:
-    if: ${{ vars.RUN_TESTS }}
-    runs-on: ubuntu-latest
+    # Runs once per matrix entry; this "if" is evaluated per matrix row
+    if: >-
+      ${{
+        vars.RUN_TESTS &&
+        (
+          matrix.region == 'us-east-1' ||
+          (
+            ((github.event_name == 'workflow_dispatch' && inputs.test-filter) || 'SmokeTests')
+            == 'SmokeTests'
+          )
+        )
+      }}
 
     strategy:
       max-parallel: 1
-      matrix: ${{ fromJSON(
-        ((github.event_name == 'workflow_dispatch' && inputs.test-filter) || 'SmokeTests') == 'SmokeTests'
-          && '{"region":["us-west-2","us-east-1"]}'
-          || '{"region":["us-east-1"]}'
-      ) }}
+      matrix:
+        region: [us-west-2, us-east-1]
 
+    runs-on: ubuntu-latest
     environment: "${{ matrix.region }}-tests"
 
     steps:
@@ -56,5 +64,3 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           spring-ai-model: ${{ vars.SPRING_AI_PROVIDER == 'OPENAI' && vars.OPENAI_MODEL || vars.BEDROCK_MODEL }}
           test-filter: ${{ (github.event_name == 'workflow_dispatch' && inputs.test-filter) || 'SmokeTests' }}
-    
-      
