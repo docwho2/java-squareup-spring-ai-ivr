@@ -1,1 +1,1 @@
-{"reportName":"us.amazon.nova-2-lite-v1:0 / SmokeTests","testRuns":[],"statistic":{"failed":0,"broken":0,"skipped":0,"passed":7,"unknown":0,"total":7},"time":{"start":1766168643703,"stop":1766168657962,"duration":14259,"minDuration":504,"maxDuration":4441,"sumDuration":14178}}
+{"reportName":"SmokeTests","testRuns":[],"statistic":{"failed":0,"broken":0,"skipped":0,"passed":7,"unknown":0,"total":7},"time":{"start":1766170188420,"stop":1766170207185,"duration":18765,"minDuration":503,"maxDuration":5961,"sumDuration":18686}}

@@ -1,14 +1,19 @@
 [
 {
-"name": "Index",
-"type": "web",
+"name": "Report Index",
+"type": "bamboo",
 "buildName": "All Reports",
 "buildUrl": "https://docwho2.github.io/java-squareup-spring-ai-ivr/"
 },
 {
 "name": "Maven",
-"type": "maven",
+"type": "jenkins",
 "buildName": "Spring AI Square Chime Lex Lambda",
-"buildUrl": "https://github.com/docwho2/java-squareup-spring-ai-ivr/actions/runs/20378860298"
+},
+{
+"name": "GitHub Actions Run",
+"type": "github",
+"buildName": "Run Tests #52",
+"buildUrl": "https://github.com/docwho2/java-squareup-spring-ai-ivr/actions/runs/20379485516"
 }
 ]
