@@ -142,7 +142,7 @@ runs:
         # 1) Replace the report title shown on Overview
         if [ -f "${W}/summary.json" ]; then
         MODEL="$MODEL" SUITE="$SUITE" python - <<PY
-        import json
+        import json, os
         from pathlib import Path
 
         p = Path("${W}/summary.json")
