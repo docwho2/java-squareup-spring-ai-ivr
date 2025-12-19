@@ -28,7 +28,7 @@
         <lombok.version>1.18.42</lombok.version>
         <pdfbox.version>3.0.6</pdfbox.version>
         <!-- The below three all need to be aligned -->
-        <spring.boot.version>4.0.0</spring.boot.version>
+        <spring.boot.version>4.0.1</spring.boot.version>
         <spring.cloud.version>5.0.0</spring.cloud.version>
         <spring.ai.version>2.0.0-M1</spring.ai.version>
         
