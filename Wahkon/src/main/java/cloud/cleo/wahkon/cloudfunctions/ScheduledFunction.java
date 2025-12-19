@@ -5,6 +5,7 @@ import cloud.cleo.wahkon.service.FacebookPipelineService;
 import cloud.cleo.wahkon.service.QdrantSchemaService;
 import cloud.cleo.wahkon.service.VectorStoreCleanupService;
 import cloud.cleo.wahkon.service.WahkonWebCrawlerService;
+import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
@@ -28,6 +29,21 @@ public class ScheduledFunction implements Function<ScheduleInput, Void> {
 
     public record ScheduleInput(String period) {
 
+    }
+
+    /**
+     * Only do this once after construction, this will happen at Snap Start.
+     */
+    @PostConstruct
+    public void init() {
+        try {
+            // Always ensure indexes (safe + fast; helps if store/reset happened)
+            qDrant.ensurePayloadIndexes();
+            log.info("Qdrant schema ensured at startup");
+        } catch (Exception e) {
+            // IMPORTANT: don't fail startup/SnapStart
+            log.error("Qdrant schema ensure failed at startup (continuing)", e);
+        }
     }
 
     private enum Period {
@@ -58,29 +74,26 @@ public class ScheduledFunction implements Function<ScheduleInput, Void> {
 
         log.info("Crawler triggered by EventBridge (period={})", period);
 
-        // Always ensure indexes (safe + fast; helps if store/reset happened)
-        qDrant.ensurePayloadIndexes();
-
         var tasks = new ArrayList<CompletableFuture<Void>>(3);
 
         // FB hourly (and in ALL)
-         switch (period) {
+        switch (period) {
             case HOURLY, ALL ->
-            tasks.add(CompletableFuture.runAsync(() -> {
-                log.info("Starting Facebook ingest pipeline");
-                facebookPipelineService.ingestAllConfiguredPages();
-                log.info("Finished Facebook ingest pipeline");
-            }, executor));
+                tasks.add(CompletableFuture.runAsync(() -> {
+                    log.info("Starting Facebook ingest pipeline");
+                    facebookPipelineService.ingestAllConfiguredPages();
+                    log.info("Finished Facebook ingest pipeline");
+                }, executor));
         }
 
         // Web daily (and in ALL)
-         switch (period) {
+        switch (period) {
             case DAILY, ALL ->
-            tasks.add(CompletableFuture.runAsync(() -> {
-                log.info("Starting Web crawl pipeline");
-                crawler.crawlAll();
-                log.info("Finished Web crawl pipeline");
-            }, executor));
+                tasks.add(CompletableFuture.runAsync(() -> {
+                    log.info("Starting Web crawl pipeline");
+                    crawler.crawlAll();
+                    log.info("Finished Web crawl pipeline");
+                }, executor));
         }
 
         // Cleanup: recommend daily (and ALL), not hourly
