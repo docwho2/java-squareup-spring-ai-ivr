@@ -116,13 +116,64 @@ runs:
       run: |
         mvn --no-transfer-progress allure:report --quiet
 
-    - name: Publish Allure report
+    - name: Stage report into gh-pages + generate root index.html
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        DEST_DIR="${{ steps.dest.outputs.dest_dir }}"
+
+        # If gh-pages doesn't exist yet (first run), create the folder
+        mkdir -p gh-pages
+
+        # Copy the freshly generated report into gh-pages/{model}/{suite}
+        rm -rf "gh-pages/${DEST_DIR}"
+        mkdir -p "gh-pages/${DEST_DIR}"
+        cp -R SpringAI/target/site/allure-maven-plugin/* "gh-pages/${DEST_DIR}/"
+
+        # Generate root index.html listing all {model}/{suite} that contain an index.html
+        cd gh-pages
+        mapfile -t dirs < <(find . -mindepth 2 -maxdepth 2 -type f -name index.html \
+          | sed -E 's|^\./||' \
+          | sed -E 's|/index\.html$||' \
+          | sort -u)
+
+        {
+          echo '<!doctype html>'
+          echo '<html lang="en"><head>'
+          echo '  <meta charset="utf-8" />'
+          echo '  <meta name="viewport" content="width=device-width, initial-scale=1" />'
+          echo '  <title>Allure Reports</title>'
+          echo '  <style>'
+          echo '    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:2rem;max-width:980px}'
+          echo '    table{border-collapse:collapse;width:100%}'
+          echo '    th,td{border-bottom:1px solid #e5e5e5;padding:.6rem .5rem;text-align:left}'
+          echo '    th{font-size:.9rem;color:#555}'
+          echo '    a{text-decoration:none}'
+          echo '    code{background:#f6f8fa;padding:.12rem .3rem;border-radius:.25rem}'
+          echo '  </style>'
+          echo '</head><body>'
+          echo '  <h1>Allure Reports</h1>'
+          echo '  <p>Reports are organized as <code>{model}/{suite}</code>.</p>'
+          echo '  <table>'
+          echo '    <thead><tr><th>Model</th><th>Suite</th><th>Link</th></tr></thead>'
+          echo '    <tbody>'
+          for d in "${dirs[@]}"; do
+            model="${d%%/*}"
+            suite="${d#*/}"
+            echo "      <tr><td><code>${model}</code></td><td><code>${suite}</code></td><td><a href=\"${d}/\">Open</a></td></tr>"
+          done
+          echo '    </tbody>'
+          echo '  </table>'
+          echo '</body></html>'
+        } > index.html
+
+    - name: Publish gh-pages site (root + all reports)
       uses: peaceiris/actions-gh-pages@v4
       with:
         github_token: ${{ inputs.github-token }}
         publish_branch: gh-pages
-        publish_dir: SpringAI/target/site/allure-maven-plugin
-        destination_dir: ${{ steps.dest.outputs.dest_dir }}
+        publish_dir: gh-pages
 
     - name: Fail workflow if tests failed
       # Always evaluate this step, but only fail if the test step actually failed
