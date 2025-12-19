@@ -537,14 +537,21 @@ public final class LexV2EventWrapper {
                 );
             }
             case SPEECH, DTMF -> {
-                sb.append("The user is interacting with speech via a telephone call.  please keep answers short and concise.  ");
+                sb.append("""
+                          The user is interacting via a telephone call.
+                          Keep responses extremely short and spoken-friendly.
+                          Use no more than 2 sentences.
+                          Do not explain background unless asked.
+                          If the topic is complex, give a brief answer and ask if the caller wants more detail.
+                          """);
+                
 
                 // Blank input, meaning silence timeout which is a speech only thing
                 sb.append("When the prompt is exactly ").append(BLANK_TEXT).append(", this means the caller did not say anything, so try and engage in conversation and also suggest ")
                         .append("queries the caller might be interested in (Hours, Private Shopping, Location, Product Search, Language Change, etc.).  ");
 
                 // Hangup
-                sb.append("When the caller indicates they are done with the conversation, execute the ").append(HANGUP_FUNCTION_NAME).append(" function.  ");
+                sb.append("When the caller indicates they are done with the conversation, execute the ").append(HANGUP_FUNCTION_NAME).append(" function and always end with Goodbye.  ");
 
                 // Offer up Driving directions for callers
                 sb.append("When asking about location, you can send the caller a directions link if they are interested, execute the ").append(DRIVING_DIRECTIONS_VOICE_FUNCTION_NAME).append(" function.  ");
