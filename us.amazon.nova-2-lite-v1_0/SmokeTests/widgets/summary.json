@@ -1,1 +1,1 @@
-{"reportName":"us.amazon.nova-2-lite-v1:0 / SmokeTests","testRuns":[],"statistic":{"failed":0,"broken":0,"skipped":0,"passed":7,"unknown":0,"total":7},"time":{"start":1766168596068,"stop":1766168612147,"duration":16079,"minDuration":503,"maxDuration":4457,"sumDuration":15999}}
+{"reportName":"us.amazon.nova-2-lite-v1:0 / SmokeTests","testRuns":[],"statistic":{"failed":0,"broken":0,"skipped":0,"passed":7,"unknown":0,"total":7},"time":{"start":1766168643703,"stop":1766168657962,"duration":14259,"minDuration":504,"maxDuration":4441,"sumDuration":14178}}
