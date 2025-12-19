@@ -169,7 +169,7 @@ runs:
         "buildName": "Spring AI Square Chime Lex Lambda"
         },
         {
-        "name": "GitHub Actions Run",
+        "name": "Workflow Run",
         "type": "github",
         "buildName": "${GITHUB_WORKFLOW} #${GITHUB_RUN_NUMBER}",
         "buildUrl": "${RUN_URL}"
