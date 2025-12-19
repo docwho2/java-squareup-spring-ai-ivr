@@ -141,14 +141,14 @@ runs:
 
         # 1) Replace the report title shown on Overview
         if [ -f "${W}/summary.json" ]; then
-        MODEL="$MODEL" SUITE="$SUITE" python - <<PY
+        SUITE="$SUITE" python - <<PY
         import json, os
         from pathlib import Path
 
         p = Path("${W}/summary.json")
         data = json.loads(p.read_text())
 
-        data["reportName"] = f'{os.environ["MODEL"]} / {os.environ["SUITE"]}'
+        data["reportName"] = f'{os.environ["SUITE"]}'
 
         p.write_text(json.dumps(data, separators=(",", ":")))
         PY
@@ -158,15 +158,20 @@ runs:
         cat > "${W}/executors.json" <<EOF
         [
         {
-        "name": "Index",
-        "type": "web",
+        "name": "Report Index",
+        "type": "bamboo",
         "buildName": "All Reports",
         "buildUrl": "${INDEX_URL}"
         },
         {
         "name": "Maven",
-        "type": "maven",
+        "type": "jenkins",
         "buildName": "Spring AI Square Chime Lex Lambda",
+        },
+        {
+        "name": "GitHub Actions Run",
+        "type": "github",
+        "buildName": "${GITHUB_WORKFLOW} #${GITHUB_RUN_NUMBER}",
         "buildUrl": "${RUN_URL}"
         }
         ]
