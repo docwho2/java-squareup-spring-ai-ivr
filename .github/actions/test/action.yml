@@ -161,7 +161,7 @@ runs:
           for d in "${dirs[@]}"; do
             model="${d%%/*}"
             suite="${d#*/}"
-            echo "      <tr><td><code>${model}</code></td><td><code>${suite}</code></td><td><a href=\"${d}/\">Open</a></td></tr>"
+            echo "<tr><td><code>${model}</code></td><td><code>${suite}</code></td><td><a href=\"${d}/\" target=\"_blank\" rel=\"noopener noreferrer\">Open</a></td></tr>"
           done
           echo '    </tbody>'
           echo '  </table>'
