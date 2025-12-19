@@ -88,13 +88,15 @@ public class CitySearch extends AbstractTool {
 
     public record CitySearchHit(
             String title,
-            String url,
+            String sourceUrl,
+            String updatedAt,
             String snippet
             ) {
 
         public CitySearchHit(Document d) {
             this(safeString(d.getMetadata().get("title")),
-                    safeString(d.getMetadata().get("url")),
+                    safeString(d.getMetadata().get("sourceUrl")),
+                    safeString(d.getMetadata().get("bestModifiedTs")),
                     safeSnippet(d.getText(), 450)
             );
         }

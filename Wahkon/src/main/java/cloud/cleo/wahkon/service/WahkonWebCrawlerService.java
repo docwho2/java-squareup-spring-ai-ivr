@@ -1,28 +1,32 @@
 package cloud.cleo.wahkon.service;
 
 import cloud.cleo.wahkon.config.CrawlerProperties;
-import cloud.cleo.wahkon.util.ContentHash;
+import cloud.cleo.wahkon.model.IngestMetadata;
+import cloud.cleo.wahkon.model.IngestMetadata.ContentKind;
+import cloud.cleo.wahkon.util.Sha256Hex;
+import java.net.URI;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.springframework.ai.document.Document;
+import org.jsoup.UnsupportedMimeTypeException;
+import org.jsoup.nodes.Document;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.stereotype.Service;
 
-import java.net.URI;
-import java.time.Instant;
-import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.regex.Pattern;
-
 import static java.nio.charset.StandardCharsets.UTF_8;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
-import lombok.RequiredArgsConstructor;
-import org.jsoup.UnsupportedMimeTypeException;
 
 @Service
 @Log4j2
@@ -40,7 +44,6 @@ public class WahkonWebCrawlerService {
             try {
                 crawlSite(site);
             } catch (Exception e) {
-                // Don’t kill the whole run due to one site
                 log.warn("Site crawl failed: {}", site.name(), e);
             }
         }
@@ -54,14 +57,12 @@ public class WahkonWebCrawlerService {
         site.seeds().forEach(seed -> frontier.add(seed, 0));
 
         var splitter = new TokenTextSplitter();
-
         var inFlight = new ArrayList<Future<Void>>();
 
         while (frontier.hasNext()) {
             while (inFlight.size() < props.concurrency() && frontier.hasNext()) {
                 var item = frontier.next();
                 inFlight.add(virtualThreadExecutor.submit(() -> {
-                    // Random jitter between 250ms and 10secs
                     int delayMs = ThreadLocalRandom.current().nextInt(250, 10001);
                     try {
                         TimeUnit.MILLISECONDS.sleep(delayMs);
@@ -75,7 +76,6 @@ public class WahkonWebCrawlerService {
                 }));
             }
 
-            // Wait for earliest submitted task
             var done = inFlight.remove(0);
             try {
                 done.get();
@@ -93,119 +93,115 @@ public class WahkonWebCrawlerService {
         }
     }
 
-    private void crawlOne(CrawlerProperties.Site site,
+    private void crawlOne(
+            CrawlerProperties.Site site,
             String url,
             int depth,
             Pattern include,
             Pattern exclude,
             UrlFrontier frontier,
-            TokenTextSplitter splitter) {
-
+            TokenTextSplitter splitter
+    ) {
         if (!isAllowed(site, url, include, exclude)) {
             return;
         }
 
         log.debug("CrawlOne() Incoming URL = [{}]", url);
 
-        final var fetchedAt = Instant.now();
-        org.jsoup.nodes.Document page = null;
-        String extracted;
-        String title;
+        final Instant fetchedAt = Instant.now();
+
+        Document page = null;
+        String extractedText;
+        IngestMetadata ingestMd;
+
         try {
-            page = fetch(url);  // throws if not text document
-
-            if (page == null) {
-                log.debug("Skipping {} because we jsoup could not fetch document", url);
+            PageFetch pf = fetchPage(url);
+            if (pf == null || pf.doc() == null) {
+                log.debug("Skipping {} because Jsoup could not fetch document", url);
                 return;
             }
-            title = page.title();
 
-            // At this point we are guranteed to have text page
-            extracted = extractReadableText(page);
-            if (extracted == null || extracted.isBlank()) {
-                log.debug("Skipping {} because we could not extract any readable text", url);
+            page = pf.doc();
+            extractedText = extractReadableText(page);
+            if (extractedText == null || extractedText.isBlank()) {
+                log.debug("Skipping {} because no readable text extracted", url);
                 return;
             }
+
+            ingestMd = buildHtmlMetadata(site, url, page, extractedText, fetchedAt, pf);
+
         } catch (UnsupportedMimeTypeException umt) {
-            // We will try and process PDF's which Jsoup will not fetch
-            if (looksLikePdf(url)) {
-                var pdfOpt = pdfTextExtractorService.fetchAndExtract(url);
-                if (pdfOpt.isEmpty()) {
-                    return;  // service logs errors on this
-                }
-
-                var pdf = pdfOpt.get();
-                if (pdf.text().isBlank()) {
-                    log.info("PDF has no extractable text (likely scanned), skipping: {}", url);
-                    return;
-                }
-
-                // All good, have some text to process
-                extracted = pdf.text();
-                title = pdf.title();
-            } else {
-                // Not a non-text file format we can deal with
-                log.debug("Skipping {} because we cannot support this file format", url);
+            if (!looksLikePdf(url)) {
+                log.debug("Skipping {} because unsupported file format", url);
                 return;
             }
+
+            var pdfOpt = pdfTextExtractorService.fetchAndExtract(url);
+            if (pdfOpt.isEmpty()) {
+                return;
+            }
+
+            var pdf = pdfOpt.get();
+            extractedText = pdf.text();
+            if (extractedText == null || extractedText.isBlank()) {
+                log.info("PDF has no extractable text (likely scanned), skipping: {}", url);
+                return;
+            }
+
+            ingestMd = pdf.metadata().toBuilder()
+                    .sourceSystem(site.name())
+                    .sourceUrl(safeUri(url).orElse(null)) // ensure canonical
+                    .fetchedAt(firstNonNull(pdf.metadata().getFetchedAt(), fetchedAt))
+                    .build();
+
+        } catch (Exception e) {
+            log.debug("Crawl failed {}", url, e);
+            return;
         }
 
-        final var contentHash = ContentHash.md5Hex(extracted);
+        // --- Clean-contract change detection: SHA-256 vs SHA-256
+        final String sourceSystem = ingestMd.getSourceSystem();
+        final String sourceUrl = ingestMd.getSourceUrl() != null ? ingestMd.getSourceUrl().toString() : url;
+        final String sha256 = ingestMd.getContentHashSha256();
 
-        // ---- decide if we need to embed
-        boolean unchanged = qdrant.findExistingContentHash(site.name(), url)
-                .map(existing -> existing.equals(contentHash))
-                .orElse(false);
+        boolean unchanged = sha256 != null
+                && qdrant.findExistingContentSha256(sourceSystem, sourceUrl)
+                        .map(existing -> existing.equals(sha256))
+                        .orElse(false);
 
-        // If unchanged, skip expensive embedding + upsert
         if (unchanged) {
             log.info("Unchanged, skipping embed/upsert: {}", url);
-
-            // still record freshness
-            qdrant.touchCrawled(
-                    site.name(),
-                    url,
-                    fetchedAt
-            );
-
+            qdrant.touchCrawled(sourceSystem, sourceUrl, fetchedAt);
         } else {
-            // New content to to store
-            log.info("Indexing {} ({} chars)", url, extracted.length());
+            log.info("Indexing {} ({} chars)", url, extractedText.length());
 
-            // Always clear existing chunks for this URL to prevent stale chunk leftovers
-            deleteBySourceAndUrl(site.name(), url);
+            // Prevent stale chunks for this exact identity
+            deleteByIdentity(ContentKind.valueOf(ingestMd.getContentKind().name()), sourceSystem, sourceUrl);
 
-            var base = new Document(
-                    deterministicUuid(site.name() + "|" + url),
-                    extracted,
-                    Map.of(
-                            "source", site.name(),
-                            "url", url,
-                            "title", title,
-                            "content_hash", contentHash,
-                            "content_len", extracted.length(),
-                            "crawled_at", fetchedAt.toString(),
-                            "crawled_at_epoch", fetchedAt.toEpochMilli()
-                    )
+            Map<String, Object> baseMeta = new HashMap<>(ingestMd.toVectorMetadata());
+
+            var base = new org.springframework.ai.document.Document(
+                    deterministicUuid(sourceSystem + "|" + sourceUrl),
+                    extractedText,
+                    baseMeta
             );
 
             var splitDocs = splitter.split(base);
 
-            var docs = new ArrayList<Document>(splitDocs.size());
+            var docs = new ArrayList<org.springframework.ai.document.Document>(splitDocs.size());
             for (int i = 0; i < splitDocs.size(); i++) {
                 var d = splitDocs.get(i);
-                var chunkId = deterministicUuid(site.name() + "|" + url + "|chunk|" + i);
+                var chunkId = deterministicUuid(sourceSystem + "|" + sourceUrl + "|chunk|" + i);
 
                 var meta = new HashMap<String, Object>(d.getMetadata());
                 meta.put("chunk", i);
 
-                docs.add(new Document(chunkId, d.getText(), meta));
+                docs.add(new org.springframework.ai.document.Document(chunkId, d.getText(), meta));
             }
 
             vectorStore.add(docs);
         }
 
-        // ---- ALWAYS continue traversal
         if (page != null && depth < props.maxDepth()) {
             page.select("a[href]")
                     .eachAttr("abs:href")
@@ -216,22 +212,37 @@ public class WahkonWebCrawlerService {
         }
     }
 
-    private void deleteBySourceAndUrl(String source, String url) {
+    private void deleteByIdentity(ContentKind kind, String sourceSystem, String sourceUrl) {
         var b = new FilterExpressionBuilder();
-        vectorStore.delete(b.and(b.eq("source", source), b.eq("url", url)).build());
+
+        vectorStore.delete(
+                b.and(
+                        b.eq("kind", kind.name()),
+                        b.and(
+                                b.eq("sourceSystem", sourceSystem),
+                                b.eq("sourceUrl", sourceUrl)
+                        )
+                ).build()
+        );
     }
 
-   
-
-    private org.jsoup.nodes.Document fetch(String url) throws UnsupportedMimeTypeException {
+    private PageFetch fetchPage(String url) throws UnsupportedMimeTypeException {
         try {
-            return Jsoup.connect(url)
+            Connection.Response resp = Jsoup.connect(url)
                     .userAgent(props.userAgent())
                     .timeout(props.timeoutMs())
                     .followRedirects(true)
-                    .get();
+                    .ignoreContentType(false)
+                    .execute();
+
+            String contentType = resp.contentType();
+            Instant lastModified = parseHttpDate(resp.header("Last-Modified"));
+            Long contentLength = parseLong(resp.header("Content-Length"));
+
+            Document doc = resp.parse();
+            return new PageFetch(doc, contentType, lastModified, contentLength);
+
         } catch (UnsupportedMimeTypeException umt) {
-            // Catch up higher so we can check for PDF's or other mime types we will process
             throw umt;
         } catch (Exception e) {
             log.debug("Fetch failed {}", url, e);
@@ -239,7 +250,72 @@ public class WahkonWebCrawlerService {
         }
     }
 
-    private String extractReadableText(org.jsoup.nodes.Document doc) {
+    private IngestMetadata buildHtmlMetadata(
+            CrawlerProperties.Site site,
+            String url,
+            Document page,
+            String extractedText,
+            Instant fetchedAt,
+            PageFetch pf
+    ) {
+        URI sourceUrl = safeUri(url).orElse(null);
+
+        String title = firstNonBlank(
+                normalizeTitle(page.title()),
+                normalizeTitle(meta(page, "property", "og:title")),
+                normalizeTitle(meta(page, "name", "twitter:title"))
+        );
+
+        String author = firstNonBlank(
+                normalizeTitle(meta(page, "name", "author")),
+                normalizeTitle(meta(page, "property", "article:author"))
+        );
+
+        String summary = firstNonBlank(
+                normalizeTitle(meta(page, "name", "description")),
+                normalizeTitle(meta(page, "property", "og:description")),
+                excerpt(extractedText, 240)
+        );
+
+        Instant publishedAt = firstNonNull(
+                parseInstant(meta(page, "property", "article:published_time")),
+                parseInstant(meta(page, "name", "publish_date")),
+                parseInstant(meta(page, "name", "date"))
+        );
+
+        Instant modifiedAt = firstNonNull(
+                pf.lastModified(),
+                parseInstant(meta(page, "property", "article:modified_time")),
+                parseInstant(meta(page, "property", "og:updated_time"))
+        );
+
+        String mimeType = firstNonBlank(pf.contentType(), "text/html");
+        Long contentLengthBytes = pf.contentLength() != null
+                ? pf.contentLength()
+                : (long) extractedText.getBytes(UTF_8).length;
+
+        String sha = Sha256Hex.toSha256(extractedText.getBytes(UTF_8));
+
+        return IngestMetadata.builder()
+                .sourceUrl(sourceUrl)
+                .contentHashSha256(sha)
+                .contentKind(ContentKind.WEB_PAGE)
+                .sourceSystem(site.name())
+                .title(title)
+                .summary(summary)
+                .author(author)
+                .publishedAt(publishedAt)
+                .createdAt(null)
+                .modifiedAt(modifiedAt)
+                .fetchedAt(fetchedAt)
+                .observedAt(null)
+                .pageCount(null)
+                .contentLengthBytes(contentLengthBytes)
+                .mimeType(mimeType)
+                .build();
+    }
+
+    private String extractReadableText(Document doc) {
         doc.select("script,style,noscript,svg,canvas,header,footer,nav,aside,form").remove();
 
         var main = doc.selectFirst("main");
@@ -293,6 +369,108 @@ public class WahkonWebCrawlerService {
         return UUID.nameUUIDFromBytes(name.getBytes(UTF_8)).toString();
     }
 
+    private static boolean looksLikePdf(String url) {
+        var u = url.toLowerCase(Locale.ROOT);
+        return u.contains(".pdf");
+    }
+
+    private static Optional<URI> safeUri(String s) {
+        try {
+            return s == null ? Optional.empty() : Optional.of(URI.create(s));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    private static String normalizeTitle(String s) {
+        if (s == null) {
+            return null;
+        }
+        String n = s.replace('\u0000', ' ')
+                .replace('\u00A0', ' ')
+                .replaceAll("\\s+", " ")
+                .trim();
+        return n.isBlank() ? null : n;
+    }
+
+    private static String meta(Document page, String attrKey, String attrVal) {
+        var el = page.selectFirst("meta[" + attrKey + "=" + attrVal + "]");
+        return el != null ? el.attr("content") : null;
+    }
+
+    private static String excerpt(String text, int maxChars) {
+        if (text == null) {
+            return null;
+        }
+        if (text.length() <= maxChars) {
+            return text;
+        }
+        return text.substring(0, maxChars).trim();
+    }
+
+    private static Long parseLong(String s) {
+        if (s == null || s.isBlank()) {
+            return null;
+        }
+        try {
+            return Long.parseLong(s.trim());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static Instant parseInstant(String s) {
+        if (s == null || s.isBlank()) {
+            return null;
+        }
+        try {
+            return Instant.parse(s.trim());
+        } catch (Exception ignored) {
+        }
+        try {
+            return OffsetDateTime.parse(s.trim()).toInstant();
+        } catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    private static Instant parseHttpDate(String s) {
+        if (s == null || s.isBlank()) {
+            return null;
+        }
+        try {
+            return DateTimeFormatter.RFC_1123_DATE_TIME.parse(s.trim(), OffsetDateTime::from).toInstant();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    @SafeVarargs
+    private static <T> T firstNonNull(T... vals) {
+        if (vals == null) {
+            return null;
+        }
+        for (T v : vals) {
+            if (v != null) {
+                return v;
+            }
+        }
+        return null;
+    }
+
+    private static String firstNonBlank(String... vals) {
+        if (vals == null) {
+            return null;
+        }
+        for (String v : vals) {
+            if (v != null && !v.isBlank()) {
+                return v;
+            }
+        }
+        return null;
+    }
+
+    // ------------------------------------------------------------------------
     static final class UrlFrontier {
 
         record Item(String url, int depth) {
@@ -328,9 +506,12 @@ public class WahkonWebCrawlerService {
         }
     }
 
-    private static boolean looksLikePdf(String url) {
-        var u = url.toLowerCase(Locale.ROOT);
-        // handles .pdf, .pdf?download=1, .pdf#page=2, etc.
-        return u.contains(".pdf");
+    private record PageFetch(
+            Document doc,
+            String contentType,
+            Instant lastModified,
+            Long contentLength
+            ) {
+
     }
 }

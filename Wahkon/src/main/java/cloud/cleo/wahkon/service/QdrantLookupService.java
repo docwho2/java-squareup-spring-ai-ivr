@@ -33,26 +33,26 @@ public class QdrantLookupService {
     
     
     /**
-     * Fetch the previously stored content_hash for (source,url) if any points exist. Uses Qdrant scroll with filter +
+     * Fetch the previously stored contentSha256 for (source,url) if any points exist. Uses Qdrant scroll with filter +
      * limit=1, payload only.
      *
-     * @param source
-     * @param url
+     * @param sourceSystem
+     * @param sourceUrl
      * @return
      */
-    public Optional<String> findExistingContentHash(String source, String url) {
+    public Optional<String> findExistingContentSha256(String sourceSystem, String sourceUrl) {
 
         //log.debug("Qdrant hash lookup source={} url={}", source, url);
 
         var body = Map.of(
                 "filter", Map.of(
                         "must", new Object[]{
-                            match("source", source),
-                            match("url", url)
+                            match("sourceSystem", sourceSystem),
+                            match("sourceUrl", sourceUrl)
                         }
                 ),
                 "limit", 1,
-                "with_payload", new String[]{"content_hash"},
+                "with_payload", new String[]{"contentSha256"},
                 "with_vector", false
         );
 
@@ -66,29 +66,29 @@ public class QdrantLookupService {
             
             String json = resp.getBody();
             if (json == null || json.isBlank()) {
-                log.debug("Qdrant empty response source={} url={}", source, url);
+                log.debug("Qdrant empty response source={} url={}", sourceSystem, sourceUrl);
                 return Optional.empty();
             }
 
             JsonNode root = objectMapper.readTree(json);
             JsonNode points = root.path("result").path("points");
             if (!points.isArray() || points.isEmpty()) {
-                log.debug("Qdrant no points source={} url={}", source, url);
+                log.debug("Qdrant no points source={} url={}", sourceSystem, sourceUrl);
                 return Optional.empty();
             }
 
             JsonNode payload = points.get(0).path("payload");
-            JsonNode hash = payload.path("content_hash");
-            if (hash.isMissingNode() || hash.isNull()) {
-                log.debug("Qdrant point missing content_hash source={} url={}", source, url);
+            JsonNode hash = payload.path("contentSha256");
+            if (hash.isMissingNode() || hash.isNull() || hash.asText().isBlank()) {
+                log.debug("Qdrant point missing contentSha256 source={} url={}", sourceSystem, sourceUrl);
                 return Optional.empty();
             }
 
-            log.debug("Qdrant hash hit source={} url={} hash={}", source, url, hash.asText());
+            log.debug("Qdrant hash hit source={} url={} hash={}", sourceSystem, sourceUrl, hash.asText());
             return Optional.of(hash.asText());
 
         } catch (Exception e) {
-            log.warn("Failed reading existing content_hash from Qdrant for {} {}", source, url, e);
+            log.warn("Failed reading existing contentSha256 from Qdrant for {} {}", sourceSystem, sourceUrl, e);
             return Optional.empty();
         }
     }
@@ -96,22 +96,22 @@ public class QdrantLookupService {
     /**
      * Just updated the crawled timestamps.
      * 
-     * @param source
-     * @param url
+     * @param sourceSystem
+     * @param sourceUrl
      * @param crawledAt 
      */
-    public void touchCrawled(String source, String url, Instant crawledAt) {
+    public void touchCrawled(String sourceSystem, String sourceUrl, Instant crawledAt) {
         var payload = Map.of(
-                "crawled_at", crawledAt.toString(),
-                "crawled_at_epoch", crawledAt.toEpochMilli()
+                "fetchedAt", crawledAt.toString(),
+                "fetchedAtEpoch", crawledAt.toEpochMilli()
         );
 
         var body = Map.of(
                 "payload", payload,
                 "filter", Map.of(
                         "must", new Object[]{
-                                match("source", source),
-                                match("url", url)
+                                match("sourceSystem", sourceSystem),
+                                match("sourceUrl", sourceUrl)
                         }
                 )
         );
@@ -123,7 +123,7 @@ public class QdrantLookupService {
                 .retrieve()
                 .toBodilessEntity();
 
-        log.info("Touched payload for {} {}", source, url);
+        log.info("Touched payload for {} {}", sourceSystem, sourceUrl);
     }
 
 

@@ -1,5 +1,7 @@
 package cloud.cleo.squareup.service;
 
+import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -18,7 +20,11 @@ public class CityRagService {
 
     public static final String CTX_CITY_PREFETCH_FUTURE = "cityPrefetchFuture";
 
+    // How many hits to return to the model
     private static final int TOP_K = 4;
+
+    // Pull extra candidates, then re-rank by bestModifiedTsEpoch / bestModifiedTs
+    private static final int CANDIDATE_K = 30;
 
     private static final Pattern CITY_PREFETCH_PATTERN = Pattern.compile(
             "\\b(wahkon|city|council|ordinance|agenda|minutes|event|festival|parade|schedule|wahkon\\s+days|newsletter|trail)\\b",
@@ -28,12 +34,6 @@ public class CityRagService {
     private final VectorStore vectorStore;
     private final ExecutorService virtualThreadExecutor;
 
-    /**
-     * Starts a a query and returns Future if pattern matches, otherwise null.
-     *
-     * @param inputTranscript
-     * @return null if no query was started
-     */
     public CompletableFuture<List<Document>> startPrefetchOrNull(String inputTranscript) {
         if (inputTranscript == null || inputTranscript.isBlank()) {
             return null;
@@ -47,25 +47,71 @@ public class CityRagService {
         log.debug("City prefetch started (query={})", inputTranscript);
 
         return CompletableFuture.supplyAsync(() -> {
-
             List<Document> docs = similaritySearch(inputTranscript);
             log.debug("City prefetch completed ({} docs)", docs.size());
             return docs;
-
         }, virtualThreadExecutor);
     }
 
     public List<Document> similaritySearch(String query) {
         try {
-            return vectorStore.similaritySearch(
+            List<Document> candidates = vectorStore.similaritySearch(
                     SearchRequest.builder()
                             .query(query)
-                            .topK(TOP_K)
+                            .topK(CANDIDATE_K)
                             .build()
             );
+
+            if (candidates.isEmpty()) {
+                return List.of();
+            }
+
+            // Re-rank by recency using metadata, then take TOP_K.
+            // Prefer bestModifiedTsEpoch (long). Fallback to bestModifiedTs (ISO string).
+            return candidates.stream()
+                    .sorted(Comparator.comparingLong(CityRagService::bestModifiedEpochSafe).reversed())
+                    .limit(TOP_K)
+                    .toList();
+
         } catch (Exception e) {
             log.error("City similaritySearch failed:", e);
             return List.of();
         }
+    }
+
+    private static long bestModifiedEpochSafe(Document d) {
+        if (d == null || d.getMetadata() == null) {
+            return 0L;
+        }
+
+        Object epoch = d.getMetadata().get("bestModifiedTsEpoch");
+        if (epoch instanceof Number n) {
+            return n.longValue();
+        }
+        if (epoch instanceof String s) {
+            try {
+                return Long.parseLong(s.trim());
+            } catch (Exception ignored) {
+            }
+        }
+
+        Object iso = d.getMetadata().get("bestModifiedTs");
+        if (iso instanceof String s) {
+            try {
+                return Instant.parse(s.trim()).toEpochMilli();
+            } catch (Exception ignored) {
+            }
+        }
+
+        // As a last resort, fall back to fetchedAt
+        Object fetched = d.getMetadata().get("fetchedAt");
+        if (fetched instanceof String s) {
+            try {
+                return Instant.parse(s.trim()).toEpochMilli();
+            } catch (Exception ignored) {
+            }
+        }
+
+        return 0L;
     }
 }
