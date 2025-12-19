@@ -1,0 +1,8 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"","7472","Restaurant Recommendation Test","","2025-12-19","passed","2025-12-19","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","restaurantTest"
+"","18089","Chuckles Candy Test","","2025-12-19","passed","2025-12-19","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","chucklesCandyTest"
+"","14132","Staff Test","","2025-12-19","passed","2025-12-19","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","staffTest"
+"","504","Performance Summary","","2025-12-19","passed","2025-12-19","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","performanceSummary"
+"","7103","Warm Up the Stack","","2025-12-19","passed","2025-12-19","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","warmupStack"
+"","13782","Weather Test","","2025-12-19","passed","2025-12-19","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","weatherTest"
+"","4033","Address Test","","2025-12-19","passed","2025-12-19","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","addressTest"
