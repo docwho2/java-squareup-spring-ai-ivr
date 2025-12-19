@@ -70,7 +70,7 @@ public class CitySearch extends AbstractTool {
                 .map(CitySearchHit::new)
                 .toList();
 
-        return new CitySearchResult(hits, StatusMessageResult.Status.SUCCESS,"Results Returned");
+        return new CitySearchResult(hits, StatusMessageResult.Status.SUCCESS, "Results Returned");
     }
 
     @Override
@@ -89,13 +89,18 @@ public class CitySearch extends AbstractTool {
     public record CitySearchHit(
             String title,
             String sourceUrl,
+            String kind,
+            String sourceSystem,
             String updatedAt,
             String snippet
             ) {
 
         public CitySearchHit(Document d) {
-            this(safeString(d.getMetadata().get("title")),
+            this(
+                    safeString(d.getMetadata().get("title")),
                     safeString(d.getMetadata().get("sourceUrl")),
+                    safeString(d.getMetadata().get("kind")),
+                    safeString(d.getMetadata().get("sourceSystem")),
                     safeString(d.getMetadata().get("bestModifiedTs")),
                     safeSnippet(d.getText(), 450)
             );
