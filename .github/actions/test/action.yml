@@ -168,12 +168,13 @@ runs:
           echo '</body></html>'
         } > index.html
 
-    - name: Publish gh-pages site (root + all reports)
+    - name: Publish Allure report
       uses: peaceiris/actions-gh-pages@v4
       with:
         github_token: ${{ inputs.github-token }}
         publish_branch: gh-pages
         publish_dir: gh-pages
+        keep_files: true
 
     - name: Fail workflow if tests failed
       # Always evaluate this step, but only fail if the test step actually failed
