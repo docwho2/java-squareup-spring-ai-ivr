@@ -25,7 +25,7 @@ Unlike most AI “phone bot” demos, this system was built to run **24/7 at pro
 Every component is **100% Java**, type-safe, and production-quality:
 
 - **Java 25**
-- **Spring Boot 4.0.0**
+- **Spring Boot 4.0.1**
 - **Spring Cloud 5.0.0**
 - **Spring AI 2.0.0 (validated on 2.0.0-M1)**
 - **AWS Bedrock (Nova, Claude)** and **OpenAI GPT models**

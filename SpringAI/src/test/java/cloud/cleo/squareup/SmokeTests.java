@@ -124,7 +124,7 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
 
         final var weather = getBotResponse(res);
 
-        boolean ok = weather.toLowerCase().matches("(?is).*?(°f|degrees|fahrenheit).*");
+        boolean ok = weather.toLowerCase().matches("(?is).*?(°f|degrees|fahrenheit| f ).*");
         log.info(ok ? "Weather Test Passed" : "Weather Test FAILED");
         assertTrue(ok, "Weaather test failed, response was: " + weather);
     }

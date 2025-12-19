@@ -43,8 +43,7 @@ import tools.jackson.databind.json.JsonMapper;
 public class ChatConfig {
 
     /**
-     * Which provider to use at runtime. Set via env var SPRING_AI_PROVIDER in
-     * GitHub workflow: OPENAI | BEDROCK
+     * Which provider to use at runtime. Set via env var SPRING_AI_PROVIDER in GitHub workflow: OPENAI | BEDROCK
      */
     public enum Provider {
         OPENAI, BEDROCK
@@ -84,12 +83,18 @@ public class ChatConfig {
                 .N(1);  // We only ever want 1 response
 
         if (model.startsWith("gpt-4")) {
-            // GPT-4 family still supports temperature
-            builder = builder.temperature(0.2);
+            // GPT-4 family still supports temp/topP (no reasoning)
+            builder = builder
+                    .temperature(0.2)
+                    .topP(.9)
+                    .maxTokens(100);
+        } else if (model.startsWith("gpt-5")) {
+            // GPT-5 family is just completion tokens, no temp or topP
+            builder = builder
+                    .reasoningEffort("minimal")  // need lowest latency response
+                    .maxCompletionTokens(100);
         }
 
-        // GPT-5 family: no temperature, no top_p, no sampling knobs
-        // Just rely on N=1 + tight prompts for consistency.
         return builder.build();
     }
 
@@ -163,8 +168,7 @@ public class ChatConfig {
     }
 
     /**
-     * Fix until Spring AI fixes ordering such that system prompt is always sent
-     * first.
+     * Fix until Spring AI fixes ordering such that system prompt is always sent first.
      *
      * @see https://github.com/spring-projects/spring-ai/issues/4170
      */
