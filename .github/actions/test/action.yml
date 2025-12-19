@@ -109,6 +109,23 @@ runs:
         StackName=${{ inputs.stack-name }}
         SessionId=${{ inputs.session-id }}
         EOF
+    
+    - name: Write Allure executor (pretty header + links)
+      shell: bash
+      run: |
+        mkdir -p SpringAI/target/allure-results
+
+        cat <<EOF > SpringAI/target/allure-results/executor.json
+        {
+          "name": "Lex E2E on GitHub Actions",
+          "type": "github",
+          "buildName": "${{ inputs.spring-ai-model }} • ${{ inputs.test-filter }} • ${{ inputs.region }}",
+          "buildOrder": "${{ github.run_number }}",
+          "buildUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+          "reportUrl": "https://docwho2.github.io/java-squareup-spring-ai-ivr/",
+          "reportName": "Allure Report Index"
+        }
+        EOF
         
     - name: Generate Allure report
       working-directory: ./SpringAI
