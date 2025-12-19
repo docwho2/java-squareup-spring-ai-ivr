@@ -109,29 +109,68 @@ runs:
         StackName=${{ inputs.stack-name }}
         SessionId=${{ inputs.session-id }}
         EOF
-    
-    - name: Write Allure executor (pretty header + links)
-      shell: bash
-      run: |
-        mkdir -p SpringAI/target/allure-results
-
-        cat <<EOF > SpringAI/target/allure-results/executor.json
-        {
-          "name": "Lex E2E on GitHub Actions",
-          "type": "github",
-          "buildName": "${{ inputs.spring-ai-model }} • ${{ inputs.test-filter }} • ${{ inputs.region }}",
-          "buildOrder": "${{ github.run_number }}",
-          "buildUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-          "reportUrl": "https://docwho2.github.io/java-squareup-spring-ai-ivr/",
-          "reportName": "Allure Report Index"
-        }
-        EOF
         
     - name: Generate Allure report
       working-directory: ./SpringAI
       shell: bash
       run: |
         mvn --no-transfer-progress allure:report --quiet
+        
+    - name: Customize Allure Overview (title + executor link)
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        MODEL="${{ inputs.spring-ai-model }}"
+        SUITE="${{ inputs.test-filter }}"
+        REGION="${{ inputs.region }}"
+        STACK="${{ inputs.stack-name }}"
+        
+        OWNER="${GITHUB_REPOSITORY_OWNER}"
+        REPO="$(basename "$GITHUB_REPOSITORY")"
+        PAGES_ROOT="https://${OWNER}.github.io/${REPO}"
+
+        DEST_DIR="${{ steps.dest.outputs.dest_dir }}"
+        RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+        REPORT_URL="${PAGES_ROOT}/${DEST_DIR}/"
+        INDEX_URL="${PAGES_ROOT}/"
+
+        
+
+        W="SpringAI/target/site/allure-maven-plugin/widgets"
+
+        # 1) Replace the report title shown on Overview
+        if [ -f "${W}/summary.json" ]; then
+        MODEL="$MODEL" SUITE="$SUITE" python - <<PY
+        import json
+        from pathlib import Path
+
+        p = Path("${W}/summary.json")
+        data = json.loads(p.read_text())
+
+        data["reportName"] = f'{os.environ["MODEL"]} / {os.environ["SUITE"]}'
+
+        p.write_text(json.dumps(data, separators=(",", ":")))
+        PY
+        fi
+
+        # 2) Replace EXECUTORS box content (this is exactly the file you showed)
+        cat > "${W}/executors.json" <<EOF
+        [
+        {
+        "name": "Index",
+        "type": "web",
+        "buildName": "All Reports",
+        "buildUrl": "${INDEX_URL}"
+        },
+        {
+        "name": "Maven",
+        "type": "maven",
+        "buildName": "Spring AI Square Chime Lex Lambda",
+        "buildUrl": "${RUN_URL}"
+        }
+        ]
+        EOF
 
     - name: Stage report into gh-pages + generate root index.html
       shell: bash
