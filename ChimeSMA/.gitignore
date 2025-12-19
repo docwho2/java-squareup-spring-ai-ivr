@@ -1,8 +1,0 @@
-/target/
-/bin/
-/nbproject/
-/.settings/
-/.classpath
-/.project
-/.aws-sam/
-/dependency-reduced-pom.xml
