@@ -6,14 +6,14 @@
 "buildUrl": "https://docwho2.github.io/java-squareup-spring-ai-ivr/"
 },
 {
-"name": "Maven",
+"name": "Maven Artifact",
 "type": "jenkins",
 "buildName": "Spring AI Square Chime Lex Lambda"
 },
 {
 "name": "Workflow Run",
 "type": "github",
-"buildName": "CDK and SAM Deployment #227",
-"buildUrl": "https://github.com/docwho2/java-squareup-spring-ai-ivr/actions/runs/20379767713"
+"buildName": "Run Tests #54",
+"buildUrl": "https://github.com/docwho2/java-squareup-spring-ai-ivr/actions/runs/20380875497"
 }
 ]
