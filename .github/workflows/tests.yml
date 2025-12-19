@@ -28,36 +28,46 @@ concurrency:
   
 
 jobs:
-  run-tests:
-    # Runs once per matrix entry; this "if" is evaluated per matrix row
+  run-tests-west:
+    # Only run smoke tests in us-west-2
     if: >-
       ${{
         vars.RUN_TESTS &&
         (
-          matrix.region == 'us-east-1' ||
-          (
-            ((github.event_name == 'workflow_dispatch' && inputs.test-filter) || 'SmokeTests')
-            == 'SmokeTests'
-          )
+          ((github.event_name == 'workflow_dispatch' && inputs.test-filter) || 'SmokeTests')
+          == 'SmokeTests'
         )
       }}
-
-    strategy:
-      max-parallel: 1
-      matrix:
-        region: [us-west-2, us-east-1]
-
     runs-on: ubuntu-latest
-    environment: "${{ matrix.region }}-tests"
+    environment: "us-west-2-tests"
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
 
-      - name: Execute Tests
+      - name: Execute Tests (us-west-2)
         uses: ./.github/actions/test
         with:
-          region: ${{ matrix.region }}
+          region: us-west-2
+          stack-name: ${{ vars.STACK_NAME || 'spring-ai-square-ivr' }}
+          aws-role: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          session-id: ${{ github.run_id }}-${{ github.run_attempt }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          spring-ai-model: ${{ vars.SPRING_AI_PROVIDER == 'OPENAI' && vars.OPENAI_MODEL || vars.BEDROCK_MODEL }}
+          test-filter: ${{ (github.event_name == 'workflow_dispatch' && inputs.test-filter) || 'SmokeTests' }}
+  run-tests-east:
+    if: ${{ vars.RUN_TESTS }}
+    runs-on: ubuntu-latest
+    environment: "us-east-1-tests"
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Execute Tests (us-east-1)
+        uses: ./.github/actions/test
+        with:
+          region: us-east-1
           stack-name: ${{ vars.STACK_NAME || 'spring-ai-square-ivr' }}
           aws-role: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           session-id: ${{ github.run_id }}-${{ github.run_attempt }}
