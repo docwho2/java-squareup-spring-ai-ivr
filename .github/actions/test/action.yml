@@ -124,6 +124,79 @@ runs:
         publish_dir: SpringAI/target/site/allure-maven-plugin
         destination_dir: ${{ steps.dest.outputs.dest_dir }}
 
+    - name: Checkout gh-pages (to rebuild root index)
+      uses: actions/checkout@v4
+      with:
+        ref: gh-pages
+        path: gh-pages-live
+        token: ${{ inputs.github-token }}
+        fetch-depth: 0
+
+    - name: Generate gh-pages root index.html
+      shell: bash
+      run: |
+        set -euo pipefail
+        cd gh-pages-live
+
+        # Find {model}/{suite} folders that actually have an Allure index.html
+        mapfile -t dirs < <(find . -mindepth 2 -maxdepth 2 -type f -name index.html \
+          | sed -E 's|^\./||' \
+          | sed -E 's|/index\.html$||' \
+          | sort -u)
+
+        echo "Found ${#dirs[@]} report dirs"
+
+        {
+          echo '<!doctype html>'
+          echo '<html lang="en"><head>'
+          echo '  <meta charset="utf-8" />'
+          echo '  <meta name="viewport" content="width=device-width, initial-scale=1" />'
+          echo '  <title>Allure Reports</title>'
+          echo '  <style>'
+          echo '    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:2rem;max-width:980px}'
+          echo '    table{border-collapse:collapse;width:100%}'
+          echo '    th,td{border-bottom:1px solid #e5e5e5;padding:.6rem .5rem;text-align:left}'
+          echo '    th{font-size:.9rem;color:#555}'
+          echo '    a{text-decoration:none}'
+          echo '    code{background:#f6f8fa;padding:.12rem .3rem;border-radius:.25rem}'
+          echo '  </style>'
+          echo '</head><body>'
+          echo '  <h1>Allure Reports</h1>'
+          echo '  <p>Reports are organized as <code>{model}/{suite}</code>.</p>'
+          echo '  <table>'
+          echo '    <thead><tr><th>Model</th><th>Suite</th><th>Link</th></tr></thead>'
+          echo '    <tbody>'
+
+          for d in "${dirs[@]}"; do
+            model="${d%%/*}"
+            suite="${d#*/}"
+            echo "      <tr><td><code>${model}</code></td><td><code>${suite}</code></td><td><a href=\"${d}/\">Open</a></td></tr>"
+          done
+
+          echo '    </tbody>'
+          echo '  </table>'
+          echo '</body></html>'
+        } > index.html
+
+    - name: Commit & push updated root index.html
+      shell: bash
+      run: |
+        set -euo pipefail
+        cd gh-pages-live
+
+        if git diff --quiet -- index.html; then
+          echo "No index changes"
+          exit 0
+        fi
+
+        git config user.name  "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+        git add index.html
+        git commit -m "Update Allure index"
+        git push
+
+
     - name: Fail workflow if tests failed
       # Always evaluate this step, but only fail if the test step actually failed
       if: always() && steps.run-tests.outcome == 'failure'
