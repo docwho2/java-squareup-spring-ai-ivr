@@ -28,19 +28,24 @@ concurrency:
   
 
 jobs:
-   # Run a couple tests to make sure ChatGPT is responding and able to make Square calls
   run-tests:
     if: ${{ vars.RUN_TESTS }}
-    strategy:
-      max-parallel: 1 
-      matrix:
-        region: [ us-west-2 , us-east-1 ]
     runs-on: ubuntu-latest
+
+    strategy:
+      max-parallel: 1
+      matrix: ${{ fromJSON(
+        ((github.event_name == 'workflow_dispatch' && inputs.test-filter) || 'SmokeTests') == 'SmokeTests'
+          && '{"region":["us-west-2","us-east-1"]}'
+          || '{"region":["us-east-1"]}'
+      ) }}
+
     environment: "${{ matrix.region }}-tests"
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
-        
+
       - name: Execute Tests
         uses: ./.github/actions/test
         with:
@@ -50,6 +55,6 @@ jobs:
           session-id: ${{ github.run_id }}-${{ github.run_attempt }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           spring-ai-model: ${{ vars.SPRING_AI_PROVIDER == 'OPENAI' && vars.OPENAI_MODEL || vars.BEDROCK_MODEL }}
-          test-filter: ${{ github.event_name == 'workflow_dispatch' && inputs.test-filter || 'SmokeTests' }}
+          test-filter: ${{ (github.event_name == 'workflow_dispatch' && inputs.test-filter) || 'SmokeTests' }}
     
       
