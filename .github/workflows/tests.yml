@@ -6,7 +6,7 @@ on:
     inputs:
       test-filter:
         description: 'Which tests to run (Maven -Dtest value)'
-        required: false
+        required: true
         default: 'SmokeTests'
         type: choice
         options:
@@ -28,7 +28,7 @@ concurrency:
   
 
 jobs:
-  decide-tests:
+  decide-tests-smoke-or-other:
     runs-on: ubuntu-latest
     outputs:
       is_smoke: ${{ steps.decide.outputs.is_smoke }}
@@ -44,7 +44,7 @@ jobs:
             echo "is_smoke=false" >> "$GITHUB_OUTPUT"
           fi
 
-  run-tests-west:
+  run-tests-west-smoke:
     needs: decide-tests
     if: ${{ vars.RUN_TESTS && needs.decide-tests.outputs.is_smoke == 'true' }}
     runs-on: ubuntu-latest
