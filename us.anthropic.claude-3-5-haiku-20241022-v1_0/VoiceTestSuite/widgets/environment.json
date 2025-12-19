@@ -1,1 +1,1 @@
-[{"values":["us.anthropic.claude-3-5-haiku-20241022-v1:0"],"name":"SpringAiModel"},{"values":["us-east-1"],"name":"Region"},{"values":["cfox-squareup-spring-ai-ivr"],"name":"StackName"},{"values":["20371749439-1"],"name":"SessionId"}]
+[{"values":["us.anthropic.claude-3-5-haiku-20241022-v1:0"],"name":"SpringAiModel"},{"values":["us-west-2"],"name":"Region"},{"values":["cfox-squareup-spring-ai-ivr"],"name":"StackName"},{"values":["20371749439-1"],"name":"SessionId"}]
