@@ -105,9 +105,8 @@ runs:
         mkdir -p SpringAI/target/allure-results
         cat <<EOF > SpringAI/target/allure-results/environment.properties
         SpringAiModel=${{ inputs.spring-ai-model }}
-        Region=${{ inputs.region }}
-        StackName=${{ inputs.stack-name }}
-        SessionId=${{ inputs.session-id }}
+        SpringAiProvider=${{ vars.SPRING_AI_PROVIDER || 'BEDROCK' }}
+        AwsRegion=${{ inputs.region }}
         EOF
         
     - name: Generate Allure report
@@ -164,7 +163,7 @@ runs:
         "buildUrl": "${INDEX_URL}"
         },
         {
-        "name": "Maven",
+        "name": "Maven Artifact",
         "type": "jenkins",
         "buildName": "Spring AI Square Chime Lex Lambda"
         },
