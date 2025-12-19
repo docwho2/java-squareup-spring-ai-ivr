@@ -8,12 +8,12 @@
 {
 "name": "Maven",
 "type": "jenkins",
-"buildName": "Spring AI Square Chime Lex Lambda",
+"buildName": "Spring AI Square Chime Lex Lambda"
 },
 {
 "name": "GitHub Actions Run",
 "type": "github",
-"buildName": "Run Tests #52",
-"buildUrl": "https://github.com/docwho2/java-squareup-spring-ai-ivr/actions/runs/20379485516"
+"buildName": "Run Tests #53",
+"buildUrl": "https://github.com/docwho2/java-squareup-spring-ai-ivr/actions/runs/20379563239"
 }
 ]
