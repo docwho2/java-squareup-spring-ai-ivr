@@ -56,6 +56,8 @@ jobs:
           spring-ai-model: ${{ vars.SPRING_AI_PROVIDER == 'OPENAI' && vars.OPENAI_MODEL || vars.BEDROCK_MODEL }}
           test-filter: ${{ (github.event_name == 'workflow_dispatch' && inputs.test-filter) || 'SmokeTests' }}
   run-tests-east:
+    # East should run last, so west must be done before proceeding
+    needs: run-tests-west
     if: ${{ vars.RUN_TESTS }}
     runs-on: ubuntu-latest
     environment: "us-east-1-tests"
