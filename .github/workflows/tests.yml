@@ -45,7 +45,7 @@ jobs:
           fi
 
   run-tests-west-smoke:
-    needs: decide-tests
+    needs: decide-tests-smoke-or-other
     if: ${{ vars.RUN_TESTS && needs.decide-tests.outputs.is_smoke == 'true' }}
     runs-on: ubuntu-latest
     environment: "us-west-2-tests"
@@ -66,7 +66,7 @@ jobs:
 
   run-tests-east-smoke:
     # Smoke path: must run AFTER west
-    needs: run-tests-west
+    needs: run-tests-west-smoke
     if: ${{ vars.RUN_TESTS && needs.run-tests-west.result == 'success' }}
     runs-on: ubuntu-latest
     environment: "us-east-1-tests"
@@ -87,7 +87,7 @@ jobs:
 
   run-tests-east-other:
     # Non-smoke path: east-only, NO dependency on west
-    needs: decide-tests
+    needs: decide-tests-smoke-or-other
     if: ${{ vars.RUN_TESTS && needs.decide-tests.outputs.is_smoke == 'false' }}
     runs-on: ubuntu-latest
     environment: "us-east-1-tests"
