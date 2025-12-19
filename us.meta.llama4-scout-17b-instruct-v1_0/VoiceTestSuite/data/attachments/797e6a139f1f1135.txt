@@ -1,1 +1,0 @@
-Goodbye! Have a great day!
