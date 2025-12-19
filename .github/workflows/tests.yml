@@ -62,6 +62,7 @@ jobs:
           session-id: ${{ github.run_id }}-${{ github.run_attempt }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           spring-ai-model: ${{ vars.SPRING_AI_PROVIDER == 'OPENAI' && vars.OPENAI_MODEL || vars.BEDROCK_MODEL }}
+          spring-ai-provider: ${{ vars.SPRING_AI_PROVIDER || 'BEDROCK' }}
           test-filter: ${{ (github.event_name == 'workflow_dispatch' && inputs.test-filter) || 'SmokeTests' }}
 
   run-tests-east-smoke:
@@ -83,6 +84,7 @@ jobs:
           session-id: ${{ github.run_id }}-${{ github.run_attempt }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           spring-ai-model: ${{ vars.SPRING_AI_PROVIDER == 'OPENAI' && vars.OPENAI_MODEL || vars.BEDROCK_MODEL }}
+          spring-ai-provider: ${{ vars.SPRING_AI_PROVIDER || 'BEDROCK' }}
           test-filter: ${{ (github.event_name == 'workflow_dispatch' && inputs.test-filter) || 'SmokeTests' }}
 
   run-tests-east-other:
@@ -104,4 +106,5 @@ jobs:
           session-id: ${{ github.run_id }}-${{ github.run_attempt }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           spring-ai-model: ${{ vars.SPRING_AI_PROVIDER == 'OPENAI' && vars.OPENAI_MODEL || vars.BEDROCK_MODEL }}
+          spring-ai-provider: ${{ vars.SPRING_AI_PROVIDER || 'BEDROCK' }}
           test-filter: ${{ (github.event_name == 'workflow_dispatch' && inputs.test-filter) || 'SmokeTests' }}

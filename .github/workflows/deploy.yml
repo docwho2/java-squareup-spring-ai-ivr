@@ -305,5 +305,6 @@ jobs:
           session-id: ${{ github.run_id }}-${{ github.run_attempt }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           spring-ai-model: ${{ vars.SPRING_AI_PROVIDER == 'OPENAI' && vars.OPENAI_MODEL || vars.BEDROCK_MODEL }}
+          spring-ai-provider: ${{ vars.SPRING_AI_PROVIDER || 'BEDROCK' }}
           test-filter: SmokeTests
       
