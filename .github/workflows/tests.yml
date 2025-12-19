@@ -28,19 +28,27 @@ concurrency:
   
 
 jobs:
+  decide-tests:
+    runs-on: ubuntu-latest
+    outputs:
+      is_smoke: ${{ steps.decide.outputs.is_smoke }}
+    steps:
+      - id: decide
+        shell: bash
+        run: |
+          set -euo pipefail
+          FILTER="${{ (github.event_name == 'workflow_dispatch' && inputs.test-filter) || 'SmokeTests' }}"
+          if [ "$FILTER" = "SmokeTests" ]; then
+            echo "is_smoke=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_smoke=false" >> "$GITHUB_OUTPUT"
+          fi
+
   run-tests-west:
-    # Only run smoke tests in us-west-2
-    if: >-
-      ${{
-        vars.RUN_TESTS &&
-        (
-          ((github.event_name == 'workflow_dispatch' && inputs.test-filter) || 'SmokeTests')
-          == 'SmokeTests'
-        )
-      }}
+    needs: decide-tests
+    if: ${{ vars.RUN_TESTS && needs.decide-tests.outputs.is_smoke == 'true' }}
     runs-on: ubuntu-latest
     environment: "us-west-2-tests"
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
@@ -55,13 +63,34 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           spring-ai-model: ${{ vars.SPRING_AI_PROVIDER == 'OPENAI' && vars.OPENAI_MODEL || vars.BEDROCK_MODEL }}
           test-filter: ${{ (github.event_name == 'workflow_dispatch' && inputs.test-filter) || 'SmokeTests' }}
-  run-tests-east:
-    # East should run last, so west must be done before proceeding
+
+  run-tests-east-smoke:
+    # Smoke path: must run AFTER west
     needs: run-tests-west
-    if: ${{ vars.RUN_TESTS }}
+    if: ${{ vars.RUN_TESTS && needs.run-tests-west.result == 'success' }}
     runs-on: ubuntu-latest
     environment: "us-east-1-tests"
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
 
+      - name: Execute Tests (us-east-1)
+        uses: ./.github/actions/test
+        with:
+          region: us-east-1
+          stack-name: ${{ vars.STACK_NAME || 'spring-ai-square-ivr' }}
+          aws-role: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          session-id: ${{ github.run_id }}-${{ github.run_attempt }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          spring-ai-model: ${{ vars.SPRING_AI_PROVIDER == 'OPENAI' && vars.OPENAI_MODEL || vars.BEDROCK_MODEL }}
+          test-filter: ${{ (github.event_name == 'workflow_dispatch' && inputs.test-filter) || 'SmokeTests' }}
+
+  run-tests-east-other:
+    # Non-smoke path: east-only, NO dependency on west
+    needs: decide-tests
+    if: ${{ vars.RUN_TESTS && needs.decide-tests.outputs.is_smoke == 'false' }}
+    runs-on: ubuntu-latest
+    environment: "us-east-1-tests"
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
