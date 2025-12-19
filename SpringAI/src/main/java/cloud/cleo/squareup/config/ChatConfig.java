@@ -91,7 +91,7 @@ public class ChatConfig {
         } else if (model.startsWith("gpt-5")) {
             // GPT-5 family is just completion tokens, no temp or topP
             builder = builder
-                    .reasoningEffort("low")  // need lowest latency response
+                    .reasoningEffort("minimal")  // need lowest latency response
                     .maxCompletionTokens(100);
         }
 
