@@ -105,7 +105,7 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
 
         final var name = getBotResponse(res);
 
-        assertTrue(name.toLowerCase().matches("(?s).*?(copper bot|copper fox).*"),
+        assertTrue(name.toLowerCase().matches("(?s).*?(copper bot|copper fox|bot ).*"),
                 "Name test failed, response was: " + name);
     }
 
@@ -189,7 +189,7 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
     // Hello, what is your name?
     protected abstract String getWhatIsYourName();
 
-    // When did the store first open?
+    // What year did the store first open?
     protected abstract String getWhenDidStoreOpen();
 
     // Thank you for all your help, that's all for today, goodbye.

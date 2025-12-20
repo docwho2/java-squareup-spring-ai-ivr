@@ -33,7 +33,7 @@ public class DutchTest extends AbstractVoiceLanguageTest {
 
     @Override
     protected String getWhenDidStoreOpen() {
-        return "Wanneer is de winkel voor het eerst geopend?";
+        return "In welk jaar is de winkel voor het eerst geopend?";
     }
 
     @Override

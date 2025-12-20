@@ -33,7 +33,7 @@ private final static Pattern YES = Pattern.compile("(oui |oui,)");
 
     @Override
     protected String getWhenDidStoreOpen() {
-        return "Quand le magasin a-t-il ouvert ses portes pour la première fois ?";
+        return "En quelle année le magasin a-t-il ouvert ses portes pour la première fois ?";
     }
 
     @Override

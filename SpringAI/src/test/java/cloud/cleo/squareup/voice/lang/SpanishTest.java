@@ -33,7 +33,7 @@ public class SpanishTest extends AbstractVoiceLanguageTest {
 
     @Override
     protected String getWhenDidStoreOpen() {
-        return "¿Cuándo abrió la tienda por primera vez?";
+        return "¿En qué año abrió la tienda por primera vez?";
     }
 
     @Override

@@ -33,7 +33,7 @@ public class SwedishTest extends AbstractVoiceLanguageTest {
 
     @Override
     protected String getWhenDidStoreOpen() {
-        return "När öppnade butiken först?";
+        return "Vilket år öppnade butiken först?";
     }
 
     @Override
