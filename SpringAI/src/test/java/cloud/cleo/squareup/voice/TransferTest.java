@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
  * @author sjensen
  */
 @Epic(ALLURE_EPIC_VOICE)
-public class VoiceTransferTest extends AbstractVoiceTest {
+public class TransferTest extends AbstractVoiceTest {
     
     @Test
     @Order(1)

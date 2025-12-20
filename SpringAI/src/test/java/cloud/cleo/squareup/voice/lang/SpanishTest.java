@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package cloud.cleo.squareup.voice.language;
+package cloud.cleo.squareup.voice.lang;
 
 import static cloud.cleo.squareup.AbstractLexAwsTestSupport.ALLURE_EPIC_LANGUAGE;
 import static cloud.cleo.squareup.AbstractLexAwsTestSupport.ALLURE_EPIC_VOICE;
@@ -16,9 +16,9 @@ import java.util.regex.Pattern;
  */
 @Epic(ALLURE_EPIC_LANGUAGE)
 @Epic(ALLURE_EPIC_VOICE)
-public class VoiceLanguageSpanishTest extends AbstractVoiceLanguageTest {
+public class SpanishTest extends AbstractVoiceLanguageTest {
 
-    private final static Pattern YES = Pattern.compile("(si|sí)");
+    private final static Pattern YES = Pattern.compile("(si |sí |si,|sí,|sí!|si!)");
 
     
     @Override

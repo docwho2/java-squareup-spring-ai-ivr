@@ -1,4 +1,4 @@
-package cloud.cleo.squareup.voice.language;
+package cloud.cleo.squareup.voice.lang;
 
 import cloud.cleo.squareup.AbstractLexAwsTestSupport;
 import static cloud.cleo.squareup.AbstractLexAwsTestSupport.ALLURE_FEATURE_CHIME_CC;
@@ -186,10 +186,13 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
      */
     protected abstract Language getTestLanguage();
 
+    // Hello, what is your name?
     protected abstract String getWhatIsYourName();
 
+    // When did the store first open?
     protected abstract String getWhenDidStoreOpen();
 
+    // Thank you for all your help, that's all for today, goodbye.
     protected abstract String getThankYouAllDone();
 
     // Please check the store inventory for candles, respond with yes if you have them.
