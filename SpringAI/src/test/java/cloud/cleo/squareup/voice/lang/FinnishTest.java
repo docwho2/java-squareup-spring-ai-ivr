@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 @Epic(ALLURE_EPIC_VOICE)
 public class FinnishTest extends AbstractVoiceLanguageTest {
 
-    private final static Pattern YES = Pattern.compile("(kyllä |kyllä,|kylla |kylla,)");
+    private final static Pattern YES = Pattern.compile("(kyllä |kyllä,|kylla |kylla,|On meillä)");
 
     
     @Override
