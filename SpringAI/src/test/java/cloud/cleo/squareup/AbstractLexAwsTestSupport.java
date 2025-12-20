@@ -2,6 +2,7 @@ package cloud.cleo.squareup;
 
 import cloud.cleo.squareup.enums.ChannelPlatform;
 import static cloud.cleo.squareup.enums.ChannelPlatform.CHIME;
+import cloud.cleo.squareup.enums.Language;
 import cloud.cleo.squareup.enums.LexInputMode;
 import io.qameta.allure.Allure;
 import io.qameta.allure.junit5.AllureJunit5;
@@ -34,6 +35,22 @@ import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
 @Log4j2
 public abstract class AbstractLexAwsTestSupport {
 
+    // Statics for Allure features
+    public final static String ALLURE_FEATURE_STORE_KNOWLEDGE = "Store Knowledge";
+    public final static String ALLURE_FEATURE_TOOL_CALL = "Tool Call";
+    public final static String ALLURE_FEATURE_SQUARE_API = "Square API";
+    public final static String ALLURE_FEATURE_WEATHER_API = "Weather API";
+    public final static String ALLURE_FEATURE_CHIME_CC = "Chime Call Control";
+    
+    
+    public final static String ALLURE_EPIC_SMOKE = "Smoke Tests";
+    public final static String ALLURE_EPIC_WARM_UP = "Warm Up Tests";
+    public final static String ALLURE_EPIC_VOICE = "Voice Tests";
+    public final static String ALLURE_EPIC_LANGUAGE = "Language Tests";
+    public final static String ALLURE_EPIC_PERF_SUM = "Performance Summary";
+    
+    public final static String JUNIT_TAG_WARM_UP = "WarmUp";
+    
     private static final boolean RUN_TESTS
             = Boolean.parseBoolean(System.getenv().getOrDefault("RUN_TESTS", "false"));
 
@@ -46,17 +63,16 @@ public abstract class AbstractLexAwsTestSupport {
                     System.getenv().getOrDefault("STACK_NAME", "cfox-squareup-spring-ai-ivr")
             );
 
-    private static final String LOCALE_ID = "en_US";
 
     private static final String SESSION_ID
             = System.getenv().getOrDefault("LEX_SESSION_ID", UUID.randomUUID().toString());
 
-    // Initialized in @BeforeAll
-    private static Region region;
+
     private static LexRuntimeV2Client lexClient;
     private static String botId;
     private static String botAliasId;
     private static volatile boolean awsReady = false;
+    
     // Model being used
     public static String SPRING_AI_MODEL = System.getenv("SPRING_AI_MODEL");
 
@@ -167,7 +183,7 @@ public abstract class AbstractLexAwsTestSupport {
         var request = RecognizeTextRequest.builder()
                 .botId(botId)
                 .botAliasId(botAliasId)
-                .localeId(LOCALE_ID)
+                .localeId(getLanguage().getLocale().toString())
                 .sessionId(sessionId != null ? sessionId : getSessionId())
                 // Always set a channel
                 .requestAttributes(Map.of("x-amz-lex:channels:platform", channel.getChannel(), "testing_input", channel.equals(CHIME) ? LexInputMode.SPEECH.getMode() : LexInputMode.TEXT.getMode()))
@@ -261,6 +277,15 @@ public abstract class AbstractLexAwsTestSupport {
      */
     protected ChannelPlatform getChannel() {
         return ChannelPlatform.TWILIO;
+    }
+    
+    /**
+     * Override when testing other languages.
+     * 
+     * @return 
+     */
+    protected Language getLanguage() {
+        return Language.English;
     }
 
 }

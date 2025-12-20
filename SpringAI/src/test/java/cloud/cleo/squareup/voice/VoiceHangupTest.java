@@ -1,5 +1,6 @@
 package cloud.cleo.squareup.voice;
 
+import static cloud.cleo.squareup.AbstractLexAwsTestSupport.ALLURE_EPIC_VOICE;
 import static cloud.cleo.squareup.tools.AbstractTool.HANGUP_FUNCTION_NAME;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -13,14 +14,14 @@ import org.junit.jupiter.api.Test;
  * 
  * @author sjensen
  */
-@Epic("Voice Tests")
+@Epic(ALLURE_EPIC_VOICE)
 public class VoiceHangupTest extends AbstractVoiceTest {
     
     @Test
     @Order(1)
-    @Feature("Tool Call")
-    @Feature("Chime Call Control")
-    @DisplayName("Hang Up Test")
+    @Feature(ALLURE_FEATURE_TOOL_CALL)
+    @Feature(ALLURE_FEATURE_CHIME_CC)
+    @DisplayName("Hang Up")
     void hangupTest() {
 
         final var res = sendToLex(

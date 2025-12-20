@@ -1,11 +1,11 @@
 package cloud.cleo.squareup;
 
+import static cloud.cleo.squareup.AbstractLexAwsTestSupport.ALLURE_EPIC_SMOKE;
 import static cloud.cleo.squareup.AbstractLexAwsTestSupport.SPRING_AI_MODEL;
 import cloud.cleo.squareup.enums.ChannelPlatform;
 import io.qameta.allure.Allure;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
-import io.qameta.allure.Link;
 import java.util.UUID;
 import lombok.extern.log4j.Log4j2;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -23,15 +23,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * @author sjensen
  */
 @Log4j2
-@Tag("smoke")
-@Epic("Smoke Tests")
+@Epic(ALLURE_EPIC_SMOKE)
 @ExtendWith({TimingExtension.class})
 public class SmokeTests extends AbstractLexAwsTestSupport {
 
     @Test
     @Order(Integer.MIN_VALUE)          // runs before all other @Order'd tests
-    @Epic("Warmup")   // keeps all warmup tests in their own Allure group
-    @Tag("warmup")      // so the TimingExtension can recognize it
+    @Epic(ALLURE_EPIC_WARM_UP)   // keeps all warmup tests in their own Allure group
+    @Tag(JUNIT_TAG_WARM_UP)      // so the TimingExtension can recognize it
     @DisplayName("Warm Up the Stack")
     public void warmupStack() {
         // Warm up the lex path and lambda so everything is hot and use a distinct session ID
@@ -40,10 +39,9 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
 
     @Test
     @Order(1)
-    @Feature("SquareAPI")
-    @Feature("Tool Call")
-    @DisplayName("Chuckles Candy Test")
-    @Link("https://github.com/docwho2/java-squareup-spring-ai-ivr/blob/main/SpringAI/src/main/java/cloud/cleo/squareup/tools/SquareItemSearch.java")
+    @Feature(ALLURE_FEATURE_SQUARE_API)
+    @Feature(ALLURE_FEATURE_TOOL_CALL)
+    @DisplayName("Chuckles Candy")
     public void chucklesCandyTest() {
 
         final var res = sendToLex(
@@ -59,8 +57,8 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
 
     @Test
     @Order(2)
-    @Feature("Store Knowledge")
-    @DisplayName("Restaurant Recommendation Test")
+    @Feature(ALLURE_FEATURE_STORE_KNOWLEDGE)
+    @DisplayName("Restaurant Recommendation")
     public void restaurantTest() {
 
         final var res = sendToLex(
@@ -76,8 +74,8 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
 
     @Test
     @Order(3)
-    @Feature("Store Knowledge")
-    @DisplayName("Address Test")
+    @Feature(ALLURE_FEATURE_STORE_KNOWLEDGE)
+    @DisplayName("Store Address")
     public void addressTest() {
 
         final var res = sendToLex(
@@ -93,10 +91,9 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
 
     @Test
     @Order(4)
-    @Feature("SquareAPI")
-    @Feature("Tool Call")
-    @DisplayName("Staff Test")
-    @Link("https://github.com/docwho2/java-squareup-spring-ai-ivr/blob/main/SpringAI/src/main/java/cloud/cleo/squareup/tools/SquareTeamMembers.java")
+    @Feature(ALLURE_FEATURE_SQUARE_API)
+    @Feature(ALLURE_FEATURE_TOOL_CALL)
+    @DisplayName("Store Staff")
     public void staffTest() {
 
         final var res = sendToLex(
@@ -112,10 +109,9 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
 
     @Test
     @Order(5)
-    @Feature("WeatherAPI")
-    @Feature("Tool Call")
-    @DisplayName("Weather Test")
-    @Link("https://github.com/docwho2/java-squareup-spring-ai-ivr/blob/main/SpringAI/src/main/java/cloud/cleo/squareup/tools/StoreWeather.java")
+    @Feature(ALLURE_FEATURE_WEATHER_API)
+    @Feature(ALLURE_FEATURE_TOOL_CALL)
+    @DisplayName("Weather Forecast")
     public void weatherTest() {
 
         final var res = sendToLex(
@@ -131,8 +127,7 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
 
     @Test
     @Order(Integer.MAX_VALUE)  // Always Last
-    @Epic("Summary")
-    @Tag("summary")
+    @Epic(ALLURE_EPIC_PERF_SUM)
     @DisplayName("Performance Summary")
     public void performanceSummary() {
         var results = TimingExtension.getResults();

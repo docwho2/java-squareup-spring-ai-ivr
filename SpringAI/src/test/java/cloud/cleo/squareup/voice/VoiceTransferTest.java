@@ -1,5 +1,6 @@
 package cloud.cleo.squareup.voice;
 
+import static cloud.cleo.squareup.AbstractLexAwsTestSupport.ALLURE_EPIC_VOICE;
 import static cloud.cleo.squareup.tools.AbstractTool.TRANSFER_FUNCTION_NAME;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -9,18 +10,18 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 
 /**
- * Ensure Bot calls hangup when we're done.
+ * Ensure Bot calls transfer when caller wants to speak to real person.
  * 
  * @author sjensen
  */
-@Epic("Voice Tests")
+@Epic(ALLURE_EPIC_VOICE)
 public class VoiceTransferTest extends AbstractVoiceTest {
     
     @Test
     @Order(1)
-    @Feature("Tool Call")
-    @Feature("Chime Call Control")
-    @DisplayName("Transfer Test")
+    @Feature(ALLURE_FEATURE_TOOL_CALL)
+    @Feature(ALLURE_FEATURE_CHIME_CC)
+    @DisplayName("Transfer to Person")
     void hangupTest() {
 
         final var res = sendToLex(
@@ -29,7 +30,7 @@ public class VoiceTransferTest extends AbstractVoiceTest {
         
         // Bot should have called transfer action
         assertTrue(TRANSFER_FUNCTION_NAME.equals(getBotAction(res)),
-                "Bot did not execute " + TRANSFER_FUNCTION_NAME + " action when told done");
+                "Bot did not execute " + TRANSFER_FUNCTION_NAME + " action when told speak to real person");
        
     }
 }

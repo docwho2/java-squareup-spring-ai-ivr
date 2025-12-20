@@ -25,9 +25,9 @@ public abstract class AbstractVoiceTest extends AbstractLexAwsTestSupport {
 
     @Test
     @Order(-100)
-    @DisplayName("Bot Name Test")
+    @DisplayName("Bot Name")
     public void botNameTest() {
-        Allure.feature("Store Knowledge");
+        Allure.feature(ALLURE_FEATURE_STORE_KNOWLEDGE);
         
         final var res = sendToLex(
                 "Hello what is your name?"
@@ -41,9 +41,9 @@ public abstract class AbstractVoiceTest extends AbstractLexAwsTestSupport {
 
     @Test
     @Order(-50)
-    @DisplayName("Store Open Year Test")
+    @DisplayName("Store Open Year")
     public void storeOpenYearTest() {
-        Allure.feature("Store Knowledge");
+        Allure.feature(ALLURE_FEATURE_STORE_KNOWLEDGE);
 
         final var res = sendToLex(
                 "when did the store first open?"

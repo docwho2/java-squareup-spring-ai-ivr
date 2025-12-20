@@ -22,12 +22,14 @@ public class SquareItemSearch extends AbstractTool {
     @Tool(
             name = "store_product_item",
             description = """
-            Search for store product items by text and return up to 5 item names. \
-            The result may not include all matching items if more than 5 exist.
+            Search for store product items by text and return up to 5 item names. 
+            The result may not include all matching items if more than 5 exist. If you
+            are conversing in another language other than English then you must translate 
+            the searchText parameter into English.
             """
     )
     public SquareItemSearchResult searchItems(
-            @ToolParam(description = "The search text to search for items for sale in English language.", required = true) String searchText
+            @ToolParam(description = "The search text to search for items for sale translated to English language.", required = true) String searchText
     ) {
 
         if (searchText == null || searchText.isBlank()) {

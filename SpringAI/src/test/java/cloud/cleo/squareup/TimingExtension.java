@@ -1,6 +1,7 @@
 package cloud.cleo.squareup;
 
 import static cloud.cleo.squareup.AbstractLexAwsTestSupport.INTER_TEST_DELAY_MS;
+import static cloud.cleo.squareup.AbstractLexAwsTestSupport.JUNIT_TAG_WARM_UP;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -44,7 +45,7 @@ public class TimingExtension implements BeforeTestExecutionCallback, AfterTestEx
         long durationMs = Duration.ofNanos(System.nanoTime() - startNanos).toMillis();
 
         // Skip warmup tests from metrics
-        if (context.getTags().contains("warmup")) {
+        if (context.getTags().contains(JUNIT_TAG_WARM_UP) ) {
             log.info("Warmup {} took {} ms (ignored in metrics)",
                     context.getDisplayName(), durationMs - INTER_TEST_DELAY_MS);
             return;
