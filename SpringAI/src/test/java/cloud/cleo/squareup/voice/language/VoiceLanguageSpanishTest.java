@@ -51,6 +51,11 @@ public class VoiceLanguageSpanishTest extends AbstractVoiceLanguageTest {
         return YES;
     }
 
+    @Override
+    protected String getCityComplaintProcess() {
+       return "¿Tiene la ciudad un procedimiento para presentar quejas? Responda con sí si lo tiene e indique qué pasos seguir a continuación.";
+    }
+
 
     
 }

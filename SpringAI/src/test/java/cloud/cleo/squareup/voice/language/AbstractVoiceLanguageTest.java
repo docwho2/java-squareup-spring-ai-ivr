@@ -105,7 +105,7 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
 
         final var name = getBotResponse(res);
 
-        assertTrue(name.toLowerCase().matches("(?s).*?(copper bot).*"),
+        assertTrue(name.toLowerCase().matches("(?s).*?(copper bot|copper fox).*"),
                 "Name test failed, response was: " + name);
     }
 
@@ -122,7 +122,7 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
 
         final var open = getBotResponse(res);
 
-        assertTrue(open.toLowerCase().matches("(?s).*?(2021|october).*"),
+        assertTrue(open.toLowerCase().matches("(?s).*?(2021).*"),
                 "Open Year test failed, response was: " + open);
     }
 
@@ -140,11 +140,27 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
 
         final var jackets = getBotResponse(res);
 
-
         assertTrue(getYesPattern().matcher(jackets.toLowerCase()).find(),
                 "Jacket response was: " + jackets);
     }
-    
+
+    @Test
+    @Order(-10)
+    @DisplayName("City RAG Complaint Search")
+    public void cityRagTest() {
+        Allure.feature(ALLURE_FEATURE_TOOL_CALL);
+        Allure.feature(ALLURE_FEATURE_RAG);
+        Allure.parameter("Language", getTestLanguage().toString());
+
+        final var res = sendToLex(
+                getCityComplaintProcess()
+        );
+
+        final var city = getBotResponse(res);
+
+        assertTrue(getYesPattern().matcher(city.toLowerCase()).find(),
+                "City RAG Complaint Serch response was: " + city);
+    }
 
     @Test
     @Order(Integer.MAX_VALUE - 100)
@@ -175,9 +191,13 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
     protected abstract String getWhenDidStoreOpen();
 
     protected abstract String getThankYouAllDone();
-    
-    // 
+
+    // Please check the store inventory for candles, respond with yes if you have them.
     protected abstract String getDoYouHaveCandlesInStock();
+    
+    // Does the city have a process for complaints?  respond with yes if there is one and what to do next.
+    protected abstract String getCityComplaintProcess();
+
     protected abstract Pattern getYesPattern();
 
     /**

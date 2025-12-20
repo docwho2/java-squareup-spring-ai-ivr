@@ -124,6 +124,24 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
         log.info(ok ? "Weather Test Passed" : "Weather Test FAILED");
         assertTrue(ok, "Weaather test failed, response was: " + weather);
     }
+    
+    @Test
+    @Order(6)
+    @Feature(ALLURE_FEATURE_RAG)
+    @Feature(ALLURE_FEATURE_TOOL_CALL)
+    @DisplayName("City RAG Complaint Search")
+    public void cityRagTest() {
+
+        final var res = sendToLex(
+                "Does the city have a process for complaints?  Respond with yes if there is one and what to do next."
+        );
+
+        final var city = getBotResponse(res);
+
+        boolean ok = city.toLowerCase().matches("(?is).*?(yes|we do).*");
+        log.info(ok ? "City RAG Complaint Search Test Passed" : "City RAG Complaint Search Test FAILED");
+        assertTrue(ok, "City RAG Complaint Search test failed, response was: " + city);
+    }
 
     @Test
     @Order(Integer.MAX_VALUE)  // Always Last

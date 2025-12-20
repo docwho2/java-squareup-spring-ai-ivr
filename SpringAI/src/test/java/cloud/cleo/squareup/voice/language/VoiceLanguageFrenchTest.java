@@ -50,5 +50,10 @@ private final static Pattern YES = Pattern.compile("(oui)");
     protected Pattern getYesPattern() {
         return YES;
     }
+
+    @Override
+    protected String getCityComplaintProcess() {
+        return "La ville dispose-t-elle d'une procédure de traitement des plaintes ? Répondez par oui si c'est le cas et indiquez la marche à suivre.";
+    }
     
 }

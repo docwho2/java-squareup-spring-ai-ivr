@@ -57,7 +57,7 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
         }
 
         // Kick off retrieval *before* the model call, only when likely useful (service does keyword check)
-        final var cityPrefetchFuture = cityRag.startPrefetchOrNull(eventWrapper.getInputTranscript());
+        final var cityPrefetchFuture = cityRag.startPrefetchOrNull(eventWrapper);
 
         final var toolCtx = new HashMap<String, Object>(2);
         // Always place the event Wrapper in the context for tooling

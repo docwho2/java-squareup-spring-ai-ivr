@@ -28,10 +28,11 @@ public class CitySearch extends AbstractTool {
             name = CITY_SEARCH_FUNCTION_NAME,
             description = """
             Search the City of Wahkon local website knowledge for events, schedules, ordinances, agendas, announcements, and PDFs.
+            If you are conversing in another language other than English then you must translate the query parameter into English.
             """
     )
     public CitySearchResult citySearch(
-            @ToolParam(description = "The query to search the city knowledge base for.", required = true) String query,
+            @ToolParam(description = "The query to search the city knowledge base for translated to English language.", required = true) String query,
             ToolContext ctx) {
 
         if (query == null || query.isBlank()) {

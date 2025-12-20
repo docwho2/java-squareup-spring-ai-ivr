@@ -1,5 +1,7 @@
 package cloud.cleo.squareup.service;
 
+import cloud.cleo.squareup.LexV2EventWrapper;
+import cloud.cleo.squareup.enums.Language;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
@@ -34,7 +36,15 @@ public class CityRagService {
     private final VectorStore vectorStore;
     private final ExecutorService virtualThreadExecutor;
 
-    public CompletableFuture<List<Document>> startPrefetchOrNull(String inputTranscript) {
+    public CompletableFuture<List<Document>> startPrefetchOrNull(LexV2EventWrapper eventWrapper) {
+        // For a pre-fetch it must be english language, other languages will need translation first
+        if ( ! eventWrapper.getLocale().equals(Language.English.getLocale()) ) {
+            log.debug("City prefetch skipped due to not being english language");
+            return null;
+        }
+        
+        final var inputTranscript = eventWrapper.getInputTranscript();
+        
         if (inputTranscript == null || inputTranscript.isBlank()) {
             return null;
         }
