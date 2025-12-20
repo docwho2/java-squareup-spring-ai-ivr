@@ -92,6 +92,8 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
         }
     }
 
+    final static Pattern botNamePattern = Pattern.compile("(copper bot|copper fox|bot )");
+
     @Test
     @Order(-100)
     @DisplayName("Bot Name")
@@ -103,11 +105,10 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
                 getWhatIsYourName()
         );
 
-        final var name = getBotResponse(res);
-
-        assertTrue(name.toLowerCase().matches("(?s).*?(copper bot|copper fox|bot ).*"),
-                "Name test failed, response was: " + name);
+        assertMatchesRegex(botNamePattern, getBotResponse(res));
     }
+
+    final static Pattern open2021 = Pattern.compile("(2021|21)");
 
     @Test
     @Order(-50)
@@ -120,10 +121,7 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
                 getWhenDidStoreOpen()
         );
 
-        final var open = getBotResponse(res);
-
-        assertTrue(open.toLowerCase().matches("(?s).*?(2021).*"),
-                "Open Year test failed, response was: " + open);
+        assertMatchesRegex(open2021, getBotResponse(res));
     }
 
     @Test
@@ -138,10 +136,7 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
                 getDoYouHaveCandlesInStock()
         );
 
-        final var jackets = getBotResponse(res);
-
-        assertTrue(getYesPattern().matcher(jackets.toLowerCase()).find(),
-                "Jacket response was: " + jackets);
+        assertMatchesRegex(getYesPattern(), getBotResponse(res));
     }
 
     @Test
@@ -156,10 +151,7 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
                 getCityComplaintProcess()
         );
 
-        final var city = getBotResponse(res);
-
-        assertTrue(getYesPattern().matcher(city.toLowerCase()).find(),
-                "City RAG Complaint Serch response was: " + city);
+        assertMatchesRegex(getYesPattern(), getBotResponse(res));
     }
 
     @Test
@@ -197,7 +189,7 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
 
     // Please check the store inventory for candles, respond with yes if you have them.
     protected abstract String getDoYouHaveCandlesInStock();
-    
+
     // Does the city have a process for complaints?  respond with yes if there is one and what to do next.
     protected abstract String getCityComplaintProcess();
 

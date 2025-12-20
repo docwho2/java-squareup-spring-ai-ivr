@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
 public class FrenchTest extends AbstractVoiceLanguageTest {
     
 
-private final static Pattern YES = Pattern.compile("(oui |oui,)");
+private final static Pattern YES = Pattern.compile("(oui |oui,)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     
     @Override
     protected Language getTestLanguage() {

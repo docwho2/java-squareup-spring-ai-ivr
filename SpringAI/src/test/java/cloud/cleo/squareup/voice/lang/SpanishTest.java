@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 @Epic(ALLURE_EPIC_VOICE)
 public class SpanishTest extends AbstractVoiceLanguageTest {
 
-    private final static Pattern YES = Pattern.compile("(si |sí |si,|sí,|sí!|si!)");
+    private final static Pattern YES = Pattern.compile("(si |sí |si,|sí,|sí!|si!)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
     
     @Override

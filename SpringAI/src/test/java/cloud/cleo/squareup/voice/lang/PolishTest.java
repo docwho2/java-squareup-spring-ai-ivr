@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 @Epic(ALLURE_EPIC_VOICE)
 public class PolishTest extends AbstractVoiceLanguageTest {
 
-    private final static Pattern YES = Pattern.compile("(tak |tak,)");
+    private final static Pattern YES = Pattern.compile("(tak |tak,)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
     
     @Override

@@ -7,6 +7,7 @@ import io.qameta.allure.Allure;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import lombok.extern.log4j.Log4j2;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -89,6 +90,8 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
         assertTrue(ok, "Address test failed, response was: " + address);
     }
 
+    
+    final static Pattern yesStaff = Pattern.compile("(jensen|yes|copperfoxgifts|indeed|confirm)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     @Test
     @Order(4)
     @Feature(ALLURE_FEATURE_SQUARE_API)
@@ -102,7 +105,7 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
 
         final var staff = getBotResponse(res);
 
-        boolean ok = staff.matches("(?is).*?(jensen|yes|copperfoxgifts|indeed|confirm).*");
+        boolean ok = yesStaff.matcher(staff).find();
         log.info(ok ? "Staff Test Passed" : "Staff Test FAILED");
         assertTrue(ok, "Staff test failed, response was: " + staff);
     }

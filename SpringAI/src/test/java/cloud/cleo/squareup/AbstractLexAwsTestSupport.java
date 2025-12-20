@@ -42,16 +42,15 @@ public abstract class AbstractLexAwsTestSupport {
     public final static String ALLURE_FEATURE_WEATHER_API = "Weather API";
     public final static String ALLURE_FEATURE_CHIME_CC = "Chime Call Control";
     public final static String ALLURE_FEATURE_RAG = "RAG Vector Search";
-    
-    
+
     public final static String ALLURE_EPIC_SMOKE = "Smoke Tests";
     public final static String ALLURE_EPIC_WARM_UP = "Warm Up Tests";
     public final static String ALLURE_EPIC_VOICE = "Voice Tests";
     public final static String ALLURE_EPIC_LANGUAGE = "Language Tests";
     public final static String ALLURE_EPIC_PERF_SUM = "Performance Summary";
-    
+
     public final static String JUNIT_TAG_WARM_UP = "WarmUp";
-    
+
     private static final boolean RUN_TESTS
             = Boolean.parseBoolean(System.getenv().getOrDefault("RUN_TESTS", "false"));
 
@@ -64,16 +63,14 @@ public abstract class AbstractLexAwsTestSupport {
                     System.getenv().getOrDefault("STACK_NAME", "cfox-squareup-spring-ai-ivr")
             );
 
-
     private static final String SESSION_ID
             = System.getenv().getOrDefault("LEX_SESSION_ID", UUID.randomUUID().toString());
-
 
     private static LexRuntimeV2Client lexClient;
     private static String botId;
     private static String botAliasId;
     private static volatile boolean awsReady = false;
-    
+
     // Model being used
     public static String SPRING_AI_MODEL = System.getenv("SPRING_AI_MODEL");
 
@@ -199,9 +196,9 @@ public abstract class AbstractLexAwsTestSupport {
 
         final var content = getBotResponse(response);
         assertNotNull(content);
-        
+
         // Check for Markdown in responses
-        if ( MARKDOWN_PATTERN.matcher(content).find() ) {
+        if (MARKDOWN_PATTERN.matcher(content).find()) {
             Allure.addAttachment("Markdown Detected in response!!!", "");
             Allure.label("tag", "Markdown Detected");
         }
@@ -209,6 +206,22 @@ public abstract class AbstractLexAwsTestSupport {
         Allure.addAttachment("Lex Response", "text/plain", content);
         log.info("<<< response: \"{}\"", content);
         return response;
+    }
+
+    protected final void assertMatchesRegex(Pattern pattern, String actual) {
+        if (actual == null) {
+            fail("Actual was null (pattern=" + pattern.pattern() + ")");
+            return;
+        }
+
+        if (! pattern.matcher(actual).find()) {
+            Allure.addAttachment("Expected regex", "text/plain", pattern.pattern());
+
+
+            fail("Did not match regex.\n"
+                    + "Regex: " + pattern.pattern() + "\n"
+                    + "Actual: " + actual);
+        }
     }
 
     /**
@@ -279,11 +292,11 @@ public abstract class AbstractLexAwsTestSupport {
     protected ChannelPlatform getChannel() {
         return ChannelPlatform.TWILIO;
     }
-    
+
     /**
      * Override when testing other languages.
-     * 
-     * @return 
+     *
+     * @return
      */
     protected Language getLanguage() {
         return Language.English;

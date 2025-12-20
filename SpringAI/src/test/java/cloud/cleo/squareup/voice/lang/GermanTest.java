@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 @Epic(ALLURE_EPIC_VOICE)
 public class GermanTest extends AbstractVoiceLanguageTest {
 
-    private final static Pattern YES = Pattern.compile("(ja |ja,)");
+    private final static Pattern YES = Pattern.compile("(ja |ja,)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
     
     @Override
