@@ -1,1 +1,1 @@
-[{"values":["us.amazon.nova-2-lite-v1:0"],"name":"SpringAiModel"},{"values":["BEDROCK"],"name":"SpringAiProvider"},{"values":["us-west-2"],"name":"AwsRegion"}]
+[{"values":["us.amazon.nova-2-lite-v1:0"],"name":"SpringAiModel"},{"values":["BEDROCK"],"name":"SpringAiProvider"},{"values":["us-east-1"],"name":"AwsRegion"}]
