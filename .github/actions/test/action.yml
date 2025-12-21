@@ -108,9 +108,14 @@ runs:
       run: |
         set -euo pipefail
         mkdir -p SpringAI/target/allure-results
+        eval_prop () {
         
-        boot_version="$(mvn -q -DforceStdout help:evaluate -Dexpression=spring.boot.version | tail -n 1)"
-        ai_version="$(mvn -q -DforceStdout help:evaluate -Dexpression=spring.ai.version   | tail -n 1)"
+        local expr="$1"
+            mvn -q -DforceStdout help:evaluate -Dexpression="${expr}" 2>/dev/null | tail -n 1
+        }
+
+        boot_version="$(eval_prop spring.boot.version)"
+        ai_version="$(eval_prop spring.ai.version)"
     
         cat <<EOF > SpringAI/target/allure-results/environment.properties
         SpringAiModel=${{ inputs.spring-ai-model }}
