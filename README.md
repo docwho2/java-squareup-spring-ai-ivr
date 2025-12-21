@@ -2,17 +2,26 @@
 
 ## Background
 
-This project is a [SIP Media Application](https://docs.aws.amazon.com/chime-sdk/latest/ag/use-sip-apps.html) and makes use of the 
-[Java Chime SMA Flow Library](https://github.com/docwho2/java-chime-voicesdk-sma) to deliver a [Spring AI](https://docs.spring.io/spring-ai/reference/) voice bot IVR application. The IVR application is integrated with the [Square API](https://developer.squareup.com/us/en) to allow callers to ask questions about products 
-and business hours, transfer to employee cell phones, etc.
+This project is a **carrier-grade AI IVR and multi-channel assistant platform** built on [**Amazon Chime SIP Media Applications**](https://docs.aws.amazon.com/chime-sdk/latest/ag/use-sip-apps.html) and [**Spring AI**](https://docs.spring.io/spring-ai/reference/), designed for **real-world retail operations**, not demonstrations.
 
-## Testing Links
+It combines **telephony-class call control**, **large language models**, **real-time business data**, and **live local knowledge** into a single, cohesive system capable of running **24/7 at production scale** across multiple AWS regions.
 
-[Nova 2 Lite Smoke Tests](https://docwho2.github.io/java-squareup-spring-ai-ivr/us.amazon.nova-2-lite-v1_0/SmokeTests).
+At its core, the platform uses a custom **Java Chime SMA orchestration layer** to control calls end-to-end, while delegating conversational intelligence to **Spring AI**. The LLM is tightly integrated with:
+- The **Square API** for inventory, store hours, and employee routing
+- **Retrieval-Augmented Generation (RAG)** built from live web and social data
+- A highly optimized **DynamoDB chat memory subsystem**
+- Multi-language voice and text channels via **Amazon Lex**, SMS, and Facebook Messenger
 
-Full model regression testing coming soon...
+Unlike typical AI voice demos, this system was engineered with:
+- **Strict latency budgets**
+- **Deterministic tool execution**
+- **Multi-region fault tolerance**
+- **Full CI/CD automation**
+- **Exhaustive, behavior-driven testing**
 
-# 🚀 Why This Project Is Enterprise-Grade (Not a Demo)
+The result is not an “AI answering bot,” but a **fully autonomous AI call agent** capable of answering questions, controlling call flow, switching languages, retrieving live data, and escalating to humans — all while remaining model-agnostic and continuously verifiable through automated regression testing.
+
+## 🚀 Why This Project Is Enterprise-Grade (Not a Demo)
 
 This application is the result of **years of real-world production use**, customer feedback, multi-region deployments, and extensive testing. It is **not a prototype** or reference sample. It is a **carrier-grade AI voice and messaging platform** engineered end-to-end for reliability, performance, and telephony-class expectations.
 
@@ -82,6 +91,42 @@ The test suite provides:
 Each test run produces a [**fully navigable Allure report**](https://docwho2.github.io/java-squareup-spring-ai-ivr/) with concrete evidence of system behavior, making this suite both a **regression safety net** and a **model evaluation framework**.
 
 ➡️ See **[tests/README.md](./SpringAI/src/test/README.md)** for full details.
+
+---
+
+## 📖 Retrieval-Augmented Generation (RAG) with Live Local Data
+
+This platform includes a **production-grade RAG subsystem** built on **Spring AI**, designed to keep the assistant grounded in **real, continuously changing local knowledge** — not static demo documents.
+
+Key capabilities:
+
+- **Automated ingestion** of live data from:
+  - Public **web pages** (custom crawler)
+  - **Facebook page posts** via the Graph API
+- **English-normalized vector storage** with **automatic query translation**, enabling:
+  - Multilingual user questions
+  - Accurate retrieval from English-only knowledge sources
+  - Correct localized responses back to the user
+- **Metadata-rich embeddings** for source attribution, scoping, and filtering
+- **Tool-driven retrieval** via Spring AI (RAG is invoked explicitly, not injected heuristically)
+
+### ⚡ Low-Latency Prefetching for Carrier-Grade Response Times
+
+To meet **telephony-class latency requirements**, the system employs **strategic prefetching**:
+
+- RAG queries and external data lookups are **prefetched early in the turn lifecycle**
+- Frequently accessed local knowledge (city info, policies, announcements) is warmed ahead of response generation
+- Prefetching is **deterministic and bounded**, avoiding speculative or wasteful calls
+
+This ensures that when the model decides to retrieve context, the data is already available — delivering **consistent, low-latency responses suitable for real-time voice interactions**.
+
+The RAG pipeline is fully integrated into the same **enterprise test harness**, proving that:
+- Retrieval occurs when appropriate
+- Prefetching improves response latency without changing behavior
+- Results remain grounded in actual source content
+- Behavior is consistent across languages, channels, and LLM providers
+
+Together, live data ingestion and latency-aware prefetching ensure local policies, events, and announcements stay **current, verifiable, and fast**, even under carrier-grade voice constraints.
 
 ---
 
