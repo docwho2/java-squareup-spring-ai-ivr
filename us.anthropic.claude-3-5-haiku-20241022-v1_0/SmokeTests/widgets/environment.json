@@ -1,1 +1,1 @@
-[{"values":["us.anthropic.claude-3-5-haiku-20241022-v1:0"],"name":"SpringAiModel"},{"values":["BEDROCK"],"name":"SpringAiProvider"},{"values":["4.0.1"],"name":"SpringBootVersion"},{"values":["2.0.0-M1"],"name":"SpringAiVersion"},{"values":["us-west-2"],"name":"AwsRegion"}]
+[{"values":["us.anthropic.claude-3-5-haiku-20241022-v1:0"],"name":"SpringAiModel"},{"values":["BEDROCK"],"name":"SpringAiProvider"},{"values":["4.0.1"],"name":"SpringBootVersion"},{"values":["2.0.0-M1"],"name":"SpringAiVersion"},{"values":["us-east-1"],"name":"AwsRegion"}]
