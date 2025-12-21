@@ -106,8 +106,8 @@ runs:
     - name: Write Allure environment (region/stack)
       shell: bash
       run: |
+        set -euo pipefail
         mkdir -p SpringAI/target/allure-results
-        
         
         boot_version="$(mvn -q -DforceStdout help:evaluate -Dexpression=spring.boot.version | tail -n 1)"
         ai_version="$(mvn -q -DforceStdout help:evaluate -Dexpression=spring.ai.version   | tail -n 1)"
