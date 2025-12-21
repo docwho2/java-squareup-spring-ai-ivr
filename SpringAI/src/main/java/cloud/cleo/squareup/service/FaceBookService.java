@@ -111,6 +111,7 @@ public class FaceBookService {
                             .pathSegment(FB_API_VERSION, pageId, "pass_thread_control")
                             .queryParam("access_token", pageAccessToken)
                             .build())
+                    .accept(MediaType.APPLICATION_JSON)
                     .body(json)
                     .retrieve()
                     .body(JsonNode.class);
@@ -161,6 +162,7 @@ public class FaceBookService {
                             .pathSegment(FB_API_VERSION, "me", "custom_user_settings")
                             .queryParam("access_token", pageAccessToken)
                             .build())
+                    .accept(MediaType.APPLICATION_JSON)
                     .body(json)
                     .retrieve()
                     .body(JsonNode.class);
@@ -209,6 +211,7 @@ public class FaceBookService {
                             .pathSegment(FB_API_VERSION, "me", "messages")
                             .queryParam("access_token", pageAccessToken)
                             .build())
+                    .accept(MediaType.APPLICATION_JSON)
                     .body(json)
                     .retrieve()
                     .body(JsonNode.class);
@@ -234,36 +237,38 @@ public class FaceBookService {
      * @param id
      * @return 
      */
-    public String getFacebookName(String id) {
+    public Optional<String> getFacebookName(String id) {
         try {
             JsonNode result = restClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .pathSegment(FB_API_VERSION, id)
                             .queryParam("access_token", pageAccessToken)
+                            .queryParam("fields", "name,first_name,last_name")
                             .build())
+                    .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
                     .body(JsonNode.class);
 
             log.debug("FB Graph Query result: {}", result::toPrettyString);
 
             if (result == null) {
-                return "Unknown";
+                return Optional.empty();
             }
 
             // Check for a single name field first
             if (result.hasNonNull("name")) {
-                return result.get("name").asText();
+                return Optional.of(result.get("name").asText());
             }
 
             // Or first + last
             if (result.hasNonNull("first_name") && result.hasNonNull("last_name")) {
-                return result.get("first_name").asText() + " " + result.get("last_name").asText();
+                return Optional.of(result.get("first_name").asText() + " " + result.get("last_name").asText());
             }
 
         } catch (Exception e) {
             log.error("Facebook user name retrieval error", e);
         }
 
-        return "Unknown";
+        return Optional.empty();
     }
 }

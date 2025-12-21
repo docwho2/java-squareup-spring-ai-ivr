@@ -46,6 +46,8 @@ public abstract class AbstractLexAwsTestSupport {
     public final static String ALLURE_EPIC_SMOKE = "Smoke Tests";
     public final static String ALLURE_EPIC_WARM_UP = "Warm Up Tests";
     public final static String ALLURE_EPIC_VOICE = "Voice Tests";
+    public final static String ALLURE_EPIC_SMS = "SMS Tests";
+    public final static String ALLURE_EPIC_FACEBOOK = "Facebook Tests";
     public final static String ALLURE_EPIC_LANGUAGE = "Language Tests";
     public final static String ALLURE_EPIC_PERF_SUM = "Performance Summary";
 
@@ -95,6 +97,10 @@ public abstract class AbstractLexAwsTestSupport {
             + // bold underscore
             ")"
     );
+    
+    // Common Patterns used to validate knowledge responses
+    public final static Pattern COPPER_BOT_PATTERN = Pattern.compile("(copper bot|copper fox|bot )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+    public final static Pattern COPPER_FOX_OPEN_YEAR = Pattern.compile("(2021|21)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
     static {
         if (RUN_TESTS) {
@@ -218,12 +224,26 @@ public abstract class AbstractLexAwsTestSupport {
             Allure.addAttachment("Expected regex", "text/plain", pattern.pattern());
 
 
-            fail("Did not match regex.\n"
-                    + "Regex: " + pattern.pattern() + "\n"
+            fail("Did not match regex.\nRegex: " + pattern.pattern() + "\n"
                     + "Actual: " + actual);
         }
     }
 
+    protected final void assertNotMatchesRegex(Pattern pattern, String actual) {
+        if (actual == null) {
+            fail("Actual was null (pattern=" + pattern.pattern() + ")");
+            return;
+        }
+
+        if ( pattern.matcher(actual).find() ) {
+            Allure.addAttachment("Unexpected regex", "text/plain", pattern.pattern());
+
+
+            fail("Matched regex.\nRegex: " + pattern.pattern() + "\n"
+                    + "Actual: " + actual);
+        }
+    }
+    
     /**
      * Given a Lex Response, extract what the BOT response was. In some cases it will be in the session state for a
      * Close Dialog action.

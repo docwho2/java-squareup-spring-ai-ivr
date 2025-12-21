@@ -92,7 +92,6 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
         }
     }
 
-    final static Pattern botNamePattern = Pattern.compile("(copper bot|copper fox|bot )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
     @Test
     @Order(-100)
@@ -105,10 +104,10 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
                 getWhatIsYourName()
         );
 
-        assertMatchesRegex(botNamePattern, getBotResponse(res));
+        assertMatchesRegex(COPPER_BOT_PATTERN, getBotResponse(res));
     }
 
-    final static Pattern open2021 = Pattern.compile("(2021|21)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+ 
 
     @Test
     @Order(-50)
@@ -121,7 +120,7 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
                 getWhenDidStoreOpen()
         );
 
-        assertMatchesRegex(open2021, getBotResponse(res));
+        assertMatchesRegex(COPPER_FOX_OPEN_YEAR, getBotResponse(res));
     }
 
     @Test

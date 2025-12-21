@@ -1,4 +1,4 @@
-package cloud.cleo.squareup.voice;
+package cloud.cleo.squareup.sms;
 
 import cloud.cleo.squareup.AbstractLexAwsTestSupport;
 import cloud.cleo.squareup.enums.ChannelPlatform;
@@ -17,7 +17,7 @@ import org.junit.jupiter.api.TestInstance;
  */
 @Log4j2
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class AbstractVoiceTest extends AbstractLexAwsTestSupport {
+public abstract class AbstractSmsTest extends AbstractLexAwsTestSupport {
 
     // Use one random session ID for this voice session
     private final String SESSION_ID = UUID.randomUUID().toString();
@@ -27,9 +27,9 @@ public abstract class AbstractVoiceTest extends AbstractLexAwsTestSupport {
     @DisplayName("Bot Name")
     public void botNameTest() {
         Allure.feature(ALLURE_FEATURE_STORE_KNOWLEDGE);
-        
+
         final var res = sendToLex(
-                "Hello what is your name?"
+                "Hello, what is your name?"
         );
 
         assertMatchesRegex(COPPER_BOT_PATTERN, getBotResponse(res));
@@ -45,7 +45,9 @@ public abstract class AbstractVoiceTest extends AbstractLexAwsTestSupport {
                 "In what year did the store first open?"
         );
 
-         assertMatchesRegex(COPPER_FOX_OPEN_YEAR, getBotResponse(res));
+        final var open = getBotResponse(res);
+
+        assertMatchesRegex(COPPER_FOX_OPEN_YEAR, getBotResponse(res));
     }
 
     @Override
@@ -54,12 +56,12 @@ public abstract class AbstractVoiceTest extends AbstractLexAwsTestSupport {
     }
 
     /**
-     * Voice channel testing
+     * SMS channel testing
      *
      * @return
      */
     @Override
     protected ChannelPlatform getChannel() {
-        return ChannelPlatform.CHIME;
+        return ChannelPlatform.TWILIO;
     }
 }

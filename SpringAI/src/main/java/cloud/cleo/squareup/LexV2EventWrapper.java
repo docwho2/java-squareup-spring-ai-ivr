@@ -607,7 +607,12 @@ public final class LexV2EventWrapper {
 
             if (name == null) {
                 // Not cached yet, call Facebook API once
-                name = faceBookService.getFacebookName(getSessionId());
+                final var nameOpt = faceBookService.getFacebookName(getSessionId());
+                if ( nameOpt.isPresent() ){
+                    name = nameOpt.get();
+                } else {
+                    name = "Unknown";
+                }
                 // Cache it even if it's "Unknown" to avoid repeated calls
                 putSessionAttribute("fb_user_name", name);
             }

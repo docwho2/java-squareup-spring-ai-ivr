@@ -15,6 +15,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @Log4j2
 @Epic(ALLURE_EPIC_SMOKE)
 @ExtendWith({TimingExtension.class})
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SmokeTests extends AbstractLexAwsTestSupport {
 
     @Test
