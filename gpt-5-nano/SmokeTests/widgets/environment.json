@@ -1,1 +1,1 @@
-[{"values":["gpt-5-nano"],"name":"SpringAiModel"},{"values":["OPENAI"],"name":"SpringAiProvider"},{"values":["4.0.1"],"name":"SpringBootVersion"},{"values":["2.0.0-M1"],"name":"SpringAiVersion"},{"values":["us-west-2"],"name":"AwsRegion"}]
+[{"values":["gpt-5-nano"],"name":"SpringAiModel"},{"values":["OPENAI"],"name":"SpringAiProvider"},{"values":["4.0.1"],"name":"SpringBootVersion"},{"values":["2.0.0-M1"],"name":"SpringAiVersion"},{"values":["us-east-1"],"name":"AwsRegion"}]
