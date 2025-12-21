@@ -1,1 +1,1 @@
-{"reportName":"FullRegressionSuite","testRuns":[],"statistic":{"failed":0,"broken":0,"skipped":0,"passed":81,"unknown":0,"total":81},"time":{"start":1766327976226,"stop":1766328147327,"duration":171101,"minDuration":1186,"maxDuration":4367,"sumDuration":170813}}
+{"reportName":"FullRegressionSuite","testRuns":[],"statistic":{"failed":0,"broken":0,"skipped":0,"passed":84,"unknown":0,"total":84},"time":{"start":1766344252842,"stop":1766344420922,"duration":168080,"minDuration":1127,"maxDuration":2641,"sumDuration":167784}}

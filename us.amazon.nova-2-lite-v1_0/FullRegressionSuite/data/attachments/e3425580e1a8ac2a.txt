@@ -1,0 +1,1 @@
+DialogAction(Type=Close)
