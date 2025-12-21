@@ -1,0 +1,411 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"## Ask what year the store opened
+- Assert that response contains ""2021""
+","1412","Store Open Year","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.TransferTest","cloud.cleo.squareup.voice.TransferTest","storeOpenYearTest"
+"## Ask what year the store opened
+- Assert that response contains ""2021""
+- Assert that response does not contain English words (Yes,open,started,october,etc.)
+","1828","Store Open Year","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.DutchTest","cloud.cleo.squareup.voice.lang.DutchTest","storeOpenYearTest"
+"## Ask what year the store opened
+- Assert that response contains ""2021""
+- Assert that response does not contain English words (Yes,open,started,october,etc.)
+","2117","Store Open Year","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.PolishTest","cloud.cleo.squareup.voice.lang.PolishTest","storeOpenYearTest"
+"## Ask what year the store opened
+- Assert that response contains ""2021""
+- Assert that response does not contain English words (Yes,open,started,october,etc.)
+","1460","Store Open Year","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.PolishTest","cloud.cleo.squareup.sms.lang.PolishTest","storeOpenYearTest"
+"## Indicate we are all done with the call
+- Assert that proper tool is called to end the call
+- Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
+  - Chime would then hang up on the caller
+","1861","Hang Up","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.SwedishTest","cloud.cleo.squareup.voice.lang.SwedishTest","hangupTest"
+"## Ask if the City has a complaint process
+The model must translate ""complaint process"" to English before calling the tool for RAG query
+- Assert that response contains ""yes"" in the naitive language
+- Assert that response does not contain English words (Yes,complaint,found,etc.)
+","2305","City RAG Complaint Search","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.SpanishTest","cloud.cleo.squareup.sms.lang.SpanishTest","cityRagTest"
+"## Ask if the City has a complaint process
+The model must translate ""complaint process"" to English before calling the tool for RAG query
+- Assert that response contains ""yes"" in the naitive language
+- Assert that response does not contain English words (Yes,complaint,found,etc.)
+","2788","City RAG Complaint Search","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.NorwegianTest","cloud.cleo.squareup.voice.lang.NorwegianTest","cityRagTest"
+"## Indicate we are all done with the call
+- Assert that proper tool is called to end the call
+- Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
+  - Chime would then hang up on the caller
+","1967","Hang Up","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.NorwegianTest","cloud.cleo.squareup.voice.lang.NorwegianTest","hangupTest"
+"## Ask if the City has a complaint process
+The model must translate ""complaint process"" to English before calling the tool for RAG query
+- Assert that response contains ""yes"" in the naitive language
+- Assert that response does not contain English words (Yes,complaint,found,etc.)
+","2259","City RAG Complaint Search","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.FrenchTest","cloud.cleo.squareup.sms.lang.FrenchTest","cityRagTest"
+"## Ask what the Bot's name is
+- Assert that response contains ""Copper Bot""
+","1453","Bot Name","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.LanguageSwitchTest","cloud.cleo.squareup.voice.LanguageSwitchTest","botNameTest"
+"## Ask if Candles are in stock
+The model must interpret this as non-English and now converese in this languauge moving forward
+- Assert that response contains ""yes"" in the naitive language
+  - This ensures the query search term was translated to English properly for the search to succeed
+- Assert that response does not contain English words (Yes,Candle,in stock,etc.)
+","2296","Inventory Candles","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.PolishTest","cloud.cleo.squareup.sms.lang.PolishTest","candlesTest"
+"## Indicate we are all done with the call
+- Assert that proper tool is called to end the call
+- Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
+  - Chime would then hang up on the caller
+","1903","Hang Up","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.FrenchTest","cloud.cleo.squareup.voice.lang.FrenchTest","hangupTest"
+"## Ask what year the store opened
+- Assert that response contains ""2021""
+- Assert that response does not contain English words (Yes,open,started,october,etc.)
+","1772","Store Open Year","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.FrenchTest","cloud.cleo.squareup.voice.lang.FrenchTest","storeOpenYearTest"
+"## Ask if the City has a complaint process
+The model must translate ""complaint process"" to English before calling the tool for RAG query
+- Assert that response contains ""yes"" in the naitive language
+- Assert that response does not contain English words (Yes,complaint,found,etc.)
+","2901","City RAG Complaint Search","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.PolishTest","cloud.cleo.squareup.voice.lang.PolishTest","cityRagTest"
+"## Ask to speak in the target language
+- Assert that proper tool is called to switch languages
+- Assert that the exact language (enum) was passed correctly to the tool call
+- Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
+Upon Success, Chime engages the proper LexBot in the target Locale.
+If this test fails, remaining tests are skipped since they are predicated on speaking the target language
+","2178","Indicate Starting Language","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.GermanTest","cloud.cleo.squareup.voice.lang.GermanTest","indicateLanguageTest"
+"## Ask what the Bot's name is
+- Assert that response contains ""Copper Bot""
+- Assert that response does not contain English words (name,store,helpful,assistant,etc..)
+","2048","Bot Name","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.SpanishTest","cloud.cleo.squareup.voice.lang.SpanishTest","botNameTest"
+"## Ask what year the store opened
+- Assert that response contains ""2021""
+- Assert that response does not contain English words (Yes,open,started,october,etc.)
+","2020","Store Open Year","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.FinnishTest","cloud.cleo.squareup.voice.lang.FinnishTest","storeOpenYearTest"
+"## Ask if the City has a complaint process
+The model must translate ""complaint process"" to English before calling the tool for RAG query
+- Assert that response contains ""yes"" in the naitive language
+- Assert that response does not contain English words (Yes,complaint,found,etc.)
+","2548","City RAG Complaint Search","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.PolishTest","cloud.cleo.squareup.sms.lang.PolishTest","cityRagTest"
+"## Indicate we are all done with the call
+- Assert that proper tool is called to end the call
+- Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
+  - Chime would then hang up on the caller
+","1887","Hang Up","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.HangupTest","cloud.cleo.squareup.voice.HangupTest","hangupTest"
+"## Ask if the City has a complaint process
+The model must translate ""complaint process"" to English before calling the tool for RAG query
+- Assert that response contains ""yes"" in the naitive language
+- Assert that response does not contain English words (Yes,complaint,found,etc.)
+","2610","City RAG Complaint Search","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.GermanTest","cloud.cleo.squareup.sms.lang.GermanTest","cityRagTest"
+"## Ask if the City has a complaint process
+The model must translate ""complaint process"" to English before calling the tool for RAG query
+- Assert that response contains ""yes"" in the naitive language
+- Assert that response does not contain English words (Yes,complaint,found,etc.)
+","2332","City RAG Complaint Search","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.NorwegianTest","cloud.cleo.squareup.sms.lang.NorwegianTest","cityRagTest"
+"## Indicate we are all done with the call
+- Assert that proper tool is called to end the call
+- Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
+  - Chime would then hang up on the caller
+","2118","Hang Up","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.FinnishTest","cloud.cleo.squareup.voice.lang.FinnishTest","hangupTest"
+"## Ask to speak in the target language
+- Assert that proper tool is called to switch languages
+- Assert that the exact language (enum) was passed correctly to the tool call
+- Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
+Upon Success, Chime engages the proper LexBot in the target Locale.
+If this test fails, remaining tests are skipped since they are predicated on speaking the target language
+","2099","Indicate Starting Language","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.PolishTest","cloud.cleo.squareup.voice.lang.PolishTest","indicateLanguageTest"
+"## Ask if Candles are in stock
+- Assert that response contains ""yes"" in the naitive language
+  - This ensures the query search term was translated to English properly for the search to succeed
+- Assert that response does not contain English words (Yes,Candle,in stock,etc.)
+","2512","Inventory Candles","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.FinnishTest","cloud.cleo.squareup.voice.lang.FinnishTest","candlesTest"
+"## Ask to speak in the target language
+- Assert that proper tool is called to switch languages
+- Assert that the exact language (enum) was passed correctly to the tool call
+- Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
+Upon Success, Chime engages the proper LexBot in the target Locale.
+If this test fails, remaining tests are skipped since they are predicated on speaking the target language
+","2026","Indicate Starting Language","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.FrenchTest","cloud.cleo.squareup.voice.lang.FrenchTest","indicateLanguageTest"
+"## Ask if Candles are in stock
+The model must interpret this as non-English and now converese in this languauge moving forward
+- Assert that response contains ""yes"" in the naitive language
+  - This ensures the query search term was translated to English properly for the search to succeed
+- Assert that response does not contain English words (Yes,Candle,in stock,etc.)
+","2206","Inventory Candles","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.NorwegianTest","cloud.cleo.squareup.sms.lang.NorwegianTest","candlesTest"
+"## Ask what the Bot's name is
+- Assert that response contains ""Copper Bot""
+- Assert that response does not contain English words (name,store,helpful,assistant,etc..)
+","1975","Bot Name","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.DutchTest","cloud.cleo.squareup.voice.lang.DutchTest","botNameTest"
+"## Indicate we are all done with the call
+- Assert that proper tool is called to end the call
+- Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
+  - Chime would then hang up on the caller
+","1910","Hang Up","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.DutchTest","cloud.cleo.squareup.voice.lang.DutchTest","hangupTest"
+"## Ask if Candles are in stock
+- Assert that response contains ""yes"" in the naitive language
+  - This ensures the query search term was translated to English properly for the search to succeed
+- Assert that response does not contain English words (Yes,Candle,in stock,etc.)
+","2387","Inventory Candles","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.SwedishTest","cloud.cleo.squareup.voice.lang.SwedishTest","candlesTest"
+"## Ask to speak in Spanish
+- Assert that proper tool is called to switch languages
+- Assert that the exact language (enum) was passed correctly to the tool call for Spanish
+- Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
+  - Chime would then start a new LexSession with Spanish Locale
+","2115","Language Switch","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.LanguageSwitchTest","cloud.cleo.squareup.voice.LanguageSwitchTest","languageSwitchTest"
+"## Ask if the City has a complaint process
+The model must translate ""complaint process"" to English before calling the tool for RAG query
+- Assert that response contains ""yes"" in the naitive language
+- Assert that response does not contain English words (Yes,complaint,found,etc.)
+","2293","City RAG Complaint Search","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.DutchTest","cloud.cleo.squareup.voice.lang.DutchTest","cityRagTest"
+"## Ask to speak in the target language
+- Assert that proper tool is called to switch languages
+- Assert that the exact language (enum) was passed correctly to the tool call
+- Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
+Upon Success, Chime engages the proper LexBot in the target Locale.
+If this test fails, remaining tests are skipped since they are predicated on speaking the target language
+","2173","Indicate Starting Language","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.FinnishTest","cloud.cleo.squareup.voice.lang.FinnishTest","indicateLanguageTest"
+"## Ask if the City has a complaint process
+The model must translate ""complaint process"" to English before calling the tool for RAG query
+- Assert that response contains ""yes"" in the naitive language
+- Assert that response does not contain English words (Yes,complaint,found,etc.)
+","2654","City RAG Complaint Search","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.FinnishTest","cloud.cleo.squareup.voice.lang.FinnishTest","cityRagTest"
+"## Ask what the Bot's name is
+- Assert that response contains ""Copper Bot""
+- Assert that response does not contain English words (name,store,helpful,assistant,etc..)
+","2091","Bot Name","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.GermanTest","cloud.cleo.squareup.voice.lang.GermanTest","botNameTest"
+"## Ask if the City has a complaint process
+The model must translate ""complaint process"" to English before calling the tool for RAG query
+- Assert that response contains ""yes"" in the naitive language
+- Assert that response does not contain English words (Yes,complaint,found,etc.)
+","2545","City RAG Complaint Search","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.FinnishTest","cloud.cleo.squareup.sms.lang.FinnishTest","cityRagTest"
+"## Ask to speak in the target language
+- Assert that proper tool is called to switch languages
+- Assert that the exact language (enum) was passed correctly to the tool call
+- Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
+Upon Success, Chime engages the proper LexBot in the target Locale.
+If this test fails, remaining tests are skipped since they are predicated on speaking the target language
+","2087","Indicate Starting Language","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.NorwegianTest","cloud.cleo.squareup.voice.lang.NorwegianTest","indicateLanguageTest"
+"## Ask if the City has a complaint process
+The model must translate ""complaint process"" to English before calling the tool for RAG query
+- Assert that response contains ""yes"" in the naitive language
+- Assert that response does not contain English words (Yes,complaint,found,etc.)
+","2571","City RAG Complaint Search","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.SwedishTest","cloud.cleo.squareup.voice.lang.SwedishTest","cityRagTest"
+"## Ensure Session is cleared for Facebook tests
+- Clear all chat memory so tests are clean
+  - assert that response contains ""cleared""
+- We assert that lex dialog is CLOSED
+","1089","Facebook Clear Memory","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.fb.FacebookTests","cloud.cleo.squareup.fb.FacebookTests","facebookClearTest"
+"## Ask what the Bot's name is
+- Assert that response contains ""Copper Bot""
+- Assert that response does not contain English words (name,store,helpful,assistant,etc..)
+","2431","Bot Name","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.NorwegianTest","cloud.cleo.squareup.voice.lang.NorwegianTest","botNameTest"
+"## Ask what the Bot's name is
+- Assert that response contains ""Copper Bot""
+- Assert that response does not contain English words (name,store,helpful,assistant,etc..)
+","2170","Bot Name","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.SwedishTest","cloud.cleo.squareup.voice.lang.SwedishTest","botNameTest"
+"## Ask if Candles are in stock
+The model must interpret this as non-English and now converese in this languauge moving forward
+- Assert that response contains ""yes"" in the naitive language
+  - This ensures the query search term was translated to English properly for the search to succeed
+- Assert that response does not contain English words (Yes,Candle,in stock,etc.)
+","2138","Inventory Candles","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.GermanTest","cloud.cleo.squareup.sms.lang.GermanTest","candlesTest"
+"## Ask what the Bot's name is
+- Assert that response contains ""Copper Bot""
+","1303","Bot Name","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.TransferTest","cloud.cleo.squareup.voice.TransferTest","botNameTest"
+"## Ask if Candles are in stock
+- Assert that response contains ""yes"" in the naitive language
+  - This ensures the query search term was translated to English properly for the search to succeed
+- Assert that response does not contain English words (Yes,Candle,in stock,etc.)
+","2228","Inventory Candles","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.FrenchTest","cloud.cleo.squareup.voice.lang.FrenchTest","candlesTest"
+"## Ask what year the store opened
+- Assert that response contains ""2021""
+- Assert that response does not contain English words (Yes,open,started,october,etc.)
+","1166","Store Open Year","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.SpanishTest","cloud.cleo.squareup.voice.lang.SpanishTest","storeOpenYearTest"
+"## Ask if Candles are in stock
+- Assert that response contains ""yes"" in the naitive language
+  - This ensures the query search term was translated to English properly for the search to succeed
+- Assert that response does not contain English words (Yes,Candle,in stock,etc.)
+","2330","Inventory Candles","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.NorwegianTest","cloud.cleo.squareup.voice.lang.NorwegianTest","candlesTest"
+"## Ask what year the store opened
+- Assert that response contains ""2021""
+- Assert that response does not contain English words (Yes,open,started,october,etc.)
+","1955","Store Open Year","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.NorwegianTest","cloud.cleo.squareup.voice.lang.NorwegianTest","storeOpenYearTest"
+"## Ask what year the store opened
+- Assert that response contains ""2021""
+- Assert that response does not contain English words (Yes,open,started,october,etc.)
+","1776","Store Open Year","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.GermanTest","cloud.cleo.squareup.voice.lang.GermanTest","storeOpenYearTest"
+"## Ask if Candles are in stock
+The model must interpret this as non-English and now converese in this languauge moving forward
+- Assert that response contains ""yes"" in the naitive language
+  - This ensures the query search term was translated to English properly for the search to succeed
+- Assert that response does not contain English words (Yes,Candle,in stock,etc.)
+","2024","Inventory Candles","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.SpanishTest","cloud.cleo.squareup.sms.lang.SpanishTest","candlesTest"
+"## Ask if Candles are in stock
+The model must interpret this as non-English and now converese in this languauge moving forward
+- Assert that response contains ""yes"" in the naitive language
+  - This ensures the query search term was translated to English properly for the search to succeed
+- Assert that response does not contain English words (Yes,Candle,in stock,etc.)
+","2379","Inventory Candles","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.FinnishTest","cloud.cleo.squareup.sms.lang.FinnishTest","candlesTest"
+"## Indicate we are all done with the call
+- Assert that proper tool is called to end the call
+- Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
+  - Chime would then hang up on the caller
+","1763","Hang Up","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.GermanTest","cloud.cleo.squareup.voice.lang.GermanTest","hangupTest"
+"## Ask if Candles are in stock
+- Assert that response contains ""yes"" in the naitive language
+  - This ensures the query search term was translated to English properly for the search to succeed
+- Assert that response does not contain English words (Yes,Candle,in stock,etc.)
+","2010","Inventory Candles","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.GermanTest","cloud.cleo.squareup.voice.lang.GermanTest","candlesTest"
+"## Ask if the City has a complaint process
+The model must translate ""complaint process"" to English before calling the tool for RAG query
+- Assert that response contains ""yes"" in the naitive language
+- Assert that response does not contain English words (Yes,complaint,found,etc.)
+","2646","City RAG Complaint Search","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.SpanishTest","cloud.cleo.squareup.voice.lang.SpanishTest","cityRagTest"
+"## Ask what the Bot's name is
+- Assert that response contains ""Copper Bot""
+- Assert that response does not contain English words (name,store,helpful,assistant,etc..)
+","1948","Bot Name","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.FrenchTest","cloud.cleo.squareup.voice.lang.FrenchTest","botNameTest"
+"## Ask if the City has a complaint process
+The model must translate ""complaint process"" to English before calling the tool for RAG query
+- Assert that response contains ""yes"" in the naitive language
+- Assert that response does not contain English words (Yes,complaint,found,etc.)
+","2226","City RAG Complaint Search","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.GermanTest","cloud.cleo.squareup.voice.lang.GermanTest","cityRagTest"
+"## Ask to talk to a real person
+- Assert that proper tool is called to transfer the call
+- Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
+  - Chime would then transfer the call to the target number (store main number)
+","1896","Transfer to Person","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.TransferTest","cloud.cleo.squareup.voice.TransferTest","transferTest"
+"## Ask if Candles are in stock
+The model must interpret this as non-English and now converese in this languauge moving forward
+- Assert that response contains ""yes"" in the naitive language
+  - This ensures the query search term was translated to English properly for the search to succeed
+- Assert that response does not contain English words (Yes,Candle,in stock,etc.)
+","2380","Inventory Candles","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.FrenchTest","cloud.cleo.squareup.sms.lang.FrenchTest","candlesTest"
+"## Ask what year the store opened
+- Assert that response contains ""2021""
+","1463","Store Open Year","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.HangupTest","cloud.cleo.squareup.voice.HangupTest","storeOpenYearTest"
+"## Ask to speak in the target language
+- Assert that proper tool is called to switch languages
+- Assert that the exact language (enum) was passed correctly to the tool call
+- Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
+Upon Success, Chime engages the proper LexBot in the target Locale.
+If this test fails, remaining tests are skipped since they are predicated on speaking the target language
+","2304","Indicate Starting Language","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.SpanishTest","cloud.cleo.squareup.voice.lang.SpanishTest","indicateLanguageTest"
+"## Ask what year the store opened
+- Assert that response contains ""2021""
+- Assert that response does not contain English words (Yes,open,started,october,etc.)
+","1215","Store Open Year","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.SwedishTest","cloud.cleo.squareup.sms.lang.SwedishTest","storeOpenYearTest"
+"## Ask if Candles are in stock
+- Assert that response contains ""yes"" in the naitive language
+  - This ensures the query search term was translated to English properly for the search to succeed
+- Assert that response does not contain English words (Yes,Candle,in stock,etc.)
+","2530","Inventory Candles","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.PolishTest","cloud.cleo.squareup.voice.lang.PolishTest","candlesTest"
+"## Ask if the City has a complaint process
+The model must translate ""complaint process"" to English before calling the tool for RAG query
+- Assert that response contains ""yes"" in the naitive language
+- Assert that response does not contain English words (Yes,complaint,found,etc.)
+","2283","City RAG Complaint Search","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.DutchTest","cloud.cleo.squareup.sms.lang.DutchTest","cityRagTest"
+"## Indicate we are all done with the call
+- Assert that proper tool is called to end the call
+- Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
+  - Chime would then hang up on the caller
+","1921","Hang Up","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.SpanishTest","cloud.cleo.squareup.voice.lang.SpanishTest","hangupTest"
+"## Ask if Candles are in stock
+- Assert that response contains ""yes"" in the naitive language
+  - This ensures the query search term was translated to English properly for the search to succeed
+- Assert that response does not contain English words (Yes,Candle,in stock,etc.)
+","2180","Inventory Candles","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.DutchTest","cloud.cleo.squareup.voice.lang.DutchTest","candlesTest"
+"## Ask what year the store opened
+- Assert that response contains ""2021""
+- Assert that response does not contain English words (Yes,open,started,october,etc.)
+","1946","Store Open Year","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.SwedishTest","cloud.cleo.squareup.voice.lang.SwedishTest","storeOpenYearTest"
+"## Ask what year the store opened
+- Assert that response contains ""2021""
+- Assert that response does not contain English words (Yes,open,started,october,etc.)
+","1198","Store Open Year","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.GermanTest","cloud.cleo.squareup.sms.lang.GermanTest","storeOpenYearTest"
+"## Ask if Candles are in stock
+The model must interpret this as non-English and now converese in this languauge moving forward
+- Assert that response contains ""yes"" in the naitive language
+  - This ensures the query search term was translated to English properly for the search to succeed
+- Assert that response does not contain English words (Yes,Candle,in stock,etc.)
+","2125","Inventory Candles","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.SwedishTest","cloud.cleo.squareup.sms.lang.SwedishTest","candlesTest"
+"## Ask what year the store opened
+- Assert that response contains ""2021""
+- Assert that response does not contain English words (Yes,open,started,october,etc.)
+","1174","Store Open Year","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.SpanishTest","cloud.cleo.squareup.sms.lang.SpanishTest","storeOpenYearTest"
+"## Ask to speak in the target language
+- Assert that proper tool is called to switch languages
+- Assert that the exact language (enum) was passed correctly to the tool call
+- Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
+Upon Success, Chime engages the proper LexBot in the target Locale.
+If this test fails, remaining tests are skipped since they are predicated on speaking the target language
+","2276","Indicate Starting Language","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.DutchTest","cloud.cleo.squareup.voice.lang.DutchTest","indicateLanguageTest"
+"## Ask if the City has a complaint process
+The model must translate ""complaint process"" to English before calling the tool for RAG query
+- Assert that response contains ""yes"" in the naitive language
+- Assert that response does not contain English words (Yes,complaint,found,etc.)
+","2344","City RAG Complaint Search","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.FrenchTest","cloud.cleo.squareup.voice.lang.FrenchTest","cityRagTest"
+"## Ask what the Bot's name is
+- Assert that response contains ""Copper Bot""
+","1314","Bot Name","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.HangupTest","cloud.cleo.squareup.voice.HangupTest","botNameTest"
+"## Ask if Candles are in stock
+- Assert that response contains ""yes"" in the naitive language
+  - This ensures the query search term was translated to English properly for the search to succeed
+- Assert that response does not contain English words (Yes,Candle,in stock,etc.)
+","2194","Inventory Candles","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.SpanishTest","cloud.cleo.squareup.voice.lang.SpanishTest","candlesTest"
+"## Ask to speak in the target language
+- Assert that proper tool is called to switch languages
+- Assert that the exact language (enum) was passed correctly to the tool call
+- Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
+Upon Success, Chime engages the proper LexBot in the target Locale.
+If this test fails, remaining tests are skipped since they are predicated on speaking the target language
+","1998","Indicate Starting Language","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.SwedishTest","cloud.cleo.squareup.voice.lang.SwedishTest","indicateLanguageTest"
+"## Ask what year the store opened
+- Assert that response contains ""2021""
+- Assert that response does not contain English words (Yes,open,started,october,etc.)
+","1543","Store Open Year","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.FinnishTest","cloud.cleo.squareup.sms.lang.FinnishTest","storeOpenYearTest"
+"## Ask what the Bot's name is
+- Assert that response contains ""Copper Bot""
+- Assert that response does not contain English words (name,store,helpful,assistant,etc..)
+","2439","Bot Name","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.FinnishTest","cloud.cleo.squareup.voice.lang.FinnishTest","botNameTest"
+"## Ask if the City has a complaint process
+The model must translate ""complaint process"" to English before calling the tool for RAG query
+- Assert that response contains ""yes"" in the naitive language
+- Assert that response does not contain English words (Yes,complaint,found,etc.)
+","2437","City RAG Complaint Search","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.SwedishTest","cloud.cleo.squareup.sms.lang.SwedishTest","cityRagTest"
+"## Ask what year the store opened
+- Assert that response contains ""2021""
+- Assert that response does not contain English words (Yes,open,started,october,etc.)
+","1226","Store Open Year","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.NorwegianTest","cloud.cleo.squareup.sms.lang.NorwegianTest","storeOpenYearTest"
+"## Ask Store  name and ensure personalized response
+This test has 3 assertions
+- Copper Bot name must be in the response
+- System prompt says to greet with name, so first name should also be in this initial response
+- Since this a new Facebook session a welcome card should also be present in the response
+","2333","Facebook Hello","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.fb.FacebookTests","cloud.cleo.squareup.fb.FacebookTests","facebookStoreNameTest"
+"## Ask if Candles are in stock
+The model must interpret this as non-English and now converese in this languauge moving forward
+- Assert that response contains ""yes"" in the naitive language
+  - This ensures the query search term was translated to English properly for the search to succeed
+- Assert that response does not contain English words (Yes,Candle,in stock,etc.)
+","2125","Inventory Candles","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.DutchTest","cloud.cleo.squareup.sms.lang.DutchTest","candlesTest"
+"## Ask what year the store opened
+- Assert that response contains ""2021""
+- Assert that response does not contain English words (Yes,open,started,october,etc.)
+","1136","Store Open Year","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.DutchTest","cloud.cleo.squareup.sms.lang.DutchTest","storeOpenYearTest"
+"## Explicitly ask what my name
+This test has 2 assertions
+- It should repeat my name back (from FB API Call)
+- Since this is NOT new Facebook session now, a welcome card should should not be in the response
+","1451","Facebook Name","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.fb.FacebookTests","cloud.cleo.squareup.fb.FacebookTests","facebookUserNameTest"
+"## Indicate we are all done with the call
+- Assert that proper tool is called to end the call
+- Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
+  - Chime would then hang up on the caller
+","2161","Hang Up","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.PolishTest","cloud.cleo.squareup.voice.lang.PolishTest","hangupTest"
+"## Ask what year the store opened
+- Assert that response contains ""2021""
+- Assert that response does not contain English words (Yes,open,started,october,etc.)
+","1200","Store Open Year","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.sms.lang.FrenchTest","cloud.cleo.squareup.sms.lang.FrenchTest","storeOpenYearTest"
+"## Ask what year the store opened
+- Assert that response contains ""2021""
+","1425","Store Open Year","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.LanguageSwitchTest","cloud.cleo.squareup.voice.LanguageSwitchTest","storeOpenYearTest"
+"## Ask what the Bot's name is
+- Assert that response contains ""Copper Bot""
+- Assert that response does not contain English words (name,store,helpful,assistant,etc..)
+","2420","Bot Name","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.voice.lang.PolishTest","cloud.cleo.squareup.voice.lang.PolishTest","botNameTest"
