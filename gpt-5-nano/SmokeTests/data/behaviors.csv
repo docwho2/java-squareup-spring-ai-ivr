@@ -1,8 +1,0 @@
-"BROKEN","EPIC","FAILED","FEATURE","PASSED","SKIPPED","STORY","UNKNOWN"
-"3","Smoke Tests","0","Tool Call","0","0","","0"
-"2","Smoke Tests","0","SquareAPI","0","0","","0"
-"1","Smoke Tests","0","WeatherAPI","0","0","","0"
-"1","Smoke Tests","0","","1","0","","0"
-"1","Warmup","0","","0","0","","0"
-"0","Summary","0","","1","0","","0"
-"1","Smoke Tests","1","Store Knowledge","0","0","","0"
