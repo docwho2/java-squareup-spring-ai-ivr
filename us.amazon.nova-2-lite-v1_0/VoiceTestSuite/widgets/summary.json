@@ -1,1 +1,1 @@
-{"reportName":"VoiceTestSuite","testRuns":[],"statistic":{"failed":7,"broken":0,"skipped":0,"passed":50,"unknown":0,"total":57},"time":{"start":1766274662782,"stop":1766274782108,"duration":119326,"minDuration":1192,"maxDuration":2715,"sumDuration":119128}}
+{"reportName":"VoiceTestSuite","testRuns":[],"statistic":{"failed":0,"broken":0,"skipped":0,"passed":57,"unknown":0,"total":57},"time":{"start":1766275528693,"stop":1766275650076,"duration":121383,"minDuration":1322,"maxDuration":2858,"sumDuration":121183}}
