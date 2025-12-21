@@ -107,9 +107,16 @@ runs:
       shell: bash
       run: |
         mkdir -p SpringAI/target/allure-results
+        
+        
+        boot_version="$(mvn -q -DforceStdout help:evaluate -Dexpression=spring.boot.version | tail -n 1)"
+        ai_version="$(mvn -q -DforceStdout help:evaluate -Dexpression=spring.ai.version   | tail -n 1)"
+    
         cat <<EOF > SpringAI/target/allure-results/environment.properties
         SpringAiModel=${{ inputs.spring-ai-model }}
         SpringAiProvider=${{ inputs.spring-ai-provider }}
+        SpringBootVersion=${boot_version}
+        SpringAiVersion=${ai_version}
         AwsRegion=${{ inputs.region }}
         EOF
         
