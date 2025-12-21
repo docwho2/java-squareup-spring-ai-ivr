@@ -1,0 +1,3 @@
+It's currently -1 degrees Fahrenheit and cloudy with light winds at 4.5 mph. The forecast shows cloudy skies today with a high of 20 degrees, then cloudy tomorrow with a high of 31 degrees, foggy on Tuesday with a high of 28 degrees, cloudy on Wednesday with a high of 32 degrees, and snow possible on Christmas Day with a high of 33 degrees.
+
+Would you like me to send you driving directions to our store?
