@@ -1,0 +1,14 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"This test has 3 assertions
+- Copper Bot name must be in the response
+- System prompt says to greet with name, so first name should also be in this initial response
+- Since this a new Facebook session a welcome card should also be present in the response
+","2249","Facebook Hello","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.fb.FacebookTests","cloud.cleo.squareup.fb.FacebookTests","facebookStoreNameTest"
+"- Clear all chat memory so tests are clean
+  - assert that response contains ""cleared""
+- We assert that lex dialog is CLOSED
+","1035","Facebook Clear Memory","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.fb.FacebookTests","cloud.cleo.squareup.fb.FacebookTests","facebookClearTest"
+"This test has 2 assertions
+- It should repeat my name back
+- Since this is NOT new Facebook session now, a welcome card should should not be in the response
+","1805","Facebook Name","","2025-12-21","passed","2025-12-21","","cloud.cleo.squareup.fb.FacebookTests","cloud.cleo.squareup.fb.FacebookTests","facebookUserNameTest"
