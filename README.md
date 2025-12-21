@@ -29,6 +29,13 @@ Unlike most AI “phone bot” demos, this system was built to run **24/7 at pro
 
 ---
 
+## Latest Breaking Information/Links
+
+- [Why we are currently using Bedrock Nova 2 model](./model-selection.md)
+- [Index to all Regression and Smoke Tests](https://docwho2.github.io/java-squareup-spring-ai-ivr/)
+
+---
+
 ## 🧱 Built on a Modern, Enterprise Java Stack
 
 Every component is **100% Java**, type-safe, and production-quality:
