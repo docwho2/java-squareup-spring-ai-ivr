@@ -65,6 +65,26 @@ Even the infrastructure layer is production-grade.
 
 ---
 
+## 🧪 Enterprise-Grade Testing & Model Validation
+
+This project includes a **production-grade, behavior-driven test harness** that validates the system across **models, languages, channels, memory, RAG, and external APIs**.
+
+The test suite provides:
+
+- **87+ fully automated tests** covering voice, text, multilingual flows, RAG, Square API, and chat memory
+- **Type-safe, contract-driven assertions** (no duplicated strings; all checks reference production constants and enums)
+- **Multilingual validation** ensuring non-English queries correctly retrieve **English-only data sources**
+- **Negative assertions** proving when behaviors *must not* occur (session handling, welcome cards, dialog closure)
+- **Fail-fast language gates** to isolate failures and keep regressions actionable
+- **Scheduled smoke tests** for continuous uptime and integration health
+- **Model-agnostic execution**, enabling side-by-side regression testing across Bedrock and OpenAI models
+
+Each test run produces a [**fully navigable Allure report**](https://docwho2.github.io/java-squareup-spring-ai-ivr/) with concrete evidence of system behavior, making this suite both a **regression safety net** and a **model evaluation framework**.
+
+➡️ See **[tests/README.md](./SpringAI/src/test/README.md)** for full details.
+
+---
+
 ## 🔊 Advanced Chime SMA Telephony Framework (Custom Library)
 
 This system includes a **bespoke Chime SMA Java library** representing hundreds of hours of development:
