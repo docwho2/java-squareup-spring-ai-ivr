@@ -1,0 +1,1 @@
+Bitte überprüfen Sie den Lagerbestand des Geschäfts auf Kerzen und antworten Sie mit „Ja“, falls welche vorhanden sind.
