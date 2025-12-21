@@ -37,7 +37,7 @@ Every component is **100% Java**, type-safe, and production-quality:
 - **Spring Boot 4.0.1**
 - **Spring Cloud 5.0.0**
 - **Spring AI 2.0.0 (validated on 2.0.0-M1)**
-- **AWS Bedrock (Nova, Claude)** and **OpenAI GPT models**
+- **AWS Bedrock (Nova, Titan, Claude)** and **OpenAI GPT models**
 - **AWS-native services:** Chime, Lex, DynamoDB, SES, SNS, Pinpoint, Polly, Lambda SnapStart
 
 This is not a loose collection of scripts — it is a **cohesive, enterprise software system** with a well-defined architecture and production lifecycle.

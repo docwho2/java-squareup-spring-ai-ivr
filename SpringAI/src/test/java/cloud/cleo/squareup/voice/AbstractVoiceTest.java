@@ -8,7 +8,6 @@ import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 
 /**
  * Simple voice flow where we ask a couple questions.
@@ -27,7 +26,10 @@ public abstract class AbstractVoiceTest extends AbstractLexAwsTestSupport {
     public void botNameTest() {
         Allure.feature(ALLURE_FEATURE_STORE_KNOWLEDGE);
         
-        Allure.description("Assert response matches regex " + COPPER_BOT_PATTERN.pattern());
+         Allure.description("""
+                           ## Ask what the Bot's name is
+                           - Assert that response contains "Copper Bot"
+                           """);
         
         final var res = sendToLex(
                 "Hello what is your name?"
@@ -42,7 +44,10 @@ public abstract class AbstractVoiceTest extends AbstractLexAwsTestSupport {
     public void storeOpenYearTest() {
         Allure.feature(ALLURE_FEATURE_STORE_KNOWLEDGE);
         
-        Allure.description("Assert response matches regex " + COPPER_FOX_OPEN_YEAR.pattern());
+         Allure.description("""
+                           ## Ask what year the store opened
+                           - Assert that response contains "2021" 
+                           """);
 
         final var res = sendToLex(
                 "In what year did the store first open?"

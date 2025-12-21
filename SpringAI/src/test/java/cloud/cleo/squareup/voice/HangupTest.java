@@ -2,12 +2,14 @@ package cloud.cleo.squareup.voice;
 
 import static cloud.cleo.squareup.AbstractLexAwsTestSupport.ALLURE_EPIC_VOICE;
 import static cloud.cleo.squareup.tools.AbstractTool.HANGUP_FUNCTION_NAME;
+import io.qameta.allure.Allure;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import static software.amazon.awssdk.services.lexruntimev2.model.DialogActionType.CLOSE;
 
 /**
  * Ensure Bot calls hangup when we're done.
@@ -23,6 +25,13 @@ public class HangupTest extends AbstractVoiceTest {
     @Feature(ALLURE_FEATURE_CHIME_CC)
     @DisplayName("Hang Up")
     void hangupTest() {
+        
+         Allure.description("""
+                           ## Indicate we are all done with the call
+                           - Assert that proper tool is called to end the call
+                           - Assert that the lex Dialog has closed (guarentees Chime is back in control of the call)
+                             - Chime would then hang up on the caller
+                           """);
 
         final var res = sendToLex(
                 "Thank you for all your help, that's it for today, good bye."
@@ -32,9 +41,11 @@ public class HangupTest extends AbstractVoiceTest {
         assertTrue(HANGUP_FUNCTION_NAME.equals(getBotAction(res)),
                 "Bot did not execute " + HANGUP_FUNCTION_NAME + " action when told done");
         
-        final var bye = getBotResponse(res);
+        assertTrue(res.sessionState().dialogAction().type().equals(CLOSE),
+                "Dialog state is not closed [" + res.sessionState().dialogAction().type() + "]"
+        );
 
-        boolean ok = bye.toLowerCase().matches("(?s).*bye.*");
-        assertTrue(ok, "Bot response did not contain bye as instructed to");
+        Allure.addAttachment("Dialog Action", res.sessionState().dialogAction().toString());
+        
     }
 }

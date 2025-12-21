@@ -35,6 +35,7 @@ public class FacebookTests extends AbstractLexAwsTestSupport {
     @DisplayName("Facebook Clear Memory")
     public void facebookClearTest() {
         Allure.description("""
+                           ## Ensure Session is cleared for Facebook tests
                            - Clear all chat memory so tests are clean
                              - assert that response contains "cleared"
                            - We assert that lex dialog is CLOSED
@@ -60,6 +61,7 @@ public class FacebookTests extends AbstractLexAwsTestSupport {
     @DisplayName("Facebook Hello")
     public void facebookStoreNameTest() {
         Allure.description("""
+                           ## Ask Store  name and ensure personalized response
                            This test has 3 assertions
                            - Copper Bot name must be in the response
                            - System prompt says to greet with name, so first name should also be in this initial response
@@ -90,8 +92,9 @@ public class FacebookTests extends AbstractLexAwsTestSupport {
     @DisplayName("Facebook Name")
     public void facebookUserNameTest() {
         Allure.description("""
+                           ## Explicitly ask what my name
                            This test has 2 assertions
-                           - It should repeat my name back
+                           - It should repeat my name back (from FB API Call)
                            - Since this is NOT new Facebook session now, a welcome card should should not be in the response
                            """);
 
