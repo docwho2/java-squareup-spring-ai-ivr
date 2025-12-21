@@ -63,7 +63,7 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
 
         final var chuckles = getBotResponse(res);
 
-        boolean ok = chuckles.matches("(?s).*?(Yes|We have|Chuckles).*");
+        boolean ok = chuckles.toLowerCase().matches("(?s).*?(yes|we have|chuckles).*");
         log.info(ok ? "Chuckles Test Passed" : "Chuckles Test FAILED");
         assertTrue(ok, "Chuckles test failed, response was: " + chuckles);
     }
@@ -109,7 +109,7 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
 
         final var address = getBotResponse(res);
 
-        boolean ok = address.matches("(?s).*160\\s+Main.*");
+        boolean ok = address.toLowerCase().matches("(?s).*160\\s+main.*");
         log.info(ok ? "Address Test Passed" : "Address Test FAILED");
         assertTrue(ok, "Address test failed, response was: " + address);
     }
@@ -187,6 +187,30 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
         boolean ok = city.toLowerCase().matches("(?is).*?(yes|we do).*");
         log.info(ok ? "City RAG Complaint Search Test Passed" : "City RAG Complaint Search Test FAILED");
         assertTrue(ok, "City RAG Complaint Search test failed, response was: " + city);
+    }
+    
+    @Test
+    @Order(7)
+    @Feature(ALLURE_FEATURE_GENERAL)
+    @DisplayName("Chat Memory")
+    public void chatMemoryTest() {
+        
+        Allure.description("""
+                           ## Verify Chat Memory is working
+                           - Ask what the first query was
+                             - If chat memory is working properly, it shoud tell us what we asked in the first test
+                           - Assert that response says we asked about Chuckles Candy which was the first smoke test
+                           """);
+
+        final var res = sendToLex(
+                "What was the first thing I asked you?"
+        );
+
+        final var chatMemory = getBotResponse(res);
+
+        boolean ok = chatMemory.toLowerCase().matches("(?is).*?(chuckles|candy).*");
+        log.info(ok ? "Chat Memory Test Passed" : "Chat Memory Test FAILED");
+        assertTrue(ok, "Chaat Memory test failed, response was: " + chatMemory);
     }
 
     @Test

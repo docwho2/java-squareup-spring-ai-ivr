@@ -48,6 +48,7 @@ public abstract class AbstractLexAwsTestSupport {
     public final static String ALLURE_FEATURE_CHIME_CC = "Chime Call Control";
     public final static String ALLURE_FEATURE_RAG = "RAG Vector Search";
     public final static String ALLURE_FEATURE_FACEBOOK = "Facebook";
+    public final static String ALLURE_FEATURE_GENERAL = "General";
 
     public final static String ALLURE_EPIC_SMOKE = "Smoke Tests";
     public final static String ALLURE_EPIC_WARM_UP = "Warm Up Tests";
