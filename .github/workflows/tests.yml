@@ -99,6 +99,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
+        with:
+          submodules: recursive
 
       - name: Execute Tests (us-east-1)
         uses: ./.github/actions/test
