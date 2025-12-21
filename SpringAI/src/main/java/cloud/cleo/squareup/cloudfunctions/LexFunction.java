@@ -45,10 +45,20 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
     private final List<AbstractTool> tools;
     private final ChatMemory chatMemory;
     private final CityRagService cityRag;
+    
+    // Incoming string that will clear chat memory
+    public final static String CLEAR_CHAT_HISTORY = "ClearChatHistory";
 
     @Override
     public LexV2Response apply(LexV2Event lexRequest) {
         final var eventWrapper = new LexV2EventWrapper(lexRequest);
+        
+        if ( CLEAR_CHAT_HISTORY.equals(eventWrapper.getInputTranscript())) {
+            // Used by tests to clear chat memory, useful for FB channel because session ID doesn't change
+            chatMemory.clear(eventWrapper.getChatMemorySessionId());
+            // Also ending a the Lex Session, so everything is fresh
+            return buildTerminatingResponse(Map.of("bot_response", "Chat Memory has been cleared"));
+        }
 
         // Handle case where there is no input (Caller Silence not saying anything)
         if (eventWrapper.getBlankCounter() > 2 && eventWrapper.isVoice()) {

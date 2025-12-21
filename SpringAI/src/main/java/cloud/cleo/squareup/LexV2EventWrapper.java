@@ -618,8 +618,8 @@ public final class LexV2EventWrapper {
             }
 
             if (!"Unknown".equalsIgnoreCase(name)) {
-                sb.append("The user's name is ").append(name)
-                        .append(".  Please greet the user by name and personalize responses when appropiate.  ");
+                sb.append(" The user's name is ").append(name)
+                        .append(".  Please greet the user by first name and personalize responses when appropiate to make the experience more friendly.  ");
             }
         }
 
