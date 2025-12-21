@@ -123,7 +123,7 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
 
     @Test
     @Order(-25)
-    @DisplayName("Inventory Jackets")
+    @DisplayName("Inventory Candles")
     public void candlesTest() {
         Allure.feature(ALLURE_FEATURE_TOOL_CALL);
         Allure.feature(ALLURE_FEATURE_SQUARE_API);
