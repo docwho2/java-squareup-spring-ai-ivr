@@ -15,7 +15,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
@@ -27,15 +26,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @Log4j2
 @Epic(ALLURE_EPIC_SMOKE)
 @ExtendWith({TimingExtension.class})
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SmokeTests extends AbstractLexAwsTestSupport {
-
+    
     @Test
     @Order(Integer.MIN_VALUE)          // runs before all other @Order'd tests
     @Epic(ALLURE_EPIC_WARM_UP)   // keeps all warmup tests in their own Allure group
     @Tag(JUNIT_TAG_WARM_UP)      // so the TimingExtension can recognize it
     @DisplayName("Warm Up the Stack")
     public void warmupStack() {
+        Allure.description("""
+                           ## Send a \"Hello\" prompt to warm the stack
+                           - use random session ID so it doesn't count for the rest of the real tests
+                           - Assert that there is just a response
+                           """);
         // Warm up the lex path and lambda so everything is hot and use a distinct session ID
         assertNotNull(getBotResponse(sendToLex("Hello, what is your name?", UUID.randomUUID().toString())));
     }
@@ -47,6 +50,13 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
     @DisplayName("Chuckles Candy")
     public void chucklesCandyTest() {
 
+         Allure.description("""
+                           ## Exercise tool call with Square API Call
+                           - Search for Chuckles Candy that is always in stock
+                           - Assert that response says yes we have it
+                           """);
+        
+        
         final var res = sendToLex(
                 "Do you have Chuckles Candy in stock?"
         );
@@ -64,6 +74,12 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
     @DisplayName("Restaurant Recommendation")
     public void restaurantTest() {
 
+        Allure.description("""
+                           ## Check Prompting knowledge
+                           - Ask for resturant recommendation
+                           - Assert that response says Muggs which is next door to the Store
+                           """);
+        
         final var res = sendToLex(
                 "Please recommend a restaurant in the area?"
         );
@@ -81,6 +97,12 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
     @DisplayName("Store Address")
     public void addressTest() {
 
+         Allure.description("""
+                           ## Check Prompting knowledge
+                           - Ask for the store address
+                           - Assert that response contains our street address
+                           """);
+        
         final var res = sendToLex(
                 "What is your address?"
         );
@@ -100,6 +122,12 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
     @Feature(ALLURE_FEATURE_TOOL_CALL)
     @DisplayName("Store Staff")
     public void staffTest() {
+        
+        Allure.description("""
+                           ## Exercise tool call with Square API Call
+                           - Ask if a Staff member works at the Store
+                           - Assert that response says the person does work there
+                           """);
 
         final var res = sendToLex(
                 "Does Steve work there?  If so, just say Yes"
@@ -118,6 +146,12 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
     @Feature(ALLURE_FEATURE_TOOL_CALL)
     @DisplayName("Weather Forecast")
     public void weatherTest() {
+        
+        Allure.description("""
+                           ## Exercise tool call with Weather API Call
+                           - Ask for current weather at the store
+                           - Assert that response returns the temperature
+                           """);
 
         final var res = sendToLex(
                 "What's the weather like at the store today?"
@@ -136,6 +170,13 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
     @Feature(ALLURE_FEATURE_TOOL_CALL)
     @DisplayName("City RAG Complaint Search")
     public void cityRagTest() {
+        
+        Allure.description("""
+                           ## Exercise tool call with RAG Qdrant query
+                           - Ask for the City complaint process
+                             - Crawler process has full city website so this document should be there
+                           - Assert that response says Yes to validate query worked
+                           """);
 
         final var res = sendToLex(
                 "Does the city have a process for complaints?  Respond with yes if there is one and what to do next."

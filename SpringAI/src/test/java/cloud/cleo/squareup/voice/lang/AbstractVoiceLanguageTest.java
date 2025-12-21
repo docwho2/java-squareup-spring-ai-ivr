@@ -18,7 +18,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
-import org.junit.jupiter.api.TestInstance;
 import org.opentest4j.TestAbortedException;
 
 /**
@@ -28,7 +27,6 @@ import org.opentest4j.TestAbortedException;
  * @author sjensen
  */
 @Log4j2
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSupport {
 
     private static final String INDICATE_TEST_METHOD = "indicateLanguageTest";

@@ -16,7 +16,6 @@ import org.junit.jupiter.api.TestInstance;
  * @author sjensen
  */
 @Log4j2
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractVoiceTest extends AbstractLexAwsTestSupport {
 
     // Use one random session ID for this voice session
@@ -27,6 +26,8 @@ public abstract class AbstractVoiceTest extends AbstractLexAwsTestSupport {
     @DisplayName("Bot Name")
     public void botNameTest() {
         Allure.feature(ALLURE_FEATURE_STORE_KNOWLEDGE);
+        
+        Allure.description("Assert response matches regex " + COPPER_BOT_PATTERN.pattern());
         
         final var res = sendToLex(
                 "Hello what is your name?"
@@ -40,6 +41,8 @@ public abstract class AbstractVoiceTest extends AbstractLexAwsTestSupport {
     @DisplayName("Store Open Year")
     public void storeOpenYearTest() {
         Allure.feature(ALLURE_FEATURE_STORE_KNOWLEDGE);
+        
+        Allure.description("Assert response matches regex " + COPPER_FOX_OPEN_YEAR.pattern());
 
         final var res = sendToLex(
                 "In what year did the store first open?"

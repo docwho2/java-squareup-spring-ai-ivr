@@ -1,7 +1,7 @@
 package cloud.cleo.squareup;
 
 import cloud.cleo.squareup.enums.ChannelPlatform;
-import static cloud.cleo.squareup.enums.ChannelPlatform.CHIME;
+import static cloud.cleo.squareup.enums.ChannelPlatform.*;
 import cloud.cleo.squareup.enums.Language;
 import cloud.cleo.squareup.enums.LexInputMode;
 import io.qameta.allure.Allure;
@@ -18,6 +18,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -25,6 +26,7 @@ import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.lexruntimev2.LexRuntimeV2Client;
 import software.amazon.awssdk.services.lexruntimev2.model.Message;
+import static software.amazon.awssdk.services.lexruntimev2.model.MessageContentType.PLAIN_TEXT;
 import software.amazon.awssdk.services.lexruntimev2.model.RecognizeTextRequest;
 import software.amazon.awssdk.services.lexruntimev2.model.RecognizeTextResponse;
 import software.amazon.awssdk.services.ssm.SsmClient;
@@ -32,8 +34,11 @@ import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
 
 @ExtendWith({AllureJunit5.class})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Log4j2
 public abstract class AbstractLexAwsTestSupport {
+    
+    protected final Map<String, String> sessionAttrs = new HashMap<>();
 
     // Statics for Allure features
     public final static String ALLURE_FEATURE_STORE_KNOWLEDGE = "Store Knowledge";
@@ -98,7 +103,7 @@ public abstract class AbstractLexAwsTestSupport {
             + // bold underscore
             ")"
     );
-    
+
     // Common Patterns used to validate knowledge responses
     public final static Pattern COPPER_BOT_PATTERN = Pattern.compile("(copper bot|copper fox|bot )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     public final static Pattern COPPER_FOX_OPEN_YEAR = Pattern.compile("(2021|21)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
@@ -177,13 +182,16 @@ public abstract class AbstractLexAwsTestSupport {
 
         log.info(">>> request: \"{}\"", text);
 
-        Map<String, String> sessionAttrs = new HashMap<>(2);
+        
         // If Chime, then we add bogus calling number
         switch (channel) {
             case CHIME ->
                 // Send invalid E164 so our session ID will be used and no actual SMS will be sent on tests (because hasValidE164 will be false)
                 sessionAttrs.put("callingNumber", "+10000000000");
         }
+        
+        // Always clear bot_response before sending
+        sessionAttrs.remove("bot_response");
 
         var request = RecognizeTextRequest.builder()
                 .botId(botId)
@@ -200,13 +208,18 @@ public abstract class AbstractLexAwsTestSupport {
                 "lexClient RecognizeText Call",
                 () -> lexClient.recognizeText(request)
         );
+        
+        // Maintain session attributes across requests
+        sessionAttrs.clear();
+        if ( response.sessionState().hasSessionAttributes() ) {
+            sessionAttrs.putAll(response.sessionState().sessionAttributes());
+        }
 
         final var content = getBotResponse(response);
         assertNotNull(content);
 
         // Check for Markdown in responses
-        if (MARKDOWN_PATTERN.matcher(content).find()) {
-            Allure.addAttachment("Markdown Detected in response!!!", "");
+        if (!channel.equals(FACEBOOK) && MARKDOWN_PATTERN.matcher(content).find()) {
             Allure.label("tag", "Markdown Detected");
         }
 
@@ -221,9 +234,8 @@ public abstract class AbstractLexAwsTestSupport {
             return;
         }
 
-        if (! pattern.matcher(actual).find()) {
+        if (!pattern.matcher(actual).find()) {
             Allure.addAttachment("Expected regex", "text/plain", pattern.pattern());
-
 
             fail("Did not match regex.\nRegex: " + pattern.pattern() + "\n"
                     + "Actual: " + actual);
@@ -236,15 +248,14 @@ public abstract class AbstractLexAwsTestSupport {
             return;
         }
 
-        if ( pattern.matcher(actual).find() ) {
+        if (pattern.matcher(actual).find()) {
             Allure.addAttachment("Unexpected regex", "text/plain", pattern.pattern());
-
 
             fail("Matched regex.\nRegex: " + pattern.pattern() + "\n"
                     + "Actual: " + actual);
         }
     }
-    
+
     /**
      * Given a Lex Response, extract what the BOT response was. In some cases it will be in the session state for a
      * Close Dialog action.
@@ -257,6 +268,8 @@ public abstract class AbstractLexAwsTestSupport {
         if (response.hasMessages()) {
             // Normal response, return the message
             return response.messages().stream()
+                    // Should not count image response cards or anything else
+                    .filter(m -> m.contentType().equals(PLAIN_TEXT))
                     .map(Message::content)
                     .reduce("", (a, b) -> a + " " + b)
                     .trim();
