@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 import static software.amazon.awssdk.services.lexruntimev2.model.DialogActionType.CLOSE;
 
 /**
- * Ensure Bot calls hangup when we're done.
+ * Ensure bot switches language and closes dialog
  *
  * @author sjensen
  */
@@ -25,13 +25,13 @@ public class LanguageSwitchTest extends AbstractVoiceTest {
     @Feature(ALLURE_FEATURE_TOOL_CALL)
     @Feature(ALLURE_FEATURE_CHIME_CC)
     @DisplayName("Language Switch")
-    void hangupTest() {
+    void languageSwitchTest() {
 
         Allure.description("""
                            ## Ask to speak in Spanish
                            - Assert that proper tool is called to switch languages
                            - Assert that the exact language (enum) was passed correctly to the tool call for Spanish
-                           - Assert that the lex Dialog has closed (guarentees Chime is back in control of the call)
+                           - Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
                              - Chime would then start a new LexSession with Spanish Locale
                            """);
 
@@ -51,7 +51,7 @@ public class LanguageSwitchTest extends AbstractVoiceTest {
                 "Dialog state is not closed [" + res.sessionState().dialogAction().type() + "]"
         );
 
-        Allure.addAttachment("Dialog Action", res.sessionState().dialogAction().toString());
+        Allure.addAttachment("Lex Dialog Action", res.sessionState().dialogAction().toString());
 
     }
 }

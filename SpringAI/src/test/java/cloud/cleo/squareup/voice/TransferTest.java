@@ -24,12 +24,12 @@ public class TransferTest extends AbstractVoiceTest {
     @Feature(ALLURE_FEATURE_TOOL_CALL)
     @Feature(ALLURE_FEATURE_CHIME_CC)
     @DisplayName("Transfer to Person")
-    void hangupTest() {
+    void transferTest() {
         
          Allure.description("""
                            ## Ask to talk to a real person
                            - Assert that proper tool is called to transfer the call
-                           - Assert that the lex Dialog has closed (guarentees Chime is back in control of the call)
+                           - Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
                              - Chime would then transfer the call to the target number (store main number)
                            """);
 

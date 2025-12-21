@@ -64,10 +64,10 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
         Allure.feature(ALLURE_FEATURE_CHIME_CC);
 
         Allure.description("""
-                           ## Ask to speak in the target lnaguage
+                           ## Ask to speak in the target language
                            - Assert that proper tool is called to switch languages
                            - Assert that the exact language (enum) was passed correctly to the tool call
-                           - Assert that the lex Dialog has closed (guarentees Chime is back in control of the call)
+                           - Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
                            Upon Success, Chime engages the proper LexBot in the target Locale.
                            If this test fails, remaining tests are skipped since they are predicated on speaking the target language
                            """);
@@ -214,7 +214,7 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
           Allure.description("""
                            ## Indicate we are all done with the call
                            - Assert that proper tool is called to end the call
-                           - Assert that the lex Dialog has closed (guarentees Chime is back in control of the call)
+                           - Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
                              - Chime would then hang up on the caller
                            """);
         
@@ -230,7 +230,7 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
                 "Dialog state is not closed [" + res.sessionState().dialogAction().type() + "]"
         );
 
-        Allure.addAttachment("Dialog Action", res.sessionState().dialogAction().toString());
+        Allure.addAttachment("Lex Dialog Action", res.sessionState().dialogAction().toString());
     }
 
     /**

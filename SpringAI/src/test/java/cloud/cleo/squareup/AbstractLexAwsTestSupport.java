@@ -85,7 +85,7 @@ public abstract class AbstractLexAwsTestSupport {
 
     public static long INTER_TEST_DELAY_MS = 500L;
 
-    // used to detect MD in repsonses
+    // used to detect MD in responses
     private static final Pattern MARKDOWN_PATTERN = Pattern.compile(
             "(?m)("
             + "^\\s{0,3}#{1,6}\\s+.+$"
