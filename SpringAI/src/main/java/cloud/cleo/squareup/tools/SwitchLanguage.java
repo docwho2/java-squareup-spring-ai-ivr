@@ -26,7 +26,7 @@ public class SwitchLanguage extends AbstractTool {
             ToolContext ctx) {
 
         if (language == null) {
-            return logAndReturnError("language is must be provided");
+            return logAndReturnError("language must be provided");
         }
 
         final var wrapper = getEventWrapper(ctx);

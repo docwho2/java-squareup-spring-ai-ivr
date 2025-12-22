@@ -5,36 +5,30 @@
 package cloud.cleo.squareup.enums;
 
 import java.util.Locale;
+import lombok.Getter;
 
 /**
  * The Voice Languages we support.
  *
  * @author sjensen
  */
+@Getter
 public enum Language {
-    English("en-US", "Tell us how we can help today?"),
-    Spanish("es-US", "Cuéntanos ¿cómo podemos ayudar hoy?"),
-    German("de-DE", "Sagen Sie uns, wie wir heute helfen können?"),
-    Finnish("fi-FI", "Kerro meille, kuinka voimme auttaa tänään?"),
-    French("fr-CA", "Dites-nous comment nous pouvons vous aider aujourd'hui ?"),
-    Dutch("nl-NL", "Vertel ons hoe we vandaag kunnen helpen?"),
-    Norwegian("no-NO", "Fortell oss hvordan vi kan hjelpe i dag?"),
-    Polish("pl-PL", "Powiedz nam, jak możemy dziś pomóc?"),
-    Swedish("sv-SE", "Berätta för oss hur vi kan hjälpa till idag?");
+    English("en-US"),
+    Spanish("es-US"),
+    German("de-DE"),
+    Finnish("fi-FI"),
+    French("fr-CA"),
+    Dutch("nl-NL"),
+    Norwegian("no-NO"),
+    Polish("pl-PL"),
+    Swedish("sv-SE");
 
     private final Locale locale;
-    private final String initialPrompt;
 
-    Language(String localeTag, String initialPrompt) {
+    Language(String localeTag) {
         this.locale = Locale.forLanguageTag(localeTag);
-        this.initialPrompt = initialPrompt;
     }
 
-    public Locale getLocale() {
-        return locale;
-    }
 
-    public String getInitialPrompt() {
-        return initialPrompt;
-    }
 }

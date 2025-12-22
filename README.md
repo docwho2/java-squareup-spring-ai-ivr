@@ -23,7 +23,7 @@ The result is not an “AI answering bot,” but a **fully autonomous AI call ag
 
 ## 🚀 Why This Project Is Enterprise-Grade (Not a Demo)
 
-This application is the result of **years of real-world production use**, customer feedback, multi-region deployments, and extensive testing. It is **not a prototype** or reference sample. It is a **carrier-grade AI voice and messaging platform** engineered end-to-end for reliability, performance, and telephony-class expectations.
+This application is the result of **years of real-world production use** ([Last Generation](https://github.com/docwho2/java-squareup-chatgpt-ivr)), customer feedback, multi-region deployments, and extensive testing. It is **not a prototype** or reference sample. It is a **carrier-grade AI voice and messaging platform** engineered end-to-end for reliability, performance, and telephony-class expectations.
 
 Unlike most AI “phone bot” demos, this system was built to run **24/7 at production scale**, across multiple AWS regions, with full call control, strict latency requirements, and enterprise operational concerns built in from day one.
 
@@ -31,7 +31,7 @@ Unlike most AI “phone bot” demos, this system was built to run **24/7 at pro
 
 ## Latest Breaking Information/Links
 
-- [Why we are currently using Bedrock Nova 2 model](./model-selection.md)
+- [Why we are currently using AWS Bedrock Nova 2 model](./model-selection.md)
 - [Index to all Regression and Smoke Tests](https://docwho2.github.io/java-squareup-spring-ai-ivr/)
 
 ---
@@ -40,12 +40,13 @@ Unlike most AI “phone bot” demos, this system was built to run **24/7 at pro
 
 Every component is **100% Java**, type-safe, and production-quality:
 
-- **Java 25**
-- **Spring Boot 4.0.1**
-- **Spring Cloud 5.0.0**
-- **Spring AI 2.0.0 (validated on 2.0.0-M1)**
+- **Java 25** [AWS Corretto](https://docs.aws.amazon.com/corretto/latest/corretto-25-ug/what-is-corretto-25.html)
+- **Spring Boot 4**
+- **Spring Cloud 5**
+- **Spring AI 2**
 - **AWS Bedrock (Nova, Titan, Claude)** and **OpenAI GPT models**
 - **AWS-native services:** Chime, Lex, DynamoDB, SES, SNS, Pinpoint, Polly, Lambda SnapStart
+- **Qdrant Vector Store** deployed inside AWS
 
 This is not a loose collection of scripts — it is a **cohesive, enterprise software system** with a well-defined architecture and production lifecycle.
 
@@ -255,42 +256,6 @@ This system represents:
 
 This is not a demo.  
 This is **a next-generation enterprise IVR and multi-channel assistant framework**, backed by the model of your choice and deployed across AWS at carrier scale.
-
-
-## High Level Goals
-
-The goal is to introduce a "Store Virtual Assistant" powered by [Spring AI](https://docs.spring.io/spring-ai/reference/) that can not only answer store-specific queries but also address any general questions the caller might have.
-- Utilize [Spring AI Tooling](https://docs.spring.io/spring-ai/reference/api/tools.html) to facilitate Square API calls, enabling access to inventory, employee details, and store hours.
-  - Further leverage tool calls so that the model can determine when a call should be transferred or concluded.
-- Employ strategic prompting to prime the model with pertinent store information and to guide interactions with callers.
-- Ensure a robust and dependable solution that is deployed across multiple regions within AWS and is entirely cloud-based.
-- CI/CD [GitHub Workflow](https://docs.github.com/en/actions/using-workflows/about-workflows) that deploys/updates two regions in parallel.
-
-**Features:**
-- Callers are consistently greeted and informed about the store's operational status (open or closed).
-- Store hours are ascertained in real-time via a Square API call.
-- Product category and individual item searches are also driven by Square API calls.
-  - Callers can inquire about product categories or specific items in stock.
-- Engaging with store employees or the primary store line.
-  - Callers can request to connect with specific employees, with the information sourced from a Square API call (Team Member list).
-  - If the caller simply wishes to speak to a representative, the model is preloaded with a default number to redirect the call.
-    - During transfers to the main line, this process is optimized to use SIP directly connecting to the store's [Asterisk PBX](https://www.asterisk.org).
-- Directions to the store can be requested and Google directions URL can be sent to the callers mobile device if requested.
-  - When interacting with Text the link is just returned, when using voice, the link is sent to the caller.
-- Messages can be sent to via Email to any of the employees.
-  - The Model can compose some interesting emails, quite entertaining.
-  - The calling number is included in the subject of the email to lend context.
-- Language Support
-  - When interacting via Text channels (Facebook and SMS via Twilio) any language the Model knows about (over 100) is supported.
-    - The Model detects your language and responds in that language.
-  - When interacting via Voice any [language Lex supports](https://docs.aws.amazon.com/lexv2/latest/dg/how-languages.html) is possible.
-    - This project is configured with English, Spanish, German, Dutch, Finnish, French (Canadian), Norwegian, Polish, and Swedish.
-      - These are the more common languages spoken in northern Minnesota (Strong Nordic population).
-    - The Model tries to detect (or you can ask of course) if you want to speak in another language.
-    - Model tooling is used to trigger a language context switch and then the call is moved from one Bot Locale to another at the Chime level.
-  - The Model is instructed to translate request parameters into English so searching items in the Store works in any language.
-    - Do you have gummy bears?  in Spanish is "¿Tienes ositos de goma?".
-    - Sí, tenemos ositos de goma. Ofrecemos "Big Yummy Gummy Bear - 12 Ct.", "Snack Pack O'Gummy Bears Milk Chocolate", y "Triple-Decker Candy Sour Gummy Bears".
 
 
 ## Demonstration Videos

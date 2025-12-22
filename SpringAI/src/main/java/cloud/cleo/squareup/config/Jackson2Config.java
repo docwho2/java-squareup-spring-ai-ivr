@@ -14,7 +14,6 @@ public class Jackson2Config {
      *
      * This intentionally coexists with Jackson 3 (tools.jackson.*)
      * used by Spring Cloud Function.
-     * @param builder
      * @return 
      */
     @Bean

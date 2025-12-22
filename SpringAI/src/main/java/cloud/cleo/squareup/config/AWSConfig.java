@@ -40,10 +40,7 @@ public class AWSConfig {
         return ApacheHttpClient.builder().build();
     }
 
-    /**
-     * Bedrock embeddings require HTTP/2. CRT sync doesn't support HTTP/2, 
-     * @return 
-     */
+   
     @Bean(name = "crtAsync", destroyMethod = "close")
     public SdkAsyncHttpClient crtAsyncHttpClient() {
         return AwsCrtAsyncHttpClient.create();

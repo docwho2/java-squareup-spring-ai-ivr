@@ -15,7 +15,11 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- *
+ * Consume Pinpoint SMS requests via SNS, convert into a Lex Input
+ * Event and process as a PINPOINT Channel request.  Since we send
+ * SMS via SNS, users can then converse with the Bot via the same
+ * phone number.
+ * 
  * @author sjensen
  */
 @Component

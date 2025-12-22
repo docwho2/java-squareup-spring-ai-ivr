@@ -1,6 +1,6 @@
 ## Model Selection & Low-Latency Performance Summary
 
-This project has gone through multiple production-grade model iterations, with a consistent focus on **low latency**, **deterministic behavior**, and **voice-first reliability**. Early versions of the system ran almost exclusively on **OpenAI gpt-4.1-nano**, which proved to be a true workhorse and established the baseline for acceptable performance. As the system matured and multilingual and RAG complexity increased, model consistency and tail latency (p50 / p95) became just as important as raw speed.
+This project has gone through multiple production-grade model iterations, with a consistent focus on **low latency**, **deterministic behavior**, and **voice-first reliability**. [Early versions of the system](https://github.com/docwho2/java-squareup-chatgpt-ivr) ran almost exclusively on **OpenAI gpt-4.1-nano**, which proved to be a true workhorse and established the baseline for acceptable performance. As the system matured and multilingual and RAG complexity increased, model consistency and tail latency (p50 / p95) became just as important as raw speed.
 
 To validate current model choices, a standardized **smoke test suite** was executed across multiple providers and models. Each test represents a real IVR path (inventory lookup, hours, staff routing, weather, city RAG, chat memory, etc.) and reflects **end-to-end request latency**, not just model inference time.
 
@@ -61,7 +61,7 @@ Strong reasoning quality, but consistently **slower p50** on conversational path
 - Fastest or near-fastest p50 across most conversational paths  
 - Zero language leakage (no English responses when operating in Swedish or other locales)  
 - Extremely consistent behavior under IVR load  
-- Best balance of latency, determinism, and multilingual safety  
+- Best balance of latency, determinism, and multilingual safety 
 
 ---
 
@@ -97,7 +97,8 @@ Solid successor to 4.1-nano, but not materially faster for IVR-style workloads.
 | SmokeTests.chatMemoryTest | 878 | 1.14 |
 
 **Notes:**  
-This model carried the project for a long time and remains an excellent reference point. However, it showed **occasional multilingual missteps** under real-world conversational pressure.
+- This model carried the project for a long time and remains an excellent reference point.
+- However, it showed **occasional multilingual missteps** under real-world conversational pressure.
 
 ---
 

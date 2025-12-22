@@ -33,7 +33,8 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.stereotype.Component;
 
 /**
- *
+ * Cloud Function to handle all Lex Requests.
+ * 
  * @author sjensen
  */
 @Component
@@ -105,6 +106,7 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
 
                     // Since not FB, this will be for Voice calls to take action on the call (Hangup, Language Change, Transfer,etc.)
                     eventWrapper.putSessionAttributeBotResponse(botResponse);
+                    // Build a terminating response for Lex so Chime gets control
                     return buildTerminatingResponse(eventWrapper.getSessionAttributes());
                 }
             } else {
