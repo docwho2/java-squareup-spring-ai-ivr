@@ -3,34 +3,34 @@
 - Ask for the City complaint process
   - Crawler process has full city website so this document should be there
 - Assert that response says Yes to validate query worked
-","3026","City RAG Complaint Search","","2025-12-27","passed","2025-12-27","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","cityRagTest"
-"## Exercise tool call with Square API Call
-- Ask if a Staff member works at the Store
-- Assert that response says the person does work there
-","1999","Store Staff","","2025-12-27","passed","2025-12-27","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","staffTest"
-"## Check Prompting knowledge
-- Ask for the store address
-- Assert that response contains our street address
-","1241","Store Address","","2025-12-27","passed","2025-12-27","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","addressTest"
-"","509","Performance Summary","","2025-12-27","passed","2025-12-27","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","performanceSummary"
+","2695","City RAG Complaint Search","","2025-12-27","passed","2025-12-27","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","cityRagTest"
+"## Send a ""Hello"" prompt to warm the stack
+- use random session ID so it doesn't count for the rest of the real tests
+- Assert that there is just a response
+","11705","Warm Up the Stack","","2025-12-27","passed","2025-12-27","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","warmupStack"
 "## Exercise tool call with Weather API Call
 - Ask for current weather at the store
 - Assert that response returns the temperature
-","2813","Weather Forecast","","2025-12-27","passed","2025-12-27","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","weatherTest"
+","2678","Weather Forecast","","2025-12-27","passed","2025-12-27","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","weatherTest"
 "## Verify Chat Memory is working
 - Ask what the first query was
   - If chat memory is working properly, it shoud tell us what we asked in the first test
 - Assert that response says we asked about Chuckles Candy which was the first smoke test
-","1294","Chat Memory","","2025-12-27","passed","2025-12-27","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","chatMemoryTest"
+","1358","Chat Memory","","2025-12-27","passed","2025-12-27","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","chatMemoryTest"
+"## Check Prompting knowledge
+- Ask for the store address
+- Assert that response contains our street address
+","1401","Store Address","","2025-12-27","passed","2025-12-27","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","addressTest"
+"## Exercise tool call with Square API Call
+- Ask if a Staff member works at the Store
+- Assert that response says the person does work there
+","2196","Store Staff","","2025-12-27","passed","2025-12-27","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","staffTest"
 "## Check Prompting knowledge
 - Ask for resturant recommendation
 - Assert that response says Muggs which is next door to the Store
-","1493","Restaurant Recommendation","","2025-12-27","passed","2025-12-27","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","restaurantTest"
+","1471","Restaurant Recommendation","","2025-12-27","passed","2025-12-27","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","restaurantTest"
+"","504","Performance Summary","","2025-12-27","passed","2025-12-27","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","performanceSummary"
 "## Exercise tool call with Square API Call
 - Search for Chuckles Candy that is always in stock
 - Assert that response says yes we have it
-","3005","Chuckles Candy","","2025-12-27","passed","2025-12-27","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","chucklesCandyTest"
-"## Send a ""Hello"" prompt to warm the stack
-- use random session ID so it doesn't count for the rest of the real tests
-- Assert that there is just a response
-","12175","Warm Up the Stack","","2025-12-27","passed","2025-12-27","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","warmupStack"
+","2709","Chuckles Candy","","2025-12-27","passed","2025-12-27","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","chucklesCandyTest"
