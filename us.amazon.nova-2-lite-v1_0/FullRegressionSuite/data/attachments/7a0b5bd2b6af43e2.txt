@@ -1,0 +1,1 @@
+Sjekk butikkens lagerbeholdning for stearinlys, og svar ja hvis du har dem.
