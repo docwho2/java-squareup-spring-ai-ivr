@@ -4,6 +4,7 @@ import cloud.cleo.squareup.memory.DynamoDbChatMemoryRepository;
 import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import org.springframework.ai.bedrock.converse.BedrockChatOptions;
 import org.springframework.ai.bedrock.converse.BedrockProxyChatModel;
 import org.springframework.ai.chat.client.ChatClient;
@@ -117,6 +118,8 @@ public class ChatConfig {
                 .temperature(.1)
                 .topP(0.9)
                 .maxTokens(100)
+                // "service_tier" : "reserved | priority | default | flex"
+                .requestParameters(Map.of("service_tier","priority"))
                 .build();
     }
 
