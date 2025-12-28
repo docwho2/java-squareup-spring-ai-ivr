@@ -119,7 +119,7 @@ public class ChatConfig {
                 .topP(0.9)
                 .maxTokens(100)
                 // "service_tier" : "reserved | priority | default | flex"
-                .requestParameters(Map.of("service_tier","priority"))
+                //.requestParameters(Map.of("service_tier","priority"))
                 .build();
     }
 
