@@ -48,7 +48,7 @@ public class LangUtil {
         /**
          * Specify the Chat language response
          */
-        CHATGPT_RESPONSE_LANGUAGE,
+        MODEL_RESPONSE_LANGUAGE,
         /**
          * Thank you for calling, goodbye.
          */

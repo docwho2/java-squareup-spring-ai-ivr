@@ -26,7 +26,7 @@ public class LangBundle_de extends ListResourceBundle {
          // The operation timed out, please ask your question again
         {OPERATION_TIMED_OUT.toString(), "Beim Vorgang ist eine Zeitüberschreitung aufgetreten. Bitte stellen Sie Ihre Frage erneut"},
         // Response Language
-        {CHATGPT_RESPONSE_LANGUAGE.toString(), "Please respond to all prompts in German.  "},
+        {MODEL_RESPONSE_LANGUAGE.toString(), "Please respond to all prompts in German.  "},
          // Thank you for calling, goodbye.
         {GOODBYE.toString(), "Danke für Ihren Anruf, auf Wiedersehen."},
     };

@@ -26,7 +26,7 @@ public class LangBundle_fi extends ListResourceBundle {
         // The operation timed out, please ask your question again
         {OPERATION_TIMED_OUT.toString(), "Toiminto aikakatkaistiin. Esitä kysymyksesi uudelleen"},
         // Response Language
-        {CHATGPT_RESPONSE_LANGUAGE.toString(), "Please respond to all prompts in Finnish.  "},
+        {MODEL_RESPONSE_LANGUAGE.toString(), "Please respond to all prompts in Finnish.  "},
         // Thank you for calling, goodbye.
         {GOODBYE.toString(), "Kiitos soitosta, näkemiin."},
     };

@@ -75,7 +75,7 @@
         </dependency>
         
 
-        <!-- Savinng ChatGPT Message Context -->
+        <!-- Saving Chat Message Context -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>dynamodb-enhanced</artifactId>
@@ -173,7 +173,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Lex V2 Runtime client -->
+        <!-- Lex V2 Runtime client for testing -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>lexruntimev2</artifactId>

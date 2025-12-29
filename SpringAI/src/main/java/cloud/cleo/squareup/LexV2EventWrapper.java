@@ -472,12 +472,12 @@ public final class LexV2EventWrapper {
                     .append(System.getenv("MAIN_NUMBER")).append(".  ");
             sb.append("Do not give out the employee list.  You may confirm the existence of an employee and give the full name and email.  ");
 
-            // We need GPT to call any functions with translated values, because for example "ositos de goma" is "gummy bears" in Spanish,
+            // We need Model to call any functions with translated values, because for example "ositos de goma" is "gummy bears" in Spanish,
             //  However that won't match when doing a Square Item search, it needs to be translated to gummy bears for the search to work.
             // General statement didn't work well, but calling the below out works great
             sb.append("When executing store_product_item function, translate the search_text to English.  ");
 
-            // Because we search on all terms, tell GPT to look at results and analyze whether the exact search term matched, or maybe a sub-string matched
+            // Because we search on all terms, tell Model to look at results and analyze whether the exact search term matched, or maybe a sub-string matched
             sb.append("When executing store_product_item function the results may include items that don't match exactly, ")
                     .append("so check to see if the full search_text is contained in the result to indicate an exact match, otherwise indicate to user ")
                     .append("that those results may be similar items to what they asked about.  ");

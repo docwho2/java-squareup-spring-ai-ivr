@@ -26,7 +26,7 @@ public class LangBundle_nl extends ListResourceBundle {
         // The operation timed out, please ask your question again
         {OPERATION_TIMED_OUT.toString(), "Er is een time-out opgetreden tijdens de bewerking. Stel uw vraag opnieuw"},
         // Response Language
-        {CHATGPT_RESPONSE_LANGUAGE.toString(), "Please respond to all prompts in Dutch.  "},
+        {MODEL_RESPONSE_LANGUAGE.toString(), "Please respond to all prompts in Dutch.  "},
         // Thank you for calling, goodbye.
         {GOODBYE.toString(), "Bedankt voor het bellen, tot ziens."},
     };

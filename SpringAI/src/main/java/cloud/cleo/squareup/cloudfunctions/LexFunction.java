@@ -152,9 +152,9 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
     }
 
     /**
-     * General Response used to send back a message and Elicit Intent again at LEX. IE, we are sending back GPT
-     * response, and then waiting for Lex to collect speech and once again call us so we can send to GPT, effectively
-     * looping until we call a terminating event like Quit or Transfer.
+     * General Response used to send back a message and Elicit Intent again at LEX. IE, we are sending back Model
+     * response, and then waiting for Lex to collect speech and once again call us so we can send to Model, effectively
+     * looping until we call a terminating event like Hangup or Transfer.
      *
      * @param lexRequest
      * @param response

@@ -26,7 +26,7 @@ public class LangBundle_sv extends ListResourceBundle {
         // The operation timed out, please ask your question again
         {OPERATION_TIMED_OUT.toString(), "Åtgärden tog timeout, ställ din fråga igen"},
         // Response Language
-        {CHATGPT_RESPONSE_LANGUAGE.toString(), "Please respond to all prompts in Swedish.  "},
+        {MODEL_RESPONSE_LANGUAGE.toString(), "Please respond to all prompts in Swedish.  "},
         // Thank you for calling, goodbye.
         {GOODBYE.toString(), "Tack för att du ringde, hejdå."},
     };
