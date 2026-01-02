@@ -3,34 +3,34 @@
 - Ask for the City complaint process
   - Crawler process has full city website so this document should be there
 - Assert that response says Yes to validate query worked
-","3185","City RAG Complaint Search","","2026-01-02","passed","2026-01-02","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","cityRagTest"
+","2261","City RAG Complaint Search","","2026-01-02","passed","2026-01-02","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","cityRagTest"
+"## Exercise tool call with Weather API Call
+- Ask for current weather at the store
+- Assert that response returns the temperature
+","2877","Weather Forecast","","2026-01-02","passed","2026-01-02","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","weatherTest"
 "## Exercise tool call with Square API Call
-- Search for Chuckles Candy that is always in stock
-- Assert that response says yes we have it
-","7835","Chuckles Candy","","2026-01-02","passed","2026-01-02","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","chucklesCandyTest"
+- Ask if a Staff member works at the Store
+- Assert that response says the person does work there
+","2282","Store Staff","","2026-01-02","passed","2026-01-02","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","staffTest"
 "## Verify Chat Memory is working
 - Ask what the first query was
   - If chat memory is working properly, it shoud tell us what we asked in the first test
 - Assert that response says we asked about Chuckles Candy which was the first smoke test
-","1241","Chat Memory","","2026-01-02","passed","2026-01-02","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","chatMemoryTest"
-"## Check Prompting knowledge
-- Ask for the store address
-- Assert that response contains our street address
-","1268","Store Address","","2026-01-02","passed","2026-01-02","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","addressTest"
-"## Exercise tool call with Square API Call
-- Ask if a Staff member works at the Store
-- Assert that response says the person does work there
-","2609","Store Staff","","2026-01-02","passed","2026-01-02","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","staffTest"
-"## Exercise tool call with Weather API Call
-- Ask for current weather at the store
-- Assert that response returns the temperature
-","2964","Weather Forecast","","2026-01-02","passed","2026-01-02","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","weatherTest"
-"## Check Prompting knowledge
-- Ask for resturant recommendation
-- Assert that response says Muggs which is next door to the Store
-","1430","Restaurant Recommendation","","2026-01-02","passed","2026-01-02","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","restaurantTest"
-"","503","Performance Summary","","2026-01-02","passed","2026-01-02","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","performanceSummary"
+","1369","Chat Memory","","2026-01-02","passed","2026-01-02","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","chatMemoryTest"
 "## Send a ""Hello"" prompt to warm the stack
 - use random session ID so it doesn't count for the rest of the real tests
 - Assert that there is just a response
-","7880","Warm Up the Stack","","2026-01-02","passed","2026-01-02","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","warmupStack"
+","10167","Warm Up the Stack","","2026-01-02","passed","2026-01-02","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","warmupStack"
+"","503","Performance Summary","","2026-01-02","passed","2026-01-02","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","performanceSummary"
+"## Check Prompting knowledge
+- Ask for the store address
+- Assert that response contains our street address
+","1371","Store Address","","2026-01-02","passed","2026-01-02","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","addressTest"
+"## Exercise tool call with Square API Call
+- Search for Chuckles Candy that is always in stock
+- Assert that response says yes we have it
+","2632","Chuckles Candy","","2026-01-02","passed","2026-01-02","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","chucklesCandyTest"
+"## Check Prompting knowledge
+- Ask for resturant recommendation
+- Assert that response says Muggs which is next door to the Store
+","5190","Restaurant Recommendation","","2026-01-02","passed","2026-01-02","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","restaurantTest"
