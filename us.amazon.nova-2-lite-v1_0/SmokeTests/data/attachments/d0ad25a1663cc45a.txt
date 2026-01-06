@@ -1,0 +1,5 @@
+It's currently foggy at our store with a temperature of 28 degrees Fahrenheit and a wind speed of 12 mph.
+
+The forecast shows drizzle today, foggy conditions tomorrow, and snow expected by next Monday.
+
+Would you like to know our current store hours or check if we're open right now?
