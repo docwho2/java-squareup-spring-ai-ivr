@@ -1,0 +1,5 @@
+It's currently cloudy at our store with a temperature of 26 degrees Fahrenheit and wind speeds of 15 mph.
+
+The forecast shows foggy conditions today, snow tomorrow, and cloudy conditions through the weekend with a chance of snow on Sunday.
+
+Would you like to know our current store hours or check on any products before visiting?
