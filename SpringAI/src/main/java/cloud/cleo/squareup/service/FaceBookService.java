@@ -243,7 +243,7 @@ public class FaceBookService {
                     .uri(uriBuilder -> uriBuilder
                             .pathSegment(FB_API_VERSION, id)
                             .queryParam("access_token", pageAccessToken)
-                            .queryParam("fields", "name,first_name,last_name")
+                            //.queryParam("fields", "name,first_name,last_name")
                             .build())
                     .accept(MediaType.APPLICATION_JSON)
                     .retrieve()

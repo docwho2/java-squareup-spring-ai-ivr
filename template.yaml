@@ -493,7 +493,7 @@ Resources:
       DataPrivacy:
         ChildDirected: false
       AutoBuildBotLocales: true
-      IdleSessionTTLInSeconds: 300
+      IdleSessionTTLInSeconds: 3600  # 1 Hour session timeout
       BotLocales:
         - LocaleId: en_US
           Description: SpringAI Bot English

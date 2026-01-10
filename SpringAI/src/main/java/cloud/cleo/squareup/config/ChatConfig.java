@@ -87,12 +87,12 @@ public class ChatConfig {
             builder = builder
                     .temperature(0.2)
                     .topP(.9)
-                    .maxTokens(100);
+                    .maxTokens(400);
         } else if (model.startsWith("gpt-5")) {
             // GPT-5 family is just completion tokens, no temp or topP
             builder = builder
                     .reasoningEffort("minimal")  // need lowest latency response
-                    .maxCompletionTokens(100);
+                    .maxCompletionTokens(400);
         }
 
         return builder.build();
@@ -116,7 +116,7 @@ public class ChatConfig {
                 .model(resolved)
                 .temperature(.1)
                 .topP(0.9)
-                .maxTokens(100)
+                .maxTokens(400)
                 // "service_tier" : "reserved | priority | default | flex"
                 //.requestParameters(Map.of("service_tier","priority"))
                 .build();
