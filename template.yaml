@@ -114,6 +114,17 @@ Globals:
 
 Conditions:
   IsUsEast1: !Equals [ !Ref "AWS::Region", "us-east-1" ]
+  # true when stack name begins with "sbx"
+  IsSbx: !Equals
+    - "sbx"
+    - !Select
+        - 0
+        - !Split
+            - "-"
+            - !Ref "AWS::StackName"
+  CreateCrawler: !And
+    - !Condition IsUsEast1
+    - !Not [ !Condition IsSbx ]
 
 Resources:
     
@@ -1234,7 +1245,7 @@ Resources:
               Resource: '*'
     
   SpringAICrawler:
-    Condition: IsUsEast1
+    Condition: CreateCrawler
     Type: AWS::Serverless::Function
     DependsOn: SpringAILogGroupCrawler
     Properties:
@@ -1280,7 +1291,7 @@ Resources:
   
   
   SpringAILogGroupCrawler:
-    Condition: IsUsEast1
+    Condition: CreateCrawler
     Type: AWS::Logs::LogGroup
     UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
@@ -1290,7 +1301,7 @@ Resources:
       
   
   SpringAIScheduleGroup:
-    Condition: IsUsEast1
+    Condition: CreateCrawler
     Type: AWS::Scheduler::ScheduleGroup
     Properties:
       Name: !Sub "${AWS::StackName}-SpringAISchedules"
