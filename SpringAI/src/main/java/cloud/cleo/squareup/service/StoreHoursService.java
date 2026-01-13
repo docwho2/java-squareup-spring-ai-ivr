@@ -1,6 +1,5 @@
 package cloud.cleo.squareup.service;
 
-import cloud.cleo.squareup.service.SquareLocationService;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -50,22 +49,24 @@ public class StoreHoursService {
 
             String message;
             if (bh.isEmpty()) {
-                message = open
-                        ? "We are currently open, but detailed schedule data is temporarily unavailable."
-                        : "We are currently closed. Store hours are temporarily unavailable, but we will re-open soon.";
+                log.debug("Business Hours is empty, extended store closure");
+                message = "We are currently closed for the season, Private Shopping appointments are encouraged until the Grand Reopening which is the first Saturday in May.";
             } else {
+                log.debug("Business Hours has open periods");
                 message = open
                         ? "We are currently OPEN. See 'open_hours' for today's and upcoming hours."
                         : "We are currently CLOSED. See 'open_hours' for today's and upcoming hours.";
             }
 
-            return new StoreHoursResult(
+            final var shr = new StoreHoursResult(
                     status,
                     now.toString(),
                     dow,
                     message,
                     bh.isEmpty() ? null : bh
             );
+            log.debug(shr);
+            return shr;
         } catch (Exception e) {
             return new StoreHoursResult(
                     "UNKNOWN",
