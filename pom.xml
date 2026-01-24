@@ -112,7 +112,7 @@
             <dependency>
                 <groupId>com.squareup</groupId>
                 <artifactId>square</artifactId>
-                <version>45.1.0.20251016</version>
+                <version>46.0.0.20260122</version>
             </dependency>
             
             <!-- used for web crawling sites -->
