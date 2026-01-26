@@ -1,0 +1,3 @@
+It's currently -3 degrees Fahrenheit and cloudy with a wind speed of 16 mph. The forecast for the next few days shows cloudy skies with temperatures ranging from -19 to 6 degrees Fahrenheit.
+
+Would you like to know the store hours today or check if we're open?
