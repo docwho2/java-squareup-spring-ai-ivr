@@ -73,7 +73,7 @@ jobs:
      
     - name: Setup AWS Credentials
       id: aws-creds
-      uses: aws-actions/configure-aws-credentials@v5
+      uses: aws-actions/configure-aws-credentials@v6
       with:
         aws-region: us-east-1
         # The full role ARN if you are using OIDC
@@ -133,7 +133,7 @@ jobs:
     
     - name: Setup AWS Credentials
       id: aws-creds
-      uses: aws-actions/configure-aws-credentials@v5
+      uses: aws-actions/configure-aws-credentials@v6
       with:
         aws-region: ${{ matrix.region }}
         # The full role ARN if you are using OIDC
