@@ -77,7 +77,7 @@ public abstract class AbstractTool {
      * @return
      */
     LexV2EventWrapper getEventWrapper(ToolContext ctx) {
-        // Always placeed in the Tool Context for every request and never null
+        // Always placed in the Tool Context for every request and never null
         return (LexV2EventWrapper) ctx.getContext().get(CTX_EVENT_WRAPPER);
     }
 
