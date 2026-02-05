@@ -1,0 +1,5 @@
+It's currently cloudy at the store with a temperature of 30 degrees Fahrenheit and a wind speed of 6 miles per hour.
+
+The forecast shows cloudy conditions through the weekend with a chance of snow on Sunday.
+
+Would you like to know today's store hours or check our current inventory?
