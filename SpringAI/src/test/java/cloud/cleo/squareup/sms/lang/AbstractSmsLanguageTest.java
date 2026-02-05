@@ -39,8 +39,8 @@ public abstract class AbstractSmsLanguageTest extends AbstractLexAwsTestSupport 
         
         Allure.description("""
                            ## Ask if Candles are in stock
-                           The model must interpret this as non-English and now converese in this languauge moving forward
-                           - Assert that response contains "yes" in the naitive language
+                           The model must interpret this as non-English and now converse in this language moving forward
+                           - Assert that response contains "yes" in the native language
                              - This ensures the query search term was translated to English properly for the search to succeed
                            - Assert that response does not contain English words (Yes,Candle,in stock,etc.)
                            """);
@@ -65,7 +65,7 @@ public abstract class AbstractSmsLanguageTest extends AbstractLexAwsTestSupport 
          Allure.description("""
                            ## Ask if the City has a complaint process
                            The model must translate "complaint process" to English before calling the tool for RAG query
-                           - Assert that response contains "yes" in the naitive language 
+                           - Assert that response contains "yes" in the native language 
                            - Assert that response does not contain English words (Yes,complaint,found,etc.)
                            """);
         

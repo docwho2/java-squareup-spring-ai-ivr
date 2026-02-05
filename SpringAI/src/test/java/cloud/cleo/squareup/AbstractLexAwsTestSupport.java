@@ -133,7 +133,7 @@ public abstract class AbstractLexAwsTestSupport {
                 awsReady = true;
 
                 log.info(
-                        "Lex test support fully initted for stack '{}' in region '{}' (botId={}, aliasId={})",
+                        "Lex test support fully initialized for stack '{}' in region '{}' (botId={}, aliasId={})",
                         STACK_NAME, AWS_REGION, botId, botAliasId
                 );
 
@@ -171,7 +171,7 @@ public abstract class AbstractLexAwsTestSupport {
     }
 
     protected final RecognizeTextResponse sendToLex(String text, ChannelPlatform channel, String sessionId) {
-        // Default to text channel (from Twillio) if not set
+        // Default to text channel (from Twilio) if not set
         channel = channel != null ? channel : ChannelPlatform.TWILIO;
         Allure.addAttachment("Lex Request", "text/plain", text);
         Allure.parameter("Channel", channel.name());
@@ -310,7 +310,7 @@ public abstract class AbstractLexAwsTestSupport {
     }
 
     /**
-     * Override when you don't want to use the default session ID provided. IE, to perform at set of tests with your own
+     * Override when you don't want to use the default session ID provided. i.e., to perform a set of tests with your own
      * unique session ID.
      *
      * @return

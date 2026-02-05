@@ -27,7 +27,7 @@ public class FacebookTests extends AbstractLexAwsTestSupport {
     // My own FB ID (Steve Jensen)
     private final static String FACEBOOK_ID = "854474112";
 
-    private final static Pattern MY_NMAE_PATTERN = Pattern.compile("steve", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+    private final static Pattern MY_NAME_PATTERN = Pattern.compile("steve", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
     @Test
     @Order(1)
@@ -61,11 +61,11 @@ public class FacebookTests extends AbstractLexAwsTestSupport {
     @DisplayName("Facebook Hello")
     public void facebookStoreNameTest() {
         Allure.description("""
-                           ## Ask Store  name and ensure personalized response
+                           ## Ask Store name and ensure personalized response
                            This test has 3 assertions
                            - Copper Bot name must be in the response
                            - System prompt says to greet with name, so first name should also be in this initial response
-                           - Since this a new Facebook session a welcome card should also be present in the response
+                           - Since this is a new Facebook session a welcome card should also be present in the response
                            """);
 
         final var res = sendToLex(
@@ -76,9 +76,9 @@ public class FacebookTests extends AbstractLexAwsTestSupport {
         assertMatchesRegex(COPPER_BOT_PATTERN, getBotResponse(res));
 
         // Since bot is instructed to use my first name, it should appear in the initial response as well
-        assertMatchesRegex(MY_NMAE_PATTERN, getBotResponse(res));
+        assertMatchesRegex(MY_NAME_PATTERN, getBotResponse(res));
 
-        // Since this a new FB conversation, we should get a welcome card as well
+        // Since this is a new FB conversation, we should get a welcome card as well
         assertTrue(res.messages().stream().anyMatch(m -> m.imageResponseCard() != null),
                 "Response did not contain the initial Welcome Image Response Card"
         );
@@ -92,19 +92,19 @@ public class FacebookTests extends AbstractLexAwsTestSupport {
     @DisplayName("Facebook Name")
     public void facebookUserNameTest() {
         Allure.description("""
-                           ## Explicitly ask what my name
+                           ## Explicitly ask what my name is
                            This test has 2 assertions
                            - It should repeat my name back (from FB API Call)
-                           - Since this is NOT new Facebook session now, a welcome card should should not be in the response
+                           - Since this is NOT a new Facebook session now, a welcome card should not be in the response
                            """);
 
         final var res = sendToLex(
                 "What is my name?  Just confirm it, not asking for any personal details."
         );
 
-        assertMatchesRegex(MY_NMAE_PATTERN, getBotResponse(res));
+        assertMatchesRegex(MY_NAME_PATTERN, getBotResponse(res));
 
-        // Since this not a new FB conversation, we should not get a welcome card
+        // Since this is not a new FB conversation, we should not get a welcome card
         assertFalse(res.messages().stream().anyMatch(m -> m.imageResponseCard() != null),
                 "Response contained Image Response Card"
         );

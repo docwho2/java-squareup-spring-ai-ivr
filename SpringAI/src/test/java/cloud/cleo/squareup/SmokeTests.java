@@ -76,7 +76,7 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
 
         Allure.description("""
                            ## Check Prompting knowledge
-                           - Ask for resturant recommendation
+                           - Ask for restaurant recommendation
                            - Assert that response says Muggs which is next door to the Store
                            """);
         
@@ -161,7 +161,7 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
 
         boolean ok = weather.toLowerCase().matches("(?is).*?(°f|degrees|fahrenheit| f ).*");
         log.info(ok ? "Weather Test Passed" : "Weather Test FAILED");
-        assertTrue(ok, "Weaather test failed, response was: " + weather);
+        assertTrue(ok, "Weather test failed, response was: " + weather);
     }
     
     @Test
@@ -198,7 +198,7 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
         Allure.description("""
                            ## Verify Chat Memory is working
                            - Ask what the first query was
-                             - If chat memory is working properly, it shoud tell us what we asked in the first test
+                             - If chat memory is working properly, it should tell us what we asked in the first test
                            - Assert that response says we asked about Chuckles Candy which was the first smoke test
                            """);
 
@@ -210,7 +210,7 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
 
         boolean ok = chatMemory.toLowerCase().matches("(?is).*?(chuckles|candy).*");
         log.info(ok ? "Chat Memory Test Passed" : "Chat Memory Test FAILED");
-        assertTrue(ok, "Chaat Memory test failed, response was: " + chatMemory);
+        assertTrue(ok, "Chat Memory test failed, response was: " + chatMemory);
     }
 
     @Test

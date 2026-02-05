@@ -22,8 +22,8 @@ import org.opentest4j.TestAbortedException;
 import static software.amazon.awssdk.services.lexruntimev2.model.DialogActionType.CLOSE;
 
 /**
- * Start conversation in a particular language and then send some simple tests that will contain english chars to
- * validate, then sub classes can do a couple more language tests in the target language.
+ * Start conversation in a particular language and then send some simple tests that will contain English chars to
+ * validate, then subclasses can do a couple more language tests in the target language.
  *
  * @author sjensen
  */
@@ -164,7 +164,7 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
 
         Allure.description("""
                            ## Ask if Candles are in stock
-                           - Assert that response contains "yes" in the naitive language
+                           - Assert that response contains "yes" in the native language
                              - This ensures the query search term was translated to English properly for the search to succeed
                            - Assert that response does not contain English words (Yes,Candle,in stock,etc.)
                            """);
@@ -189,7 +189,7 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
         Allure.description("""
                            ## Ask if the City has a complaint process
                            The model must translate "complaint process" to English before calling the tool for RAG query
-                           - Assert that response contains "yes" in the naitive language 
+                           - Assert that response contains "yes" in the native language 
                            - Assert that response does not contain English words (Yes,complaint,found,etc.)
                            """);
 
