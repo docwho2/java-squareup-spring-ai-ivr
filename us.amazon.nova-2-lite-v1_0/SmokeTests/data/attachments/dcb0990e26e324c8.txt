@@ -1,0 +1,5 @@
+It's currently cloudy at our store with a temperature of 31.8°F and wind speeds of 18.4 mph.
+
+The forecast shows drizzle today, cloudy tomorrow, and snow on Sunday and Monday.
+
+Would you like to know our current store hours or check if we're open right now?
