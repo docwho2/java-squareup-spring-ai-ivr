@@ -1,0 +1,3 @@
+It's currently cloudy with a temperature of 16.6°F and winds at 13.3 mph.
+
+Would you like to hear the forecast for the next few days?
