@@ -11,6 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -54,15 +55,16 @@ public class WahkonWebCrawlerService {
         var exclude = site.excludeUrlRegex() != null ? Pattern.compile(site.excludeUrlRegex()) : null;
 
         var frontier = new UrlFrontier(props.maxPages());
-        site.seeds().forEach(seed -> frontier.add(seed, 0));
+        site.seeds().forEach(seed -> frontier.add(normalizeUrl(seed), 0));
 
         var splitter = new TokenTextSplitter();
+        var completionService = new ExecutorCompletionService<Void>(virtualThreadExecutor);
         var inFlight = new ArrayList<Future<Void>>();
 
-        while (frontier.hasNext()) {
+        while (frontier.hasNext() || !inFlight.isEmpty()) {
             while (inFlight.size() < props.concurrency() && frontier.hasNext()) {
                 var item = frontier.next();
-                inFlight.add(virtualThreadExecutor.submit(() -> {
+                inFlight.add(completionService.submit(() -> {
                     int delayMs = ThreadLocalRandom.current().nextInt(250, 10001);
                     try {
                         TimeUnit.MILLISECONDS.sleep(delayMs);
@@ -76,19 +78,22 @@ public class WahkonWebCrawlerService {
                 }));
             }
 
-            var done = inFlight.remove(0);
+            if (inFlight.isEmpty()) {
+                continue;
+            }
+
+            Future<Void> done;
+            try {
+                done = completionService.take();
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+            inFlight.remove(done);
             try {
                 done.get();
             } catch (ExecutionException e) {
                 // ignore per-page
-            }
-        }
-
-        for (var f : inFlight) {
-            try {
-                f.get();
-            } catch (ExecutionException e) {
-                // ignore
             }
         }
     }
@@ -206,6 +211,7 @@ public class WahkonWebCrawlerService {
             page.select("a[href]")
                     .eachAttr("abs:href")
                     .stream()
+                    .map(WahkonWebCrawlerService::normalizeUrl)
                     .filter(h -> h != null && !h.isBlank())
                     .filter(h -> isAllowed(site, h, include, exclude))
                     .forEach(h -> frontier.add(h, depth + 1));
@@ -391,6 +397,50 @@ public class WahkonWebCrawlerService {
                 .replaceAll("\\s+", " ")
                 .trim();
         return n.isBlank() ? null : n;
+    }
+
+    private static String normalizeUrl(String url) {
+        if (url == null || url.isBlank()) {
+            return null;
+        }
+        try {
+            URI uri = URI.create(url.trim()).normalize();
+            String scheme = uri.getScheme() != null ? uri.getScheme().toLowerCase(Locale.ROOT) : null;
+            String host = uri.getHost() != null ? uri.getHost().toLowerCase(Locale.ROOT) : null;
+            int port = uri.getPort();
+            String path = uri.getRawPath();
+            if (path == null || path.isBlank()) {
+                path = "/";
+            }
+            String query = stripTrackingParams(uri.getRawQuery());
+            URI normalized = new URI(scheme, null, host, port, path, query, null);
+            return normalized.toString();
+        } catch (Exception e) {
+            return url;
+        }
+    }
+
+    private static String stripTrackingParams(String rawQuery) {
+        if (rawQuery == null || rawQuery.isBlank()) {
+            return rawQuery;
+        }
+        var kept = new ArrayList<String>();
+        for (String part : rawQuery.split("&")) {
+            if (part.isBlank()) {
+                continue;
+            }
+            String key = part.split("=", 2)[0].toLowerCase(Locale.ROOT);
+            if (key.startsWith("utm_")
+                    || key.equals("fbclid")
+                    || key.equals("gclid")
+                    || key.equals("igshid")
+                    || key.equals("mc_cid")
+                    || key.equals("mc_eid")) {
+                continue;
+            }
+            kept.add(part);
+        }
+        return kept.isEmpty() ? null : String.join("&", kept);
     }
 
     private static String meta(Document page, String attrKey, String attrVal) {

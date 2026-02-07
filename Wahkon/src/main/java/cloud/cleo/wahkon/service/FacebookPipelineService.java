@@ -3,7 +3,6 @@ package cloud.cleo.wahkon.service;
 import cloud.cleo.wahkon.config.FacebookProperties;
 import cloud.cleo.wahkon.model.IngestMetadata;
 import cloud.cleo.wahkon.model.IngestMetadata.ContentKind;
-import cloud.cleo.wahkon.util.ContentHash;
 import cloud.cleo.wahkon.util.Sha256Hex;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -73,8 +72,8 @@ public class FacebookPipelineService {
         final Instant fetchedAt = Instant.now();
         final String url = post.permalinkUrl() != null ? post.permalinkUrl() : "fb://" + post.id();
 
-        // cheap change detector (keep as-is for compatibility with your existing qdrant sidecar)
-        final String contentHash = ContentHash.md5Hex(text);
+        // change detector should match contentSha256 stored in Qdrant
+        final String contentHash = Sha256Hex.toSha256(text.getBytes(StandardCharsets.UTF_8));
 
         final String source = SOURCE_PREFIX + page.name();
 
