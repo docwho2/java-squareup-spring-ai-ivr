@@ -25,7 +25,7 @@ import org.junit.jupiter.api.TestInstance;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractSmsLanguageTest extends AbstractLexAwsTestSupport {
 
-    // Use one random session ID for this voice session
+    // Use one random session ID for this SMS session
     private final String SESSION_ID = UUID.randomUUID().toString();
 
 
@@ -78,7 +78,7 @@ public abstract class AbstractSmsLanguageTest extends AbstractLexAwsTestSupport 
         assertNotMatchesRegex(Pattern.compile("(yes\\b|complaint|found\\b)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE), SESSION_ID);
     }
 
-    // Some english words that come back, should never be seen in different languages
+    // Some English words that come back, should never be seen in different languages
     private final static Pattern ENGLISH_CHECK = Pattern.compile("(open\\b|opened\\b|started\\b|year\\b|store\\b|doors\\b|october\\b)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     
     @Test
@@ -103,7 +103,7 @@ public abstract class AbstractSmsLanguageTest extends AbstractLexAwsTestSupport 
         // Should have the year
         assertMatchesRegex(COPPER_FOX_OPEN_YEAR, botResponse);
         
-        // Should Not respond in English, so check for english words
+        // Should not respond in English, so check for English words
         assertNotMatchesRegex(ENGLISH_CHECK, botResponse);
     }
 
@@ -137,7 +137,7 @@ public abstract class AbstractSmsLanguageTest extends AbstractLexAwsTestSupport 
     }
 
     /**
-     * Voice channel testing
+     * SMS channel testing
      *
      * @return
      */

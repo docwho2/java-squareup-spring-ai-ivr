@@ -67,7 +67,7 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
                            ## Ask to speak in the target language
                            - Assert that proper tool is called to switch languages
                            - Assert that the exact language (enum) was passed correctly to the tool call
-                           - Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
+                           - Assert that the Lex dialog has closed (guarantees Chime is back in control of the call)
                            Upon Success, Chime engages the proper LexBot in the target Locale.
                            If this test fails, remaining tests are skipped since they are predicated on speaking the target language
                            """);
@@ -128,7 +128,7 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
         assertNotMatchesRegex(Pattern.compile("(name\\b|store|assistant\\b)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE), SESSION_ID);
     }
 
-    // Some english words that come back, should never be seen in different languages
+    // Some English words that come back, should never be seen in different languages
     private final static Pattern ENGLISH_CHECK = Pattern.compile("(open\\b|opened\\b|started\\b|year\\b|store\\b|doors\\b|october\\b)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
     @Test
@@ -150,7 +150,7 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
 
         assertMatchesRegex(COPPER_FOX_OPEN_YEAR, getBotResponse(res));
 
-        // Should Not respond in English, so check for english words
+        // Should not respond in English, so check for English words
         assertNotMatchesRegex(ENGLISH_CHECK, getBotResponse(res));
     }
 
@@ -214,7 +214,7 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
           Allure.description("""
                            ## Indicate we are all done with the call
                            - Assert that proper tool is called to end the call
-                           - Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
+                           - Assert that the Lex dialog has closed (guarantees Chime is back in control of the call)
                              - Chime would then hang up on the caller
                            """);
         
@@ -258,7 +258,7 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
     protected abstract Pattern getYesPattern();
 
     /**
-     * will start with english, then assuming first test passes, we will return the new testing language.
+     * will start with English, then assuming first test passes, we will return the new testing language.
      *
      * @return
      */
