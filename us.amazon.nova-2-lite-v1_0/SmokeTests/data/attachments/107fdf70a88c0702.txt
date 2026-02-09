@@ -1,0 +1,1 @@
+It's currently cloudy at the store with a temperature of 25.4 degrees Fahrenheit and a wind speed of 8.1 miles per hour. The forecast shows drizzle today with a high of 43.4 degrees, then cloudy tomorrow with a high of 32.3 degrees. Would you like to know the store hours today?
