@@ -1,0 +1,3 @@
+It's currently cloudy at the store with a temperature of 29 degrees Fahrenheit and wind speeds of 19 mph. The forecast shows cloudy conditions today, foggy tomorrow, and foggy for the next few days with temperatures ranging from the mid-teens to around 40 degrees.
+
+Would you like to know today's store hours or anything else?
