@@ -31,8 +31,8 @@ public class LanguageSwitchTest extends AbstractVoiceTest {
                            ## Ask to speak in Spanish
                            - Assert that proper tool is called to switch languages
                            - Assert that the exact language (enum) was passed correctly to the tool call for Spanish
-                           - Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
-                             - Chime would then start a new LexSession with Spanish Locale
+                           - Assert that the Lex dialog has closed (guarantees Chime is back in control of the call)
+                             - Chime would then start a new Lex session with Spanish locale
                            """);
 
         final var res = sendToLex(

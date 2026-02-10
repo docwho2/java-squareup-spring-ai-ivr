@@ -29,7 +29,7 @@ public class HangupTest extends AbstractVoiceTest {
          Allure.description("""
                            ## Indicate we are all done with the call
                            - Assert that proper tool is called to end the call
-                           - Assert that the lex Dialog has closed (guarantees Chime is back in control of the call)
+                           - Assert that the Lex dialog has closed (guarantees Chime is back in control of the call)
                              - Chime would then hang up on the caller
                            """);
 
