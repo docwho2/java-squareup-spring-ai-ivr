@@ -1,0 +1,5 @@
+It's currently cloudy at the store with a temperature of 15 degrees Fahrenheit and a wind speed of 4.3 miles per hour.
+
+The forecast for the next few days shows foggy conditions with temperatures ranging from the mid-teens to the mid-thirties.
+
+Would you like to know today's store hours or anything else?
