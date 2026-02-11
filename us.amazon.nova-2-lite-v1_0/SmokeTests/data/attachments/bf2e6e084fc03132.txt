@@ -1,0 +1,3 @@
+It's currently cloudy with a temperature of 15 degrees Fahrenheit and a wind speed of 5.2 miles per hour.
+
+Would you like to hear the forecast for the next few days?
