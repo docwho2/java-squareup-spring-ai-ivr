@@ -6,7 +6,7 @@
 /.project
 /.aws-sam/
 /dependency-reduced-pom.xml
-/.DS_Store
+.DS_Store
 /.vscode
 /nbactions*
 **/.allure/
