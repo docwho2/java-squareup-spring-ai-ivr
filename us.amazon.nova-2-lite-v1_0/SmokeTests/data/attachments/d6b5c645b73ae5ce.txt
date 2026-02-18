@@ -1,0 +1,3 @@
+It's currently cloudy at the store with a temperature of 33 degrees Fahrenheit and a wind speed of 6.7 mph. Tomorrow there's a chance of snow.
+
+Would you like to know today's store hours or check our current inventory?
