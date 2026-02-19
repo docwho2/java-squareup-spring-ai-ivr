@@ -1,0 +1,5 @@
+It's currently cloudy at our store with a temperature of 26 degrees Fahrenheit and a wind speed of 6.5 miles per hour.
+
+The forecast for the next few days remains cloudy with temperatures ranging from 8 to 30 degrees Fahrenheit.
+
+Would you like to know our store hours today or anything else?
