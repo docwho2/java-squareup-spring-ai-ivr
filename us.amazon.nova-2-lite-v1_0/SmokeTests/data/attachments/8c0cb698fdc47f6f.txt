@@ -1,0 +1,5 @@
+It's currently cloudy with a temperature of 18 degrees Fahrenheit and a wind speed of 8.4 miles per hour.
+
+The forecast shows cloudy conditions through the weekend with temperatures ranging from 12 to 35 degrees.
+
+Would you like to know the store hours for today or check if we're open now?
