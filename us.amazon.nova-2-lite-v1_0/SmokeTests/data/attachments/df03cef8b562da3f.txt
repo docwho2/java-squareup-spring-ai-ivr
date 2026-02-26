@@ -1,0 +1,5 @@
+It's currently cloudy at the store with a temperature of 18 degrees Fahrenheit and a wind speed of 8.4 miles per hour.
+
+The forecast shows cloudy conditions through the weekend with a clear sky expected on Sunday, March 1st.
+
+Would you like to know today's store hours or check our current inventory?
