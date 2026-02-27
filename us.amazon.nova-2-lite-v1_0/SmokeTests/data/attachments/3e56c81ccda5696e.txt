@@ -1,0 +1,5 @@
+It's currently clear sky with a temperature of 29 degrees Fahrenheit and wind speed of 10 mph.
+
+The forecast shows cloudy conditions tomorrow with a high of 42 degrees, then snow on Sunday with a high of 15 degrees.
+
+Would you like to know today's store hours?
