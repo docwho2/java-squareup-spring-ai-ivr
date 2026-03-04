@@ -1,0 +1,3 @@
+It's currently cloudy at the store with a temperature of 36.7°F and a wind speed of 6.4 mph. The forecast shows foggy conditions tomorrow with a high of 48.6°F, followed by foggy conditions on Friday with a high of 44.1°F, rain on Saturday with a high of 43.3°F, snow on Sunday with a high of 40.2°F, and cloudy conditions on Monday with a high of 52.9°F.
+
+Would you like to know the store hours today?
