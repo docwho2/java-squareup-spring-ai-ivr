@@ -1,1 +1,1 @@
-{"reportName":"SmokeTests","testRuns":[],"statistic":{"failed":0,"broken":0,"skipped":0,"passed":9,"unknown":0,"total":9},"time":{"start":1772905528326,"stop":1772905554261,"duration":25935,"minDuration":504,"maxDuration":8657,"sumDuration":25858}}
+{"reportName":"SmokeTests","testRuns":[],"statistic":{"failed":0,"broken":0,"skipped":0,"passed":9,"unknown":0,"total":9},"time":{"start":1772991975843,"stop":1772991998599,"duration":22756,"minDuration":504,"maxDuration":4784,"sumDuration":22665}}
