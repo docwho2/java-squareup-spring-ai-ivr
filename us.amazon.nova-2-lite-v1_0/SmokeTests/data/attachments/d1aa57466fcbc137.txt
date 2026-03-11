@@ -1,0 +1,3 @@
+It's currently clear with a temperature of 28 degrees Fahrenheit and wind speeds of 14 mph.
+
+Would you like to know the weather forecast for the next few days?
