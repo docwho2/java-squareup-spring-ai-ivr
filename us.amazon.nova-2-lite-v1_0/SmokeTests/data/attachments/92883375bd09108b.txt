@@ -1,0 +1,5 @@
+It's currently cloudy with a temperature of 19 degrees Fahrenheit and wind speeds at 12.6 mph.
+
+The forecast shows snow for the next few days with temperatures ranging from 10 to 36 degrees.
+
+Would you like to know today's store hours or check if we're open?
