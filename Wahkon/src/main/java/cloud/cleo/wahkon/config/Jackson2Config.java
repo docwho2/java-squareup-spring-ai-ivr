@@ -1,10 +1,10 @@
 package cloud.cleo.wahkon.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 
 @Configuration
 public class Jackson2Config {
@@ -20,6 +20,8 @@ public class Jackson2Config {
     @Bean
     @Primary
     public ObjectMapper objectMapper() {
-        return Jackson2ObjectMapperBuilder.json().build();
+        return JsonMapper.builder()
+                .build()
+                .findAndRegisterModules();
     }
 }

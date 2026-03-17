@@ -30,7 +30,7 @@ public class FacebookPipelineService {
     private static final String SOURCE_PREFIX = "facebook:";
 
     public void ingestAllConfiguredPages() {
-        var splitter = new TokenTextSplitter();
+        var splitter = TokenTextSplitter.builder().build();
 
         for (var page : props.pages()) {
             try {

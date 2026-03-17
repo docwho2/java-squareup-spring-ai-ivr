@@ -57,7 +57,7 @@ public class WahkonWebCrawlerService {
         var frontier = new UrlFrontier(props.maxPages());
         site.seeds().forEach(seed -> frontier.add(normalizeUrl(seed), 0));
 
-        var splitter = new TokenTextSplitter();
+        var splitter = TokenTextSplitter.builder().build();
         var completionService = new ExecutorCompletionService<Void>(virtualThreadExecutor);
         var inFlight = new ArrayList<Future<Void>>();
 
