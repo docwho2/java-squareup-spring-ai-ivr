@@ -45,6 +45,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-log4j2</artifactId>
         </dependency>     
+
+        <!-- Boot 4 / Spring 7 no longer guarantees Jackson 2 via the current starter set.
+             This module still needs com.fasterxml Jackson for the explicit Jackson2Config bean. -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
        
         <!-- Amazon Bedrock (Titan embeddings) -->
         <dependency>
