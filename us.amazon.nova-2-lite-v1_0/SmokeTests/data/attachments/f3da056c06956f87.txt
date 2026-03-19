@@ -1,0 +1,5 @@
+It's currently cloudy at our store with a temperature of 32 degrees Fahrenheit and a light wind of 3.7 mph.
+
+The forecast shows foggy conditions tomorrow with a high of 52 degrees, followed by more fog on Saturday with a high of 55 degrees, snow possible on Sunday with a high of 35 degrees, and cloudy conditions on Monday with a high of 38 degrees.
+
+Would you like to know our current store hours or check if we're open today?
