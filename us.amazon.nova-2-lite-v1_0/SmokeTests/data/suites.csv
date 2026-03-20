@@ -3,34 +3,34 @@
 - Ask for the City complaint process
   - Crawler process has full city website so this document should be there
 - Assert that response says Yes to validate query worked
-","2909","City RAG Complaint Search","","2026-03-20","passed","2026-03-20","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","cityRagTest"
+","3121","City RAG Complaint Search","","2026-03-20","passed","2026-03-20","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","cityRagTest"
+"## Exercise tool call with Square API Call
+- Search for Chuckles Candy that is always in stock
+- Assert that response says yes we have it
+","3275","Chuckles Candy","","2026-03-20","passed","2026-03-20","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","chucklesCandyTest"
 "## Verify Chat Memory is working
 - Ask what the first query was
   - If chat memory is working properly, it should tell us what we asked in the first test
 - Assert that response says we asked about Chuckles Candy which was the first smoke test
-","1595","Chat Memory","","2026-03-20","passed","2026-03-20","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","chatMemoryTest"
+","1336","Chat Memory","","2026-03-20","passed","2026-03-20","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","chatMemoryTest"
 "## Send a ""Hello"" prompt to warm the stack
 - use random session ID so it doesn't count for the rest of the real tests
 - Assert that there is just a response
-","4694","Warm Up the Stack","","2026-03-20","passed","2026-03-20","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","warmupStack"
-"","504","Performance Summary","","2026-03-20","passed","2026-03-20","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","performanceSummary"
+","4454","Warm Up the Stack","","2026-03-20","passed","2026-03-20","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","warmupStack"
 "## Exercise tool call with Square API Call
 - Ask if a Staff member works at the Store
 - Assert that response says the person does work there
-","2201","Store Staff","","2026-03-20","passed","2026-03-20","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","staffTest"
-"## Exercise tool call with Square API Call
-- Search for Chuckles Candy that is always in stock
-- Assert that response says yes we have it
-","3264","Chuckles Candy","","2026-03-20","passed","2026-03-20","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","chucklesCandyTest"
-"## Exercise tool call with Weather API Call
-- Ask for current weather at the store
-- Assert that response returns the temperature
-","3779","Weather Forecast","","2026-03-20","passed","2026-03-20","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","weatherTest"
+","2045","Store Staff","","2026-03-20","passed","2026-03-20","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","staffTest"
+"","504","Performance Summary","","2026-03-20","passed","2026-03-20","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","performanceSummary"
 "## Check Prompting knowledge
 - Ask for the store address
 - Assert that response contains our street address
-","1434","Store Address","","2026-03-20","passed","2026-03-20","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","addressTest"
+","1226","Store Address","","2026-03-20","passed","2026-03-20","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","addressTest"
 "## Check Prompting knowledge
 - Ask for restaurant recommendation
 - Assert that response says Muggs which is next door to the Store
-","1641","Restaurant Recommendation","","2026-03-20","passed","2026-03-20","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","restaurantTest"
+","1517","Restaurant Recommendation","","2026-03-20","passed","2026-03-20","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","restaurantTest"
+"## Exercise tool call with Weather API Call
+- Ask for current weather at the store
+- Assert that response returns the temperature
+","3309","Weather Forecast","","2026-03-20","passed","2026-03-20","","cloud.cleo.squareup.SmokeTests","cloud.cleo.squareup.SmokeTests","weatherTest"
