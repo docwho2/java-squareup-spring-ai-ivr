@@ -1,0 +1,3 @@
+It's currently 33 degrees Fahrenheit and cloudy with a wind speed of 12.4 mph. The forecast for today shows a high of 37 degrees and a low of 25 degrees.
+
+Would you like to know the weather for any of the next few days?
