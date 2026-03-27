@@ -30,7 +30,7 @@
         <lombok.version>1.18.44</lombok.version>
         <pdfbox.version>3.0.7</pdfbox.version>
         <!-- The below three all need to be aligned -->
-        <spring.boot.version>4.0.4</spring.boot.version>
+        <spring.boot.version>4.0.5</spring.boot.version>
         <spring.cloud.version>5.0.0</spring.cloud.version>
         <spring.ai.version>2.0.0-M3</spring.ai.version>
     </properties>
