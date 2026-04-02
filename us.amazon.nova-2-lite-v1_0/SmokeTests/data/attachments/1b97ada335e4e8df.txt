@@ -1,0 +1,3 @@
+It's currently cloudy at the store with a temperature of 28 degrees Fahrenheit and wind speeds of 12 mph. The forecast shows snow for the next several days.
+
+Would you like to know the store hours today or check if we're open?
