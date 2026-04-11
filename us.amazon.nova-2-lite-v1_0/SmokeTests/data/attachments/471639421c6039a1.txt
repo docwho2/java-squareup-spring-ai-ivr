@@ -1,0 +1,5 @@
+It's currently cloudy at our store with a temperature of 46 degrees Fahrenheit and a wind speed of 10.5 miles per hour.
+
+The forecast shows drizzle today, drizzle tomorrow, rain showers on Tuesday, foggy on Wednesday, and cloudy on Thursday.
+
+Would you like to know today's store hours or check our current inventory?
