@@ -32,6 +32,15 @@
             <groupId>com.squareup</groupId>
             <artifactId>square</artifactId>
         </dependency>
+        <dependency>
+            <!-- Keep SnapStart Lambda packaging on the JVM OkHttp artifact after the Square SDK bump. -->
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp-jvm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okio</groupId>
+            <artifactId>okio-jvm</artifactId>
+        </dependency>
         
     </dependencies>
 
