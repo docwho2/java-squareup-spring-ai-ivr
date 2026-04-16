@@ -164,6 +164,15 @@
             <groupId>com.squareup</groupId>
             <artifactId>square</artifactId>
         </dependency>
+        <dependency>
+            <!-- Square 46 pulls a metadata-only okhttp artifact in Maven/SAM builds; force the JVM jar. -->
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp-jvm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okio</groupId>
+            <artifactId>okio-jvm</artifactId>
+        </dependency>
         
          
         <!-- JUnit / Spring Boot test support -->
