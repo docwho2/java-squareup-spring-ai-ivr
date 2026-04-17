@@ -1,0 +1,5 @@
+It's currently cloudy at our store with a temperature of 56.6 degrees Fahrenheit and a wind speed of 9.4 miles per hour.
+
+The forecast shows drizzle today, cloudy tomorrow, snow on Monday, cloudy Tuesday, and clear skies on Wednesday.
+
+Would you like me to check anything else about the weather or store conditions?
