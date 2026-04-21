@@ -1,0 +1,5 @@
+It's a clear sky day in Wahkon with a temperature of 58 degrees Fahrenheit and wind speeds of 14 mph.
+
+The forecast shows cloudy skies tomorrow with a high of 59 degrees, followed by cloudy skies on Wednesday with a high of 67 degrees, drizzle on Thursday with a high of 77 degrees, drizzle on Friday with a high of 67 degrees, and cloudy skies on Saturday with a high of 60 degrees.
+
+Would you like to know today's store hours or anything else about the weather?
