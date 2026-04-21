@@ -1,0 +1,3 @@
+It's a clear sky today at the store with a temperature of 57 degrees Fahrenheit and wind speeds of 13.2 miles per hour.
+
+Would you like to hear the forecast for the next few days?
