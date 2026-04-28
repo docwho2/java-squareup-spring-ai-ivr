@@ -1,9 +1,13 @@
 package cloud.cleo.squareup.config;
 
 import cloud.cleo.squareup.memory.DynamoDbChatMemoryRepository;
+import com.openai.client.OpenAIClient;
+import com.openai.client.OpenAIClientAsync;
+import io.micrometer.observation.ObservationRegistry;
 import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import org.springframework.ai.bedrock.converse.BedrockChatOptions;
 import org.springframework.ai.bedrock.converse.BedrockProxyChatModel;
 import org.springframework.ai.chat.client.ChatClient;
@@ -20,11 +24,20 @@ import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.observation.ChatModelObservationConvention;
+import org.springframework.ai.model.openai.autoconfigure.OpenAiAutoConfigurationUtil;
+import org.springframework.ai.model.openai.autoconfigure.OpenAiConnectionProperties;
+import org.springframework.ai.model.tool.DefaultToolExecutionEligibilityPredicate;
+import org.springframework.ai.model.tool.ToolCallingManager;
+import org.springframework.ai.model.tool.ToolExecutionEligibilityPredicate;
+import org.springframework.ai.openai.AbstractOpenAiOptions;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
-import org.springframework.ai.openai.api.OpenAiApi;
+import org.springframework.ai.openai.setup.OpenAiSetup;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -40,6 +53,7 @@ import tools.jackson.databind.json.JsonMapper;
  * @author sjensen
  */
 @Configuration
+@EnableConfigurationProperties(OpenAiConnectionProperties.class)
 public class ChatConfig {
 
     /**
@@ -78,8 +92,8 @@ public class ChatConfig {
         var builder = OpenAiChatOptions.builder()
                 .model(model)
                 .parallelToolCalls(true)
-                // We want cache to work across different Lambda IPs(AZ) and across regions
-                .promptCacheKey("cloud-cleo-squareup-spring-ai")
+                // We want cache to work across different Lambda IPs(AZ) and across regions.
+                .extraBody(Map.of("prompt_cache_key", "cloud-cleo-squareup-spring-ai"))
                 .N(1);  // We only ever want 1 response
 
         if (model.startsWith("gpt-4")) {
@@ -99,11 +113,63 @@ public class ChatConfig {
     }
 
     @Bean(name = "customOpenAiChatModel")
-    public ChatModel chatModel(OpenAiApi api, OpenAiChatOptions options) {
-        return OpenAiChatModel.builder()
-                .openAiApi(api)
-                .defaultOptions(options)
+    public ChatModel chatModel(OpenAiConnectionProperties connectionProperties,
+            OpenAiChatOptions options,
+            ToolCallingManager toolCallingManager,
+            ObjectProvider<ObservationRegistry> observationRegistry,
+            ObjectProvider<ChatModelObservationConvention> observationConvention,
+            ObjectProvider<ToolExecutionEligibilityPredicate> toolExecutionEligibilityPredicate
+    ) {
+        AbstractOpenAiOptions resolvedConnectionProperties =
+                OpenAiAutoConfigurationUtil.resolveConnectionProperties(connectionProperties, options);
+
+        OpenAiChatModel chatModel = OpenAiChatModel.builder()
+                .openAiClient(openAiClient(resolvedConnectionProperties))
+                .openAiClientAsync(openAiClientAsync(resolvedConnectionProperties))
+                .options(options)
+                .toolCallingManager(toolCallingManager)
+                .observationRegistry(observationRegistry.getIfUnique(() -> ObservationRegistry.NOOP))
+                .toolExecutionEligibilityPredicate(toolExecutionEligibilityPredicate.getIfUnique(DefaultToolExecutionEligibilityPredicate::new))
                 .build();
+
+        observationConvention.ifAvailable(chatModel::setObservationConvention);
+        return chatModel;
+    }
+
+    private static OpenAIClient openAiClient(AbstractOpenAiOptions options) {
+        return OpenAiSetup.setupSyncClient(
+                options.getBaseUrl(),
+                options.getApiKey(),
+                options.getCredential(),
+                options.getMicrosoftDeploymentName(),
+                options.getMicrosoftFoundryServiceVersion(),
+                options.getOrganizationId(),
+                options.isMicrosoftFoundry(),
+                options.isGitHubModels(),
+                options.getModel(),
+                options.getTimeout(),
+                options.getMaxRetries(),
+                options.getProxy(),
+                options.getCustomHeaders()
+        );
+    }
+
+    private static OpenAIClientAsync openAiClientAsync(AbstractOpenAiOptions options) {
+        return OpenAiSetup.setupAsyncClient(
+                options.getBaseUrl(),
+                options.getApiKey(),
+                options.getCredential(),
+                options.getMicrosoftDeploymentName(),
+                options.getMicrosoftFoundryServiceVersion(),
+                options.getOrganizationId(),
+                options.isMicrosoftFoundry(),
+                options.isGitHubModels(),
+                options.getModel(),
+                options.getTimeout(),
+                options.getMaxRetries(),
+                options.getProxy(),
+                options.getCustomHeaders()
+        );
     }
 
     @Bean
