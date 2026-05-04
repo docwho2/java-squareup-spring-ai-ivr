@@ -41,7 +41,7 @@ runs:
   steps:
     - name: Setup AWS Credentials
       id: aws-creds
-      uses: aws-actions/configure-aws-credentials@v4
+      uses: aws-actions/configure-aws-credentials@v6
       with:
         aws-region: ${{ inputs.region }}
         role-to-assume: ${{ inputs.aws-role }}
@@ -70,7 +70,7 @@ runs:
         
     - name: Checkout gh-pages (for Allure history)
       id: ghpages
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       continue-on-error: true
       with:
         ref: gh-pages
