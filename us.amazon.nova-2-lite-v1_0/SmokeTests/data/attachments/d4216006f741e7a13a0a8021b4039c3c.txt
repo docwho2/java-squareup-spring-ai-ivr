@@ -1,0 +1,3 @@
+It's currently clear sky with a temperature of 32.7°F and a wind speed of 4.7 mph.
+
+Would you like to hear the forecast for the next few days?
