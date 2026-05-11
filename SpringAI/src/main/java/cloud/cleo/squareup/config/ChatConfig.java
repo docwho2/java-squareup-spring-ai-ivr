@@ -26,11 +26,11 @@ import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.observation.ChatModelObservationConvention;
 import org.springframework.ai.model.openai.autoconfigure.OpenAiAutoConfigurationUtil;
-import org.springframework.ai.model.openai.autoconfigure.OpenAiConnectionProperties;
+import org.springframework.ai.model.openai.autoconfigure.OpenAiChatProperties;
+import org.springframework.ai.model.openai.autoconfigure.OpenAiCommonProperties;
 import org.springframework.ai.model.tool.DefaultToolExecutionEligibilityPredicate;
 import org.springframework.ai.model.tool.ToolCallingManager;
 import org.springframework.ai.model.tool.ToolExecutionEligibilityPredicate;
-import org.springframework.ai.openai.AbstractOpenAiOptions;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.setup.OpenAiSetup;
@@ -53,7 +53,7 @@ import tools.jackson.databind.json.JsonMapper;
  * @author sjensen
  */
 @Configuration
-@EnableConfigurationProperties(OpenAiConnectionProperties.class)
+@EnableConfigurationProperties({OpenAiCommonProperties.class, OpenAiChatProperties.class})
 public class ChatConfig {
 
     /**
@@ -88,7 +88,9 @@ public class ChatConfig {
     }
 
     @Bean
-    public OpenAiChatOptions openAiChatOptions(@Value("${spring.ai.openai.chat.options.model:gpt-5-nano}") String model) {
+    public OpenAiChatOptions openAiChatOptions(
+            @Value("${spring.ai.openai.chat.model:gpt-5-nano}") String model
+    ) {
         var builder = OpenAiChatOptions.builder()
                 .model(model)
                 .parallelToolCalls(true)
@@ -113,15 +115,20 @@ public class ChatConfig {
     }
 
     @Bean(name = "customOpenAiChatModel")
-    public ChatModel chatModel(OpenAiConnectionProperties connectionProperties,
+    public ChatModel chatModel(OpenAiCommonProperties commonProperties,
+            OpenAiChatProperties chatProperties,
             OpenAiChatOptions options,
             ToolCallingManager toolCallingManager,
             ObjectProvider<ObservationRegistry> observationRegistry,
             ObjectProvider<ChatModelObservationConvention> observationConvention,
             ObjectProvider<ToolExecutionEligibilityPredicate> toolExecutionEligibilityPredicate
     ) {
-        AbstractOpenAiOptions resolvedConnectionProperties =
-                OpenAiAutoConfigurationUtil.resolveConnectionProperties(connectionProperties, options);
+        OpenAiCommonProperties resolvedConnectionProperties =
+                OpenAiAutoConfigurationUtil.resolveCommonProperties(commonProperties, chatProperties);
+
+        if (resolvedConnectionProperties.getModel() == null) {
+            resolvedConnectionProperties.setModel(options.getModel());
+        }
 
         OpenAiChatModel chatModel = OpenAiChatModel.builder()
                 .openAiClient(openAiClient(resolvedConnectionProperties))
@@ -136,7 +143,7 @@ public class ChatConfig {
         return chatModel;
     }
 
-    private static OpenAIClient openAiClient(AbstractOpenAiOptions options) {
+    private static OpenAIClient openAiClient(OpenAiCommonProperties options) {
         return OpenAiSetup.setupSyncClient(
                 options.getBaseUrl(),
                 options.getApiKey(),
@@ -154,7 +161,7 @@ public class ChatConfig {
         );
     }
 
-    private static OpenAIClientAsync openAiClientAsync(AbstractOpenAiOptions options) {
+    private static OpenAIClientAsync openAiClientAsync(OpenAiCommonProperties options) {
         return OpenAiSetup.setupAsyncClient(
                 options.getBaseUrl(),
                 options.getApiKey(),
