@@ -1,0 +1,3 @@
+It's a clear sky day with a temperature of 62 degrees Fahrenheit and a wind speed of 12 miles per hour.
+
+Would you like to know the weather forecast for the next few days?
