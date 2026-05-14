@@ -1,0 +1,3 @@
+It's currently mostly clear with a temperature of 75 degrees Fahrenheit and a wind speed of 22 mph.
+
+Would you like to hear the forecast for the next few days?
