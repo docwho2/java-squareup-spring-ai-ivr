@@ -1,0 +1,5 @@
+It's currently cloudy at the store with a temperature of 47 degrees Fahrenheit and a wind speed of 17 miles per hour. 
+
+The forecast shows rain today, mostly clear skies tomorrow, and cloudy conditions for the next few days.
+
+Would you like me to check the current store hours or help you with anything else?
