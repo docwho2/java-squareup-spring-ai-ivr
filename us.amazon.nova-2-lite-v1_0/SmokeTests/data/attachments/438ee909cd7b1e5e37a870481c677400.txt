@@ -1,0 +1,3 @@
+It's a beautiful clear day at the store today with a temperature of 55 degrees Fahrenheit and light winds at 6.8 mph.
+
+Would you like to know the weather forecast for the next few days?
