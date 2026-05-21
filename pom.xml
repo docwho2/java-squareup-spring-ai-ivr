@@ -114,7 +114,7 @@
             <dependency>
                 <groupId>com.squareup</groupId>
                 <artifactId>square</artifactId>
-                <version>46.1.0.20260122</version>
+                <version>46.1.0.20260520</version>
             </dependency>
             <dependency>
                 <groupId>com.squareup.okhttp3</groupId>
