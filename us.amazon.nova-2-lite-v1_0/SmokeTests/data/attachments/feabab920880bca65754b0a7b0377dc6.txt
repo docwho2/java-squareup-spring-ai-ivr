@@ -1,0 +1,5 @@
+It's currently clear sky with a temperature of 48 degrees Fahrenheit and a wind speed of 7.3 mph.
+
+The forecast for today shows cloudy skies with a high of 64 degrees. Tomorrow there's rain expected with a high of 60 degrees.
+
+Do you need any more weather information or help with anything else?
