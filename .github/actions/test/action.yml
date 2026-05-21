@@ -245,7 +245,7 @@ runs:
         } > index.html
 
     - name: Publish Allure report
-      uses: peaceiris/actions-gh-pages@v4
+      uses: peaceiris/actions-gh-pages@v4.1.0
       with:
         github_token: ${{ inputs.github-token }}
         publish_branch: gh-pages
