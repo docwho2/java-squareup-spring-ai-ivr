@@ -1,1 +1,1 @@
-{"id":"b85184c0ba7930e69eeeaddba0f67483","fullName":"cloud.cleo.squareup.SmokeTests.staffTest","name":"Store Staff","status":"passed","testResultsByEnv":{"default":"60c2a1e59fcf4c7192d296fd29c3bb91"}}
+{"id":"b85184c0ba7930e69eeeaddba0f67483","fullName":"cloud.cleo.squareup.SmokeTests.staffTest","name":"Store Staff","status":"failed","testResultsByEnv":{"default":"e1a814f5529f29b17f02ab4695a2f3a8"}}
