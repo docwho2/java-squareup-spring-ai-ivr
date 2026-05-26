@@ -64,9 +64,13 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
         // Index in Dynamo of the last *persisted* message, or -1 if none.
         long lastPersistedIndex;
 
-        ConversationState(List<Message> messages, long lastPersistedIndex) {
+        // Number of persisted messages retained in logical history after unusable messages are omitted.
+        int persistedMessageCount;
+
+        ConversationState(List<Message> messages, long lastPersistedIndex, int persistedMessageCount) {
             this.messages = messages;
             this.lastPersistedIndex = lastPersistedIndex;
+            this.persistedMessageCount = persistedMessageCount;
         }
     }
 
@@ -113,17 +117,18 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
 
         List<Message> messages = items.stream()
                 .map(this::toMessage)
+                .filter(DynamoDbChatMemoryRepository::isStorableMessage)
                 .toList();
 
         long lastPersistedIndex = items.isEmpty()
                 ? -1L
                 : items.get(items.size() - 1).getMessageIndex();
 
-        log.debug("findByConversationId({}) loaded {} items from Dynamo, lastPersistedIndex={}",
-                conversationId, messages.size(), lastPersistedIndex);
+        log.debug("findByConversationId({}) loaded {} usable messages from {} Dynamo items, lastPersistedIndex={}",
+                conversationId, messages.size(), items.size(), lastPersistedIndex);
 
         // 3) Cache for this Lambda invocation
-        cache.put(conversationId, new ConversationState(new ArrayList<>(messages), lastPersistedIndex));
+        cache.put(conversationId, new ConversationState(new ArrayList<>(messages), lastPersistedIndex, messages.size()));
 
         return messages;
     }
@@ -134,7 +139,18 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
             return;
         }
 
-        Message last = messages.get(messages.size() - 1);
+        List<Message> storableMessages = messages.stream()
+                .filter(DynamoDbChatMemoryRepository::isStorableMessage)
+                .toList();
+        if (storableMessages.size() != messages.size()) {
+            log.debug("saveAll({}) omitted {} empty assistant messages from conversation history",
+                    conversationId, messages.size() - storableMessages.size());
+        }
+        if (storableMessages.isEmpty()) {
+            return;
+        }
+
+        Message last = storableMessages.getLast();
 
         // Only skip the pre-call, only ASSISTANT messages will trigger a real write
         if (last.getMessageType() != MessageType.ASSISTANT) {
@@ -143,9 +159,9 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
             cache.compute(conversationId, (id, state) -> {
                 if (state == null) {
                     // No prior findByConversationId in this container; treat as new
-                    return new ConversationState(new ArrayList<>(messages), -1L);
+                    return new ConversationState(new ArrayList<>(storableMessages), -1L, 0);
                 }
-                state.messages = new ArrayList<>(messages);
+                state.messages = new ArrayList<>(storableMessages);
                 return state;
             });
             return;
@@ -165,17 +181,17 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
             long lastIdx = findLastItem(conversationId)
                     .map(DynamoChatMemoryItem::getMessageIndex)
                     .orElse(-1L);
-            state = new ConversationState(new ArrayList<>(messages), lastIdx);
+            state = new ConversationState(new ArrayList<>(storableMessages), lastIdx, (int) (lastIdx + 1));
             cache.put(conversationId, state);
         } else {
             // Update state.messages to the latest list Spring gave us
-            state.messages = new ArrayList<>(messages);
+            state.messages = new ArrayList<>(storableMessages);
         }
 
         // Write only messages AFTER lastPersistedIndex
         long lastPersisted = state.lastPersistedIndex;
         int totalMessages = state.messages.size();
-        int startListIndex = (int) (lastPersisted + 1); // relies on messageIndex starting at 0, no gaps
+        int startListIndex = state.persistedMessageCount;
 
         if (startListIndex >= totalMessages) {
             log.debug("saveAll({}) nothing new to persist (startListIndex >= totalMessages)", conversationId);
@@ -198,7 +214,20 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
 
         // Update and evict so the next Lambda invocation starts fresh from Dynamo
         state.lastPersistedIndex = nextIndex;
+        state.persistedMessageCount = totalMessages;
         cache.remove(conversationId);
+    }
+
+    /**
+     * Bedrock tool-use responses can include an assistant generation with neither content nor tool calls. Persisting
+     * that message produces an invalid Bedrock conversation on the next tool iteration.
+     */
+    static boolean isStorableMessage(Message message) {
+        if (!(message instanceof AssistantMessage assistant)) {
+            return true;
+        }
+        return (assistant.getText() != null && !assistant.getText().isBlank())
+                || (assistant.getToolCalls() != null && !assistant.getToolCalls().isEmpty());
     }
 
     private Optional<DynamoChatMemoryItem> findLastItem(String conversationId) {

@@ -13,7 +13,6 @@ import org.springframework.ai.bedrock.converse.BedrockProxyChatModel;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.ChatClientRequest;
 import org.springframework.ai.chat.client.ChatClientResponse;
-import org.springframework.ai.chat.client.advisor.ChatModelCallAdvisor;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.client.advisor.api.AdvisorChain;
@@ -235,8 +234,6 @@ public class ChatConfig {
                         MessageChatMemoryAdvisor.builder(memory).build(),
                         // Ensures SystemMessage is always first for model compatibility
                         new SystemFirstSortingAdvisor(),
-                        // call advisor LAST so the chain actually invokes the model
-                        ChatModelCallAdvisor.builder().chatModel(model).build(),
                         new SimpleLoggerAdvisor()
                 )
                 .build();

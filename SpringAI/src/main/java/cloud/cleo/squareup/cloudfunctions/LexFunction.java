@@ -84,9 +84,10 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
                     .user(eventWrapper.getInputTranscript())
                     // Use Lex Session ID for the conversation ID for Chat Memory
                     .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, eventWrapper.getChatMemorySessionId()))
-                    .toolContext(toolCtx)
-                    // Select only tools relevant for the request
-                    .tools(tools.stream().filter(t -> t.isValidForRequest(eventWrapper)).toArray())
+                    // Select only relevant tools and provide request context using the M7 ToolSpec API.
+                    .tools(t -> t
+                            .instances(tools.stream().filter(tool -> tool.isValidForRequest(eventWrapper)).toArray())
+                            .context(toolCtx))
                     .call();
 
             final ChatResponse resp = chatCall.chatResponse();     // <-- single terminal call
