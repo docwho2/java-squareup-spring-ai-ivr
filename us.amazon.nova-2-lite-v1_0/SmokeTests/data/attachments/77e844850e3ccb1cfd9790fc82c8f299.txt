@@ -1,0 +1,5 @@
+It's currently foggy at the store with a temperature of 66.6°F and light winds at 2.5 mph.
+
+The forecast shows foggy conditions today, rain tomorrow, and rain showers on Thursday.
+
+Would you like to know the store hours today or check our current inventory?
