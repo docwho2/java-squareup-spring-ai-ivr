@@ -27,9 +27,6 @@ import org.springframework.ai.chat.observation.ChatModelObservationConvention;
 import org.springframework.ai.model.openai.autoconfigure.OpenAiAutoConfigurationUtil;
 import org.springframework.ai.model.openai.autoconfigure.OpenAiChatProperties;
 import org.springframework.ai.model.openai.autoconfigure.OpenAiCommonProperties;
-import org.springframework.ai.model.tool.DefaultToolExecutionEligibilityPredicate;
-import org.springframework.ai.model.tool.ToolCallingManager;
-import org.springframework.ai.model.tool.ToolExecutionEligibilityPredicate;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.setup.OpenAiSetup;
@@ -95,7 +92,7 @@ public class ChatConfig {
                 .parallelToolCalls(true)
                 // We want cache to work across different Lambda IPs(AZ) and across regions.
                 .extraBody(Map.of("prompt_cache_key", "cloud-cleo-squareup-spring-ai"))
-                .N(1);  // We only ever want 1 response
+                .n(1);  // We only ever want 1 response
 
         if (model.startsWith("gpt-4")) {
             // GPT-4 family still supports temp/topP (no reasoning)
@@ -117,10 +114,8 @@ public class ChatConfig {
     public ChatModel chatModel(OpenAiCommonProperties commonProperties,
             OpenAiChatProperties chatProperties,
             OpenAiChatOptions options,
-            ToolCallingManager toolCallingManager,
             ObjectProvider<ObservationRegistry> observationRegistry,
-            ObjectProvider<ChatModelObservationConvention> observationConvention,
-            ObjectProvider<ToolExecutionEligibilityPredicate> toolExecutionEligibilityPredicate
+            ObjectProvider<ChatModelObservationConvention> observationConvention
     ) {
         OpenAiCommonProperties resolvedConnectionProperties =
                 OpenAiAutoConfigurationUtil.resolveCommonProperties(commonProperties, chatProperties);
@@ -128,21 +123,21 @@ public class ChatConfig {
         if (resolvedConnectionProperties.getModel() == null) {
             resolvedConnectionProperties.setModel(options.getModel());
         }
+        ObservationRegistry resolvedObservationRegistry =
+                observationRegistry.getIfUnique(() -> ObservationRegistry.NOOP);
 
         OpenAiChatModel chatModel = OpenAiChatModel.builder()
-                .openAiClient(openAiClient(resolvedConnectionProperties))
-                .openAiClientAsync(openAiClientAsync(resolvedConnectionProperties))
+                .openAiClient(openAiClient(resolvedConnectionProperties, resolvedObservationRegistry))
+                .openAiClientAsync(openAiClientAsync(resolvedConnectionProperties, resolvedObservationRegistry))
                 .options(options)
-                .toolCallingManager(toolCallingManager)
-                .observationRegistry(observationRegistry.getIfUnique(() -> ObservationRegistry.NOOP))
-                .toolExecutionEligibilityPredicate(toolExecutionEligibilityPredicate.getIfUnique(DefaultToolExecutionEligibilityPredicate::new))
+                .observationRegistry(resolvedObservationRegistry)
                 .build();
 
         observationConvention.ifAvailable(chatModel::setObservationConvention);
         return chatModel;
     }
 
-    private static OpenAIClient openAiClient(OpenAiCommonProperties options) {
+    private static OpenAIClient openAiClient(OpenAiCommonProperties options, ObservationRegistry observationRegistry) {
         return OpenAiSetup.setupSyncClient(
                 options.getBaseUrl(),
                 options.getApiKey(),
@@ -156,11 +151,14 @@ public class ChatConfig {
                 options.getTimeout(),
                 options.getMaxRetries(),
                 options.getProxy(),
-                options.getCustomHeaders()
+                options.getCustomHeaders(),
+                observationRegistry,
+                null,
+                null
         );
     }
 
-    private static OpenAIClientAsync openAiClientAsync(OpenAiCommonProperties options) {
+    private static OpenAIClientAsync openAiClientAsync(OpenAiCommonProperties options, ObservationRegistry observationRegistry) {
         return OpenAiSetup.setupAsyncClient(
                 options.getBaseUrl(),
                 options.getApiKey(),
@@ -174,7 +172,10 @@ public class ChatConfig {
                 options.getTimeout(),
                 options.getMaxRetries(),
                 options.getProxy(),
-                options.getCustomHeaders()
+                options.getCustomHeaders(),
+                observationRegistry,
+                null,
+                null
         );
     }
 
@@ -204,7 +205,7 @@ public class ChatConfig {
         return BedrockProxyChatModel.builder()
                 .bedrockRuntimeClient(BedrockRuntimeClient.builder().httpClient(sdkHttpClient).build())
                 .bedrockRuntimeAsyncClient(BedrockRuntimeAsyncClient.builder().httpClient(sdkAsyncHttpClient).build())
-                .defaultOptions(options)
+                .options(options)
                 .build();
     }
 

@@ -2,6 +2,7 @@ package cloud.cleo.squareup.config;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
@@ -29,7 +30,8 @@ class ChatConfigTest {
                 .prompt()
                 .user("Find the item")
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
-                .tools(t -> t.instances(tool).context("request-id", "request-123"))
+                .tools(tool)
+                .toolContext(Map.of("request-id", "request-123"))
                 .call()
                 .chatResponse();
 
