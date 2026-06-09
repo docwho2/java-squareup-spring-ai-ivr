@@ -30,6 +30,7 @@ class ChatConfigTest {
                 .prompt()
                 .user("Find the item")
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+                .options(ToolCallingChatOptions.builder())
                 .tools(tool)
                 .toolContext(Map.of("request-id", "request-123"))
                 .call()
@@ -56,7 +57,7 @@ class ChatConfigTest {
         private final List<Prompt> prompts = new ArrayList<>();
 
         @Override
-        public ToolCallingChatOptions getDefaultOptions() {
+        public ToolCallingChatOptions getOptions() {
             return ToolCallingChatOptions.builder().build();
         }
 

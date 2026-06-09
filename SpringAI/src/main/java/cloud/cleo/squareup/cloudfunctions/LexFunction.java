@@ -29,6 +29,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.ChatClient.CallResponseSpec;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.model.tool.ToolCallingChatOptions;
 
 import org.springframework.stereotype.Component;
 
@@ -87,6 +88,7 @@ public class LexFunction implements Function<LexV2Event, LexV2Response> {
                     .user(eventWrapper.getInputTranscript())
                     // Use Lex Session ID for the conversation ID for Chat Memory
                     .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, eventWrapper.getChatMemorySessionId()))
+                    .options(ToolCallingChatOptions.builder())
                     .tools(validTools)
                     .toolContext(toolCtx)
                     .call();
