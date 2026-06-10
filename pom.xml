@@ -34,7 +34,7 @@
         <!-- The below three all need to be aligned -->
         <spring.boot.version>4.0.6</spring.boot.version>
         <spring.cloud.version>5.0.2</spring.cloud.version>
-        <spring.ai.version>2.0.0-RC1</spring.ai.version>
+        <spring.ai.version>2.0.0-RC2</spring.ai.version>
     </properties>
     
     
