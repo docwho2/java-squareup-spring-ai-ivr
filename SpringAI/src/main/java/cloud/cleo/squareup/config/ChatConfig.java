@@ -29,6 +29,7 @@ import org.springframework.ai.model.openai.autoconfigure.OpenAiChatProperties;
 import org.springframework.ai.model.openai.autoconfigure.OpenAiCommonProperties;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.openai.http.okhttp.OpenAiHttpClientBuilderCustomizer;
 import org.springframework.ai.openai.setup.OpenAiSetup;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -115,7 +116,8 @@ public class ChatConfig {
             OpenAiChatProperties chatProperties,
             OpenAiChatOptions options,
             ObjectProvider<ObservationRegistry> observationRegistry,
-            ObjectProvider<ChatModelObservationConvention> observationConvention
+            ObjectProvider<ChatModelObservationConvention> observationConvention,
+            ObjectProvider<OpenAiHttpClientBuilderCustomizer> httpClientCustomizers
     ) {
         OpenAiCommonProperties resolvedConnectionProperties =
                 OpenAiAutoConfigurationUtil.resolveCommonProperties(commonProperties, chatProperties);
@@ -125,10 +127,14 @@ public class ChatConfig {
         }
         ObservationRegistry resolvedObservationRegistry =
                 observationRegistry.getIfUnique(() -> ObservationRegistry.NOOP);
+        List<OpenAiHttpClientBuilderCustomizer> resolvedHttpClientCustomizers =
+                httpClientCustomizers.orderedStream().toList();
 
         OpenAiChatModel chatModel = OpenAiChatModel.builder()
-                .openAiClient(openAiClient(resolvedConnectionProperties, resolvedObservationRegistry))
-                .openAiClientAsync(openAiClientAsync(resolvedConnectionProperties, resolvedObservationRegistry))
+                .openAiClient(openAiClient(resolvedConnectionProperties, resolvedObservationRegistry,
+                        resolvedHttpClientCustomizers))
+                .openAiClientAsync(openAiClientAsync(resolvedConnectionProperties, resolvedObservationRegistry,
+                        resolvedHttpClientCustomizers))
                 .options(options)
                 .observationRegistry(resolvedObservationRegistry)
                 .build();
@@ -137,7 +143,9 @@ public class ChatConfig {
         return chatModel;
     }
 
-    private static OpenAIClient openAiClient(OpenAiCommonProperties options, ObservationRegistry observationRegistry) {
+    private static OpenAIClient openAiClient(OpenAiCommonProperties options,
+            ObservationRegistry observationRegistry,
+            List<OpenAiHttpClientBuilderCustomizer> httpClientCustomizers) {
         return OpenAiSetup.setupSyncClient(
                 options.getBaseUrl(),
                 options.getApiKey(),
@@ -154,11 +162,13 @@ public class ChatConfig {
                 options.getCustomHeaders(),
                 observationRegistry,
                 null,
-                null
+                httpClientCustomizers
         );
     }
 
-    private static OpenAIClientAsync openAiClientAsync(OpenAiCommonProperties options, ObservationRegistry observationRegistry) {
+    private static OpenAIClientAsync openAiClientAsync(OpenAiCommonProperties options,
+            ObservationRegistry observationRegistry,
+            List<OpenAiHttpClientBuilderCustomizer> httpClientCustomizers) {
         return OpenAiSetup.setupAsyncClient(
                 options.getBaseUrl(),
                 options.getApiKey(),
@@ -175,7 +185,7 @@ public class ChatConfig {
                 options.getCustomHeaders(),
                 observationRegistry,
                 null,
-                null
+                httpClientCustomizers
         );
     }
 
