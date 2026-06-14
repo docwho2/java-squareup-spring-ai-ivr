@@ -1,0 +1,3 @@
+It's a clear sky day today with a temperature of 66 degrees Fahrenheit and a wind speed of 19 mph.
+
+Tomorrow it's expected to be cloudy with a high of 70 degrees. Would you like the full forecast for the week?
