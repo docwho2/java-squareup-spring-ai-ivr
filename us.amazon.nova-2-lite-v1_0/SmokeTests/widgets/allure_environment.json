@@ -1,1 +1,1 @@
-[{"name":"SpringAiModel","values":["us.amazon.nova-2-lite-v1:0"]},{"name":"SpringAiProvider","values":["BEDROCK"]},{"name":"SpringBootVersion","values":["4.1.0"]},{"name":"SpringAiVersion","values":["2.0.0-RC2"]},{"name":"AwsRegion","values":["us-east-1"]}]
+[{"name":"SpringAiModel","values":["us.amazon.nova-2-lite-v1:0"]},{"name":"SpringAiProvider","values":["BEDROCK"]},{"name":"SpringBootVersion","values":["4.1.0"]},{"name":"SpringAiVersion","values":["2.0.0-RC2"]},{"name":"AwsRegion","values":["us-west-2"]}]
