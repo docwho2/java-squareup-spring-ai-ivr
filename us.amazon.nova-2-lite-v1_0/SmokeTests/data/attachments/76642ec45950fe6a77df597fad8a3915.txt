@@ -1,0 +1,5 @@
+It's currently cloudy at our store with a temperature of 64.6°F and wind speeds of 11.6 mph.
+
+The forecast shows rain today, cloudy tomorrow, and more cloudy conditions through the weekend with a chance of rain showers on Sunday.
+
+Would you like to know today's store hours or anything else?
