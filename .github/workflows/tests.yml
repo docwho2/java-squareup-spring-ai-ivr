@@ -54,7 +54,7 @@ jobs:
     environment: "us-west-2-tests"
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -78,7 +78,7 @@ jobs:
     environment: "us-east-1-tests"
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -102,7 +102,7 @@ jobs:
     environment: "us-east-1-tests"
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
