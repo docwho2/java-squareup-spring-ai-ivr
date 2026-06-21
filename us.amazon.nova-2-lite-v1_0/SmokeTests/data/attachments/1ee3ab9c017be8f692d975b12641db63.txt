@@ -1,0 +1,5 @@
+It's a clear sky day today with a temperature of 66 degrees Fahrenheit and a light wind at 6 mph.
+
+The forecast shows cloudy skies tomorrow with a high of 72 degrees, followed by thunderstorms on Tuesday with a high of 69 degrees.
+
+Would you like me to check the store hours for today or help with anything else?
