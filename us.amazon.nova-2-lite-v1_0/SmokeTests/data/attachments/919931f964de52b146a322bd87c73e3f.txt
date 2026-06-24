@@ -1,0 +1,3 @@
+It's currently cloudy at the store with a temperature of 58 degrees Fahrenheit and a wind speed of 9 miles per hour. Tomorrow's forecast is rain with a high of 69 degrees.
+
+Would you like to know the rest of the week's forecast?
