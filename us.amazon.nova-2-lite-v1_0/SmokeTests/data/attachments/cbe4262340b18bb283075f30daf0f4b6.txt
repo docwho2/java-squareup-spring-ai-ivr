@@ -1,0 +1,5 @@
+It's currently cloudy at our store with a temperature of 64 degrees Fahrenheit and light winds at 5.6 mph.
+
+The forecast shows drizzle today, thunderstorms tomorrow, rain showers on Friday, and more thunderstorms over the weekend.
+
+Would you like to know today's store hours or check if we're open now?
