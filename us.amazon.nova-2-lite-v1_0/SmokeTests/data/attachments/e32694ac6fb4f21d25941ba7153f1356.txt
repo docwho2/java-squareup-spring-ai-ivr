@@ -1,0 +1,5 @@
+It's a clear sky day today with a temperature of 81 degrees Fahrenheit and light winds at 2.7 mph.
+
+The forecast shows rain tomorrow, rain showers on Sunday, cloudy on Monday, drizzle on Tuesday, and thunderstorms with hail on Wednesday.
+
+Would you like to know the store hours today or check our current inventory?
