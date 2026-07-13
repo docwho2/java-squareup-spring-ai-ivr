@@ -1,0 +1,5 @@
+It's a clear sky today at the store with a temperature of 89.8°F and wind speeds of 11.1 mph.
+
+The forecast shows clear skies tomorrow with a high of 94.6°F, followed by cloudy skies on Thursday with a high of 89.7°F.
+
+Would you like to know the rest of the forecast or anything else about the weather?
