@@ -28,7 +28,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>25</maven.compiler.release>
         <lombok.version>1.18.46</lombok.version>
-        <pdfbox.version>3.0.7</pdfbox.version>
+        <pdfbox.version>3.0.8</pdfbox.version>
         <okhttp.jvm.version>5.4.0</okhttp.jvm.version>
         <okio.jvm.version>3.17.0</okio.jvm.version>
         <!-- The below three all need to be aligned -->
