@@ -1,0 +1,3 @@
+It's currently cloudy at our store with a temperature of 62 degrees Fahrenheit and a wind speed of 8.3 mph. Tomorrow's forecast is mostly clear with a high of 92 degrees.
+
+Would you like to know the store hours today or check our current inventory?
