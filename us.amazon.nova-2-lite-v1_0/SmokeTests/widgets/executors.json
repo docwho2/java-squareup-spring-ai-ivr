@@ -13,7 +13,7 @@
 {
 "name": "Workflow Run",
 "type": "github",
-"buildName": "CDK and SAM Deployment #604",
-"buildUrl": "https://github.com/docwho2/java-squareup-spring-ai-ivr/actions/runs/30264893029"
+"buildName": "Run Tests #297",
+"buildUrl": "https://github.com/docwho2/java-squareup-spring-ai-ivr/actions/runs/30295780579"
 }
 ]
