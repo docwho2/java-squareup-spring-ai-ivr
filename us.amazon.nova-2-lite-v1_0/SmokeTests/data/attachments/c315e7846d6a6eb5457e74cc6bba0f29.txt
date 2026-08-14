@@ -1,0 +1,5 @@
+It's a clear sky day today with a temperature of 81.6 degrees Fahrenheit and winds at 11.3 mph.
+
+The forecast shows cloudy skies tomorrow with a high of 85 degrees, drizzle on Monday with a high of 85 degrees, cloudy Tuesday with a high of 80 degrees, rain showers Wednesday with a high of 89 degrees, and cloudy Thursday with a high of 79 degrees.
+
+Would you like to know the store hours today or anything else about the weather?
