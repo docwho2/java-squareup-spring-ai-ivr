@@ -1,0 +1,5 @@
+It's currently cloudy at our store with a temperature of 67 degrees Fahrenheit and a wind speed of 8.6 mph.
+
+The forecast shows rain showers today and tomorrow, followed by more rain showers on the 17th, then cloudy conditions on the 18th, and drizzle on the 19th.
+
+Would you like me to check our current store hours or help with anything else?
