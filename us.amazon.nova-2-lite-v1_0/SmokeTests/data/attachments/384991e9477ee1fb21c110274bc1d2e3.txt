@@ -1,0 +1,3 @@
+It's a clear sky day with a temperature of 71.6°F and wind speed of 13.1 mph.
+
+Would you like to know the weather forecast for the next few days?
