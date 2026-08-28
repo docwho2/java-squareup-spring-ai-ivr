@@ -1,0 +1,5 @@
+It's a clear sky today with a temperature of 53.2 degrees Fahrenheit and a wind speed of 6 mph.
+
+The forecast shows cloudy skies tomorrow with a high of 79.5 degrees, rain on Monday with a high of 77 degrees, drizzle on Tuesday with a high of 92.2 degrees, and cloudy skies on Wednesday and Thursday with highs near 90 degrees.
+
+Do you want me to send you driving directions to the store?
