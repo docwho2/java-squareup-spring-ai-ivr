@@ -1,0 +1,5 @@
+It's currently cloudy at the store with a temperature of 73 degrees Fahrenheit and a light wind of 3.7 mph.
+
+The forecast shows cloudy skies today, rain tomorrow, and warming temperatures through the week with some drizzle expected.
+
+Would you like to know today's store hours or check our current inventory?
