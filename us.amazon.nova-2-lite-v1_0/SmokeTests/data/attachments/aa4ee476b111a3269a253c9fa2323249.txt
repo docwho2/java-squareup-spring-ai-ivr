@@ -1,0 +1,3 @@
+It's currently cloudy at the store with a temperature of 77.6°F and wind speeds of 13.5 mph.
+
+Would you like to know the weather forecast for the next few days?
