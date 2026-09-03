@@ -1,0 +1,5 @@
+It's currently cloudy with a temperature of 67 degrees Fahrenheit and a wind speed of 9.5 miles per hour.
+
+The forecast for the next few days shows temperatures ranging from the mid-50s to low 90s with cloudy skies and some drizzle expected.
+
+Would you like to know today's store hours or anything else?
