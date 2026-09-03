@@ -1,0 +1,5 @@
+It's currently cloudy and 86 degrees Fahrenheit at the store with winds at 10.7 mph.
+
+The forecast shows cloudy skies through tomorrow, then foggy conditions on Saturday with a high of 92 degrees, followed by rain showers on Sunday with a high of 74 degrees.
+
+Would you like to know today's store hours or check our current inventory?
