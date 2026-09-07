@@ -1,0 +1,3 @@
+It's currently cloudy at the store with a temperature of 80.5°F and wind speeds of 14.1 mph. Tomorrow there's a drizzle expected with temperatures between 63°F and 81°F.
+
+Would you like to know the forecast for any specific day this week?
