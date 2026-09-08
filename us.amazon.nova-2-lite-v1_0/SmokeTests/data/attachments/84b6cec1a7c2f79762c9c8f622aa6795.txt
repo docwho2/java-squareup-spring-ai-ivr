@@ -1,0 +1,5 @@
+It's currently 65 degrees Fahrenheit and cloudy with a wind speed of 11 mph.
+
+The forecast shows rain today, cloudy tomorrow, clear skies on Thursday, rain showers on Friday, and cloudy on Saturday.
+
+Would you like to know today's store hours or check our current inventory?
