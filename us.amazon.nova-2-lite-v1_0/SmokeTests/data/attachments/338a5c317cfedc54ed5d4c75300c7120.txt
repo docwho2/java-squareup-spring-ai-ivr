@@ -1,0 +1,5 @@
+It's a clear sky today with a temperature of 59.6°F and winds at 11.1 mph.
+
+The forecast shows cloudy skies tomorrow with a high of 71.8°F, then clear skies on Friday with a high of 80.2°F.
+
+Would you like to know the store hours today or check our current inventory?
