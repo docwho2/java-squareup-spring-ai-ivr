@@ -1,0 +1,3 @@
+It's a clear sky day with a temperature of 55.4 degrees Fahrenheit and wind speeds at 14.5 miles per hour.
+
+Would you like the forecast for the next few days?
