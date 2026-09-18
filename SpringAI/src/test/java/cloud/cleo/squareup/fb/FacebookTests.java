@@ -51,7 +51,7 @@ public class FacebookTests extends AbstractLexAwsTestSupport {
                 "Dialog state is not closed [" + res.sessionState().dialogAction().type() + "]"
         );
 
-        Allure.addAttachment("Dialog Action", res.sessionState().dialogAction().toString());
+        Allure.attachment("Dialog Action", res.sessionState().dialogAction().toString());
     }
 
     @Test
@@ -83,7 +83,7 @@ public class FacebookTests extends AbstractLexAwsTestSupport {
                 "Response did not contain the initial Welcome Image Response Card"
         );
 
-        Allure.addAttachment("Welcome Card", res.messages().stream().filter(m -> m.imageResponseCard() != null).findAny().get().toString());
+        Allure.attachment("Welcome Card", res.messages().stream().filter(m -> m.imageResponseCard() != null).findAny().get().toString());
     }
 
     @Test

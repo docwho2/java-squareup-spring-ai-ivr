@@ -223,7 +223,7 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
         String provider = System.getenv("SPRING_AI_PROVIDER");
 
         if (results.isEmpty()) {
-            Allure.addAttachment("Performance Summary", "text/plain", "No timing data collected.");
+            Allure.attachment("Performance Summary", "text/plain", "No timing data collected.");
             return;
         }
 
@@ -272,7 +272,7 @@ public class SmokeTests extends AbstractLexAwsTestSupport {
             Allure.label("tag", SPRING_AI_MODEL);
         }
 
-        Allure.getLifecycle().updateTestCase(tr -> tr.setDescriptionHtml(html.toString()));
+        Allure.descriptionHtml(html.toString());
 
     }
 
