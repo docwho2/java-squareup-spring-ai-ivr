@@ -5,7 +5,7 @@ import static cloud.cleo.squareup.enums.ChannelPlatform.*;
 import cloud.cleo.squareup.enums.Language;
 import cloud.cleo.squareup.enums.LexInputMode;
 import io.qameta.allure.Allure;
-import io.qameta.allure.junit5.AllureJunit5;
+import io.qameta.allure.jupiter.AllureJupiter;
 import java.util.HashMap;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -32,7 +32,7 @@ import software.amazon.awssdk.services.lexruntimev2.model.RecognizeTextResponse;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
 
-@ExtendWith({AllureJunit5.class})
+@ExtendWith({AllureJupiter.class})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Log4j2
@@ -173,7 +173,7 @@ public abstract class AbstractLexAwsTestSupport {
     protected final RecognizeTextResponse sendToLex(String text, ChannelPlatform channel, String sessionId) {
         // Default to text channel (from Twilio) if not set
         channel = channel != null ? channel : ChannelPlatform.TWILIO;
-        Allure.addAttachment("Lex Request", "text/plain", text);
+        Allure.attachment("Lex Request", "text/plain", text);
         Allure.parameter("Channel", channel.name());
         Allure.parameter("SessionId", sessionId);
 
@@ -224,7 +224,7 @@ public abstract class AbstractLexAwsTestSupport {
             Allure.label("tag", "Markdown Detected");
         }
 
-        Allure.addAttachment("Lex Response", "text/plain", content);
+        Allure.attachment("Lex Response", "text/plain", content);
         log.info("<<< response: \"{}\"", content);
         return response;
     }
@@ -236,7 +236,7 @@ public abstract class AbstractLexAwsTestSupport {
         }
 
         if (!pattern.matcher(actual).find()) {
-            Allure.addAttachment("Expected regex", "text/plain", pattern.pattern());
+            Allure.attachment("Expected regex", "text/plain", pattern.pattern());
 
             fail("Did not match regex.\nRegex: " + pattern.pattern() + "\n"
                     + "Actual: " + actual);
@@ -250,7 +250,7 @@ public abstract class AbstractLexAwsTestSupport {
         }
 
         if (pattern.matcher(actual).find()) {
-            Allure.addAttachment("Unexpected regex", "text/plain", pattern.pattern());
+            Allure.attachment("Unexpected regex", "text/plain", pattern.pattern());
 
             fail("Matched regex.\nRegex: " + pattern.pattern() + "\n"
                     + "Actual: " + actual);

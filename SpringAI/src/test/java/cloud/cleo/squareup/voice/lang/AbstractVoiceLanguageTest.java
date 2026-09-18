@@ -90,7 +90,7 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
                     "Dialog state is not closed [" + res.sessionState().dialogAction().type() + "]"
             );
 
-            Allure.addAttachment("Dialog Action", res.sessionState().dialogAction().toString());
+            Allure.attachment("Dialog Action", res.sessionState().dialogAction().toString());
 
             // Language switched, so now we must use the target locale for remaining tests in that language
             lang = getTestLanguage();
@@ -99,7 +99,7 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
             languageReady.set(false);
 
             // Optional: make the skip reason super obvious in Allure
-            Allure.addAttachment("Language gate failed", "text/plain",
+            Allure.attachment("Language gate failed", "text/plain",
                     "Language setup failed for " + getTestLanguage() + "\n" + e);
 
             throw e; // keep THIS test as FAILED (red)
@@ -230,7 +230,7 @@ public abstract class AbstractVoiceLanguageTest extends AbstractLexAwsTestSuppor
                 "Dialog state is not closed [" + res.sessionState().dialogAction().type() + "]"
         );
 
-        Allure.addAttachment("Lex Dialog Action", res.sessionState().dialogAction().toString());
+        Allure.attachment("Lex Dialog Action", res.sessionState().dialogAction().toString());
     }
 
     /**

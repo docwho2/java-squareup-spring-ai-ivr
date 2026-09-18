@@ -46,7 +46,7 @@ public class TransferTest extends AbstractVoiceTest {
                 "Dialog state is not closed [" + res.sessionState().dialogAction().type() + "]"
         );
 
-        Allure.addAttachment("Dialog Action", res.sessionState().dialogAction().toString());
+        Allure.attachment("Dialog Action", res.sessionState().dialogAction().toString());
        
     }
 }

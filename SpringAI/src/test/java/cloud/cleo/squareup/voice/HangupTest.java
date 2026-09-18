@@ -45,7 +45,7 @@ public class HangupTest extends AbstractVoiceTest {
                 "Dialog state is not closed [" + res.sessionState().dialogAction().type() + "]"
         );
 
-        Allure.addAttachment("Lex Dialog Action", res.sessionState().dialogAction().toString());
+        Allure.attachment("Lex Dialog Action", res.sessionState().dialogAction().toString());
         
     }
 }
