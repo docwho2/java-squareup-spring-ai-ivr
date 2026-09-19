@@ -1,0 +1,3 @@
+It's currently cloudy at the store with a temperature of about 60 degrees Fahrenheit and a wind speed of 9 miles per hour. The forecast shows drizzle today, followed by cloudy skies tomorrow and clearing skies on Tuesday.
+
+Do you want the full forecast details or anything else?
