@@ -60,7 +60,6 @@ This application is designed with the same principles found in telecommunication
 - **Chime SIP numbers and Twilio SIP trunks** mapped to **multi-region outcomes**
 - Fully serverless and able to scale from **0 to any CPS that Chime supports**
 - **No single region dependency**
-- **DynamoDB Global Tables** for cross-region conversational continuity
 - Multi-region **Lambda SnapStart** for minimal cold start impact
 
 High availability is not bolted on — it is the **core design philosophy**.
@@ -180,17 +179,17 @@ The LLM is not the system — it is **one replaceable component inside a much la
 
 ---
 
-## 📚 DynamoDB Chat Memory Optimized to the Highest Degree
+## 📚 DynamoDB Chat Memory
 
 The custom [DynamoDbChatMemoryRepository](./dynamo_chat_memory_readme.md) achieves:
 
-- **1 read + 1 write per turn** (despite Spring AI calling memory APIs 4–6 times internally)
-- Intelligent **per-invocation caching** to avoid redundant I/O
-- Append-only tail writes, no rewrites  
-- TTL-based cleanup (zero operational overhead)
-- Multi-region DynamoDB Global Table compatibility
+- Typically **1 query + 1 batch write request per completed turn**
+- Per-conversation caching during the turn to avoid repeated reads
+- Tail writes plus batched deletion of turns evicted by the 50-message window
+- DynamoDB TTL for background cleanup
 
-This is **the most optimized ChatMemoryRepository available for AWS**.
+The [DynamoDB guide](./dynamo_chat_memory_readme.md) describes the data model,
+Spring AI 2.1 compatibility, and the limits of these request counts.
 
 ---
 

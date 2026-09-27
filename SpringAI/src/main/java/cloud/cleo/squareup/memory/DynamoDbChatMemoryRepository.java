@@ -26,8 +26,8 @@ import tools.jackson.databind.json.JsonMapper;
 /**
  * Spring AI ChatMemoryRepository backed by DynamoDB Enhanced Client.
  *
- * Table schema (Dynamo): PK: conversationId (String) SK: messageIndex (Number, 0..N-1) ttl: epoch seconds for TTL
- * (per-message)
+ * Table schema (Dynamo): PK: conversationId (String), SK: monotonically increasing messageIndex (Number),
+ * ttl: epoch seconds for per-message TTL. Window eviction can leave gaps in the sort keys.
  */
 @Log4j2
 public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
@@ -56,21 +56,21 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
                 TableSchema.fromBean(DynamoChatMemoryItem.class));
     }
 
+    private record IndexedMessage(long index, Message message) { }
+
     private static final class ConversationState {
-        // Full logical history Spring thinks exists for this conversation
-
         List<Message> messages;
+        // Null only when saveAll was called before a read. Load Dynamo before the final write.
+        final List<IndexedMessage> persistedMessages;
+        final List<Long> rowIndexes;
+        final long lastPersistedIndex;
 
-        // Index in Dynamo of the last *persisted* message, or -1 if none.
-        long lastPersistedIndex;
-
-        // Number of persisted messages retained in logical history after unusable messages are omitted.
-        int persistedMessageCount;
-
-        ConversationState(List<Message> messages, long lastPersistedIndex, int persistedMessageCount) {
+        ConversationState(List<Message> messages, List<IndexedMessage> persistedMessages,
+                List<Long> rowIndexes, long lastPersistedIndex) {
             this.messages = messages;
+            this.persistedMessages = persistedMessages;
+            this.rowIndexes = rowIndexes;
             this.lastPersistedIndex = lastPersistedIndex;
-            this.persistedMessageCount = persistedMessageCount;
         }
     }
 
@@ -104,7 +104,12 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
             return state.messages;
         }
 
-        // 2) Load from Dynamo
+        state = loadState(conversationId);
+        cache.put(conversationId, state);
+        return state.messages;
+    }
+
+    private ConversationState loadState(String conversationId) {
         QueryConditional condition = QueryConditional.keyEqualTo(
                 Key.builder().partitionValue(conversationId).build());
 
@@ -115,10 +120,16 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
                 .stream()
                 .toList();
 
-        List<Message> messages = items.stream()
-                .map(this::toMessage)
-                .filter(DynamoDbChatMemoryRepository::isStorableMessage)
-                .toList();
+        List<IndexedMessage> persistedMessages = new ArrayList<>();
+        List<Long> rowIndexes = new ArrayList<>(items.size());
+        for (DynamoChatMemoryItem item : items) {
+            rowIndexes.add(item.getMessageIndex());
+            Message message = toMessage(item);
+            if (isStorableMessage(message)) {
+                persistedMessages.add(new IndexedMessage(item.getMessageIndex(), message));
+            }
+        }
+        List<Message> messages = persistedMessages.stream().map(IndexedMessage::message).toList();
 
         long lastPersistedIndex = items.isEmpty()
                 ? -1L
@@ -127,15 +138,16 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
         log.debug("findByConversationId({}) loaded {} usable messages from {} Dynamo items, lastPersistedIndex={}",
                 conversationId, messages.size(), items.size(), lastPersistedIndex);
 
-        // 3) Cache for this Lambda invocation
-        cache.put(conversationId, new ConversationState(new ArrayList<>(messages), lastPersistedIndex, messages.size()));
-
-        return messages;
+        return new ConversationState(new ArrayList<>(messages), persistedMessages, rowIndexes, lastPersistedIndex);
     }
 
     @Override
     public void saveAll(String conversationId, List<Message> messages) {
-        if (messages == null || messages.isEmpty()) {
+        if (messages == null) {
+            return;
+        }
+        if (messages.isEmpty()) {
+            deleteByConversationId(conversationId);
             return;
         }
 
@@ -159,7 +171,7 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
             cache.compute(conversationId, (id, state) -> {
                 if (state == null) {
                     // No prior findByConversationId in this container; treat as new
-                    return new ConversationState(new ArrayList<>(storableMessages), -1L, 0);
+                    return new ConversationState(new ArrayList<>(storableMessages), null, null, -1L);
                 }
                 state.messages = new ArrayList<>(storableMessages);
                 return state;
@@ -167,54 +179,61 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
             return;
         }
 
-        // From here on, we have a "complete" turn (ASSISTANT/SYSTEM/TOOL at tail).
+        // The assistant completes the turn. Spring AI supplies the replacement window,
+        // which may have evicted whole turns while retaining a system message.
         long ttlEpochSeconds = Instant.now()
                 .plus(ttlDuration)
                 .getEpochSecond();
 
         ConversationState state = cache.get(conversationId);
-
-        if (state == null) {
-            // Fallback: we didn't have a cached state (e.g., saveAll called without findByConversationId).
-            // Use your existing logic to discover last index from Dynamo once.
-            log.debug("saveAll({}) with no cache state, falling back to Dynamo last-item lookup", conversationId);
-            long lastIdx = findLastItem(conversationId)
-                    .map(DynamoChatMemoryItem::getMessageIndex)
-                    .orElse(-1L);
-            state = new ConversationState(new ArrayList<>(storableMessages), lastIdx, (int) (lastIdx + 1));
-            cache.put(conversationId, state);
-        } else {
-            // Update state.messages to the latest list Spring gave us
-            state.messages = new ArrayList<>(storableMessages);
+        if (state == null || state.persistedMessages == null) {
+            state = loadState(conversationId);
         }
 
-        // Write only messages AFTER lastPersistedIndex
-        long lastPersisted = state.lastPersistedIndex;
-        int totalMessages = state.messages.size();
-        int startListIndex = state.persistedMessageCount;
-
-        if (startListIndex >= totalMessages) {
-            log.debug("saveAll({}) nothing new to persist (startListIndex >= totalMessages)", conversationId);
-            cache.remove(conversationId); // clean up
-            return;
+        List<Long> retainedIndexes = new ArrayList<>();
+        List<Message> newMessages = new ArrayList<>();
+        int oldCursor = 0;
+        boolean sawNewMessage = false;
+        boolean reorder = false;
+        for (Message message : storableMessages) {
+            int match = -1;
+            for (int i = oldCursor; i < state.persistedMessages.size(); i++) {
+                if (state.persistedMessages.get(i).message().equals(message)) {
+                    match = i;
+                    break;
+                }
+            }
+            if (match >= 0) {
+                if (sawNewMessage) {
+                    reorder = true;
+                    break;
+                }
+                retainedIndexes.add(state.persistedMessages.get(match).index());
+                oldCursor = match + 1;
+            } else {
+                sawNewMessage = true;
+                newMessages.add(message);
+            }
+        }
+        if (reorder) {
+            // A caller replaced or reordered the window; honor saveAll's replacement contract.
+            retainedIndexes.clear();
+            newMessages = storableMessages;
         }
 
-        List<DynamoChatMemoryItem> newItems = new ArrayList<>(totalMessages - startListIndex);
-        long nextIndex = lastPersisted;
-        for (int i = startListIndex; i < totalMessages; i++) {
-            Message msg = state.messages.get(i);
-            nextIndex++;
-            newItems.add(buildItem(conversationId, (int) nextIndex, msg, ttlEpochSeconds));
+        Set<Long> retained = new HashSet<>(retainedIndexes);
+        List<Long> deletedIndexes = state.rowIndexes.stream()
+                .filter(index -> !retained.contains(index))
+                .toList();
+        List<DynamoChatMemoryItem> newItems = new ArrayList<>(newMessages.size());
+        long nextIndex = state.lastPersistedIndex;
+        for (Message message : newMessages) {
+            newItems.add(buildItem(conversationId, ++nextIndex, message, ttlEpochSeconds));
         }
 
-        log.debug("saveAll({}) persisting {} new items (indexes {}..{}), then evicting cache entry",
-                conversationId, newItems.size(), startListIndex, totalMessages - 1);
-
-        batchPutItems(newItems);
-
-        // Update and evict so the next Lambda invocation starts fresh from Dynamo
-        state.lastPersistedIndex = nextIndex;
-        state.persistedMessageCount = totalMessages;
+        log.debug("saveAll({}) deleting {} evicted items and appending {} items",
+                conversationId, deletedIndexes.size(), newItems.size());
+        batchWriteItems(conversationId, deletedIndexes, newItems);
         cache.remove(conversationId);
     }
 
@@ -230,21 +249,9 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
                 || (assistant.getToolCalls() != null && !assistant.getToolCalls().isEmpty());
     }
 
-    private Optional<DynamoChatMemoryItem> findLastItem(String conversationId) {
-        QueryConditional condition = QueryConditional.keyEqualTo(
-                Key.builder().partitionValue(conversationId).build());
-
-        return table.query(r -> r
-                .queryConditional(condition)
-                .scanIndexForward(false) // highest SK first
-                .limit(1))
-                .items()
-                .stream()
-                .findFirst();
-    }
-
     @Override
     public void deleteByConversationId(String conversationId) {
+        cache.remove(conversationId);
         QueryConditional condition = QueryConditional.keyEqualTo(
                 Key.builder().partitionValue(conversationId).build());
 
@@ -258,13 +265,13 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
      * Build a DynamoChatMemoryItem from a Spring AI Message.
      */
     private DynamoChatMemoryItem buildItem(String conversationId,
-            int index,
+            long index,
             Message msg,
             long ttlEpochSeconds) {
 
         DynamoChatMemoryItem item = new DynamoChatMemoryItem();
         item.setConversationId(conversationId);
-        item.setMessageIndex((long) index);
+        item.setMessageIndex(index);
         item.setMessageType(msg.getMessageType().name());
         item.setTtl(ttlEpochSeconds);
 
@@ -303,31 +310,52 @@ public class DynamoDbChatMemoryRepository implements ChatMemoryRepository {
     }
 
     /**
-     * Batch-write items in groups of 25 using the Enhanced Client.
+     * Delete evicted rows and append new rows in the same batch request where possible.
      */
-    private void batchPutItems(List<DynamoChatMemoryItem> items) {
-        if (items.isEmpty()) {
+    private void batchWriteItems(String conversationId, List<Long> deletedIndexes, List<DynamoChatMemoryItem> items) {
+        if (deletedIndexes.isEmpty() && items.isEmpty()) {
             return;
         }
 
         final int batchSize = 25;
-        for (int from = 0; from < items.size(); from += batchSize) {
-            int to = Math.min(from + batchSize, items.size());
-            List<DynamoChatMemoryItem> batch = items.subList(from, to);
-
-            BatchWriteItemEnhancedRequest.Builder requestBuilder
-                    = BatchWriteItemEnhancedRequest.builder();
-
-            WriteBatch.Builder<DynamoChatMemoryItem> writeBatch
-                    = WriteBatch.builder(DynamoChatMemoryItem.class)
-                            .mappedTableResource(table);
-
-            for (DynamoChatMemoryItem item : batch) {
-                writeBatch.addPutItem(item);
+        int total = deletedIndexes.size() + items.size();
+        for (int from = 0; from < total; from += batchSize) {
+            int to = Math.min(from + batchSize, total);
+            List<Key> deletes = new ArrayList<>();
+            List<DynamoChatMemoryItem> puts = new ArrayList<>();
+            for (int i = from; i < to; i++) {
+                if (i < deletedIndexes.size()) {
+                    deletes.add(Key.builder()
+                            .partitionValue(conversationId)
+                            .sortValue(deletedIndexes.get(i))
+                            .build());
+                } else {
+                    puts.add(items.get(i - deletedIndexes.size()));
+                }
             }
 
-            requestBuilder.addWriteBatch(writeBatch.build());
-            enhancedClient.batchWriteItem(requestBuilder.build());
+            for (int attempt = 0; attempt < 5; attempt++) {
+                WriteBatch.Builder<DynamoChatMemoryItem> writeBatch = WriteBatch.builder(DynamoChatMemoryItem.class)
+                        .mappedTableResource(table);
+                deletes.forEach(writeBatch::addDeleteItem);
+                puts.forEach(writeBatch::addPutItem);
+                BatchWriteResult result = enhancedClient.batchWriteItem(
+                        BatchWriteItemEnhancedRequest.builder().addWriteBatch(writeBatch.build()).build());
+                puts = result.unprocessedPutItemsForTable(table);
+                deletes = result.unprocessedDeleteItemsForTable(table);
+                if (puts.isEmpty() && deletes.isEmpty()) {
+                    break;
+                }
+                if (attempt == 4) {
+                    throw new IllegalStateException("DynamoDB did not process every chat memory write");
+                }
+                try {
+                    Thread.sleep(25L << attempt);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new IllegalStateException("Interrupted while retrying chat memory write", e);
+                }
+            }
         }
     }
 

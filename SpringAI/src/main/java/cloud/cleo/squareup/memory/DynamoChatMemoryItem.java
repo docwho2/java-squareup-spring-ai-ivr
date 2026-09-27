@@ -13,7 +13,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortK
 public class DynamoChatMemoryItem {
 
     private String conversationId;
-    private Long messageIndex;   // 0..N-1 in the current window
+    private Long messageIndex;   // Monotonic within a conversation; eviction leaves gaps
     private String messageType;  // org.springframework.ai.chat.messages.MessageType.name()
     private String text;         // Message.getText()
     
