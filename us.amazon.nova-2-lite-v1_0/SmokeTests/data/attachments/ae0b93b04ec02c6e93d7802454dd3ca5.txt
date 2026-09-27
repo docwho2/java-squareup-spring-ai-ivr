@@ -1,0 +1,5 @@
+It's currently cloudy at the store with a temperature of 57 degrees Fahrenheit and a light wind of 5 mph.
+
+The forecast shows cloudy skies today, foggy conditions tomorrow, rain showers on Tuesday, and foggy again on Wednesday.
+
+Would you like to know the store hours today or check our current inventory?
