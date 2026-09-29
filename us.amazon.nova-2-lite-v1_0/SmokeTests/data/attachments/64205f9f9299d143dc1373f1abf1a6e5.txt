@@ -1,0 +1,5 @@
+It's currently cloudy at our store with a temperature of 63 degrees Fahrenheit and a wind speed of 10.7 miles per hour.
+
+The forecast shows rain tomorrow, foggy conditions on Thursday, and cloudy skies through the weekend.
+
+Would you like to know today's store hours or check our current inventory?
