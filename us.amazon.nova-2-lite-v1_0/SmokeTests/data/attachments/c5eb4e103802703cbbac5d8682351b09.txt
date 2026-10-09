@@ -1,0 +1,5 @@
+It's a clear sky today with a temperature of 68 degrees Fahrenheit and wind speeds of 14 mph.
+
+The forecast shows cloudy skies tomorrow with a high of 69 degrees, followed by mostly clear skies on Monday with a high of 85 degrees.
+
+Would you like to know the store hours for today or check our current inventory?
