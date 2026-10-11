@@ -1,0 +1,5 @@
+It's a clear sky today with a temperature of 65 degrees Fahrenheit and wind speed of 11 miles per hour.
+
+The forecast for the next few days shows cloudy skies tomorrow with a high of 80 degrees, drizzle on Wednesday with a high of 64 degrees, more drizzle on Thursday with a high of 54 degrees, and rain on Friday with a high of 52 degrees.
+
+Would you like me to check the current store hours or help you with anything else?
