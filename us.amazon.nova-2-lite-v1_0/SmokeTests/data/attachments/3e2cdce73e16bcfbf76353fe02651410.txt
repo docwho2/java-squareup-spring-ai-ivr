@@ -1,0 +1,5 @@
+It's currently cloudy at the store with a temperature of 50 degrees Fahrenheit and a wind speed of 10 miles per hour.
+
+The forecast for the next few days shows temperatures ranging from the mid-30s to low 60s with some drizzle expected.
+
+Can I help you with anything else today?
