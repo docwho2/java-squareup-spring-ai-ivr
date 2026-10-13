@@ -1,0 +1,5 @@
+It's currently cloudy at the store with a temperature of 50.6 degrees Fahrenheit and a wind speed of 9.8 miles per hour.
+
+The forecast for the next few days shows cloudy conditions tomorrow, rain on Friday, drizzle on Saturday, and mostly clear skies on Sunday.
+
+Do you want to know today's store hours?
