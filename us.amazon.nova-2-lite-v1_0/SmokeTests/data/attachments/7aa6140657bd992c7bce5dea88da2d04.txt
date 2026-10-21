@@ -1,0 +1,3 @@
+It's a clear sky today with a temperature of 53.8 degrees Fahrenheit and a wind speed of 4.9 miles per hour.
+
+Do you want to know the forecast for the next few days?
