@@ -1,0 +1,3 @@
+It's currently cloudy at the store with a temperature of 72.5°F and a wind speed of 15.4 mph. The forecast shows drizzle today, followed by cloudy and rainy days tomorrow through Tuesday.
+
+Would you like to know the store hours today or check our current inventory?
