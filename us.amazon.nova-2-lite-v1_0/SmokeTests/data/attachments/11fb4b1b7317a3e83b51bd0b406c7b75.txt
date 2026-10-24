@@ -1,0 +1,3 @@
+It's currently cloudy at the store with a temperature of 63 degrees Fahrenheit and wind speeds of about 12 mph. Tomorrow there's a chance of drizzle with temperatures ranging from 47 to 69 degrees.
+
+Would you like to know the store hours today or check our current inventory?
