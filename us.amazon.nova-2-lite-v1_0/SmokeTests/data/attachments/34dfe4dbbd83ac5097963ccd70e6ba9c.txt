@@ -1,0 +1,5 @@
+It's currently cloudy at our store with a temperature of 51.6°F and winds at 10.5 mph. 
+
+The forecast shows drizzle today, rain tomorrow, snow on Wednesday, and rain showers on Thursday.
+
+Would you like to know today's store hours or check if we're open despite the weather?
