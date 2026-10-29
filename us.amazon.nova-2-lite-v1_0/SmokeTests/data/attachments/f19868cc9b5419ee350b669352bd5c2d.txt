@@ -1,0 +1,5 @@
+It's currently clear sky with a temperature of 44.5°F and wind speed of 10 mph.
+
+The forecast shows cloudy skies tomorrow with a high of 47°F, and rain expected on Sunday with a high of 58°F.
+
+Would you like to know today's store hours or check if we're open now?
