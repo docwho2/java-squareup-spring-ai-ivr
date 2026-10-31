@@ -1,0 +1,5 @@
+It's currently cloudy at the store with a temperature of 50 degrees Fahrenheit and a wind speed of 10 miles per hour.
+
+The forecast shows foggy conditions today, drizzle tomorrow, rain on Tuesday, rain showers on Wednesday, and drizzle on Thursday.
+
+Would you like to know today's store hours or anything else?
