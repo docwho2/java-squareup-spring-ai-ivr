@@ -1,0 +1,5 @@
+It's currently drizzling and 55 degrees Fahrenheit with a wind speed of 17 mph.
+
+The forecast shows rain for the next couple of days, then cloudy weather.
+
+Would you like to know the store hours today or check if we're open?
