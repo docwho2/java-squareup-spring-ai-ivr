@@ -1,0 +1,5 @@
+It's currently cloudy at the store with a temperature of about 50 degrees Fahrenheit and a wind speed of 17 mph.
+
+The forecast shows rain today, drizzle tomorrow, and cloudy conditions through the weekend.
+
+Would you like to know the store hours today or check anything else about the weather?
