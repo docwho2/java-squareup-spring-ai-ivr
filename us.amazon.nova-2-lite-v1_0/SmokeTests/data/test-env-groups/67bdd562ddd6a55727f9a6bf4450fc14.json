@@ -1,1 +1,1 @@
-{"id":"67bdd562ddd6a55727f9a6bf4450fc14","fullName":"cloud.cleo.squareup.SmokeTests.weatherTest","name":"Weather Forecast","status":"passed","testResultsByEnv":{"default":"ffd98cae77adace3219bffc1780b8db4"}}
+{"id":"67bdd562ddd6a55727f9a6bf4450fc14","fullName":"cloud.cleo.squareup.SmokeTests.weatherTest","name":"Weather Forecast","status":"broken","testResultsByEnv":{"default":"49fdc5d1f6f07bbcfd5d89c1d3e83c03"}}
