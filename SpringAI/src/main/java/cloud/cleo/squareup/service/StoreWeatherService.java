@@ -1,17 +1,18 @@
 package cloud.cleo.squareup.service;
 
+import java.time.Duration;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 @Service
-@RequiredArgsConstructor
 @Log4j2
 public class StoreWeatherService {
 
@@ -19,11 +20,25 @@ public class StoreWeatherService {
     private static final double WAHKON_LAT = 46.1182899;
     private static final double WAHKON_LON = -93.5210726;
 
-    private final RestClient restClient = RestClient.builder()
-                .baseUrl("https://api.open-meteo.com")
-                .build();
-    
+    private final RestClient restClient;
     private final ZoneId storeTimezone;
+
+    @Autowired
+    public StoreWeatherService(ZoneId storeTimezone) {
+        this(storeTimezone, "https://api.open-meteo.com");
+    }
+
+    StoreWeatherService(ZoneId storeTimezone, String baseUrl) {
+        this.storeTimezone = storeTimezone;
+        // Return the unavailable response while there is still time to answer the caller.
+        var requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(Duration.ofSeconds(2));
+        requestFactory.setReadTimeout(Duration.ofSeconds(3));
+        this.restClient = RestClient.builder()
+                .baseUrl(baseUrl)
+                .requestFactory(requestFactory)
+                .build();
+    }
 
     public StoreWeatherResponse getStoreWeather() {
         try {
@@ -136,9 +151,9 @@ public class StoreWeatherService {
     private StoreWeatherResponse unavailableResponse() {
         return new StoreWeatherResponse(
                 "Wahkon, MN",
-                "No weather data available at this time.",
-                0.0,
-                0.0,
+                "Weather is temporarily unavailable. Please try again later.",
+                null,
+                null,
                 List.of()
         );
     }
@@ -180,8 +195,8 @@ public class StoreWeatherService {
     public record StoreWeatherResponse(
             String locationName,
             String summary,
-            double temperatureFahrenheit,
-            double windSpeedMilesPerHour,
+            Double temperatureFahrenheit,
+            Double windSpeedMilesPerHour,
             List<DailyForecast> forecast
     ) {
         public record DailyForecast(

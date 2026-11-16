@@ -18,6 +18,7 @@ public class StoreWeather extends AbstractTool {
             description = """
             Get current weather and a short daily forecast for Wahkon, MN, USA,
             where the store is located.
+            If weather is unavailable, say so briefly. Do not invent temperature or wind readings.
             """
     )
     public StoreWeatherResponse getStoreWeather() {
