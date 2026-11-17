@@ -1,0 +1,3 @@
+Sorry, the weather information is currently unavailable. Please try again later.
+
+Would you like me to check the current store hours instead?
