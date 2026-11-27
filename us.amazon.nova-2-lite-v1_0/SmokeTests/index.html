@@ -55,7 +55,7 @@
 
     
     <script>
-      window.allureReportOptions = {"id":"awesome","reportName":"Allure","logo":"","theme":"auto","reportLanguage":"en","createdAt":1795741648702,"reportUuid":"740c9a63-0f37-4aed-a48c-0d9942309bc7","groupBy":[],"cacheKey":"1795741648702","ci":{"type":"github","detected":true,"repoName":"java-squareup-spring-ai-ivr","jobUid":"docwho2/java-squareup-spring-ai-ivr_Run Tests","jobUrl":"https://github.com/docwho2/java-squareup-spring-ai-ivr/actions?query=workflow%3A%22Run%20Tests%22","jobName":"docwho2/java-squareup-spring-ai-ivr - Run Tests","jobRunUid":"45920452524","jobRunUrl":"https://github.com/docwho2/java-squareup-spring-ai-ivr/actions/runs/45920452524","jobRunName":"run-tests-east-smoke #419","jobRunBranch":"main","pullRequestUrl":"","pullRequestName":"","provider":"github","repository":{"slug":"docwho2/java-squareup-spring-ai-ivr","url":"https://github.com/docwho2/java-squareup-spring-ai-ivr"},"sourceBranch":"main"},"executor":{"name":"Maven","type":"maven","buildName":"Spring AI Square Chime Lex Lambda"},"runSummary":{"start":1795741607135,"stop":1795741631873,"duration":24738},"layout":"base","allureVersion":"3.17.0","sections":["charts","timeline"],"defaultSection":""}
+      window.allureReportOptions = {"id":"awesome","reportName":"Allure","logo":"","theme":"auto","reportLanguage":"en","createdAt":1795775363144,"reportUuid":"3fb80b29-7c02-4f1d-bb59-e22f3a5adaa9","groupBy":[],"cacheKey":"1795775363144","ci":{"type":"github","detected":true,"repoName":"java-squareup-spring-ai-ivr","jobUid":"docwho2/java-squareup-spring-ai-ivr_CDK and SAM Deployment","jobUrl":"https://github.com/docwho2/java-squareup-spring-ai-ivr/actions?query=workflow%3A%22CDK%20and%20SAM%20Deployment%22","jobName":"docwho2/java-squareup-spring-ai-ivr - CDK and SAM Deployment","pipelineRunName":"CDK and SAM Deployment","pipelineRunUrl":"https://github.com/docwho2/java-squareup-spring-ai-ivr/actions/runs/45981317379","jobRunUid":"45981317379","jobRunUrl":"https://github.com/docwho2/java-squareup-spring-ai-ivr/actions/runs/45981317379","jobRunName":"run-tests #757","jobRunBranch":"main","pullRequestUrl":"","pullRequestName":"","commitSha":"fd825aaf5e37db22e11ea4416098e1edab3ad88b","provider":"github","repository":{"slug":"docwho2/java-squareup-spring-ai-ivr","url":"https://github.com/docwho2/java-squareup-spring-ai-ivr"},"sourceBranch":"main"},"git":{"commit":"fd825aaf5e37db22e11ea4416098e1edab3ad88b","branch":"main"},"executor":{"name":"Maven","type":"maven","buildName":"Spring AI Square Chime Lex Lambda"},"runSummary":{"start":1795775320551,"stop":1795775343596,"duration":23045},"runSummaryByEnv":{"default":{"start":1795775320551,"stop":1795775343596,"duration":23045}},"layout":"base","allureVersion":"3.33.0","sections":["charts","timeline"],"defaultSection":""}
     </script>
 </head>
 <body>
@@ -68,8 +68,9 @@
     <div id="app"></div>
     
     <script>
-      const { origin, pathname } = window.location; 
-      const url = new URL(pathname, origin);
+      const url = new URL(window.location.href);
+      url.search = "";
+      url.hash = "";
       const baseEl = document.createElement("base");
       
       baseEl.href = url.toString();
@@ -80,7 +81,7 @@
     <script>
       window.allure = window.allure || {};
     </script>
-    <script   src="app-e10ef08e2435570d7f42.js"></script>
+    <script   src="app-189f0a86432a713a6a0d.js"></script>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-LNDJ3J7WT0"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -88,8 +89,8 @@
         gtag('js', new Date());
         gtag('config', 'G-LNDJ3J7WT0', {
           "report": "awesome",
-          "allureVersion": "3.17.0",
-          "reportUuid": "740c9a63-0f37-4aed-a48c-0d9942309bc7",
+          "allureVersion": "3.33.0",
+          "reportUuid": "3fb80b29-7c02-4f1d-bb59-e22f3a5adaa9",
           "single_file": "false"
         });
     </script>
